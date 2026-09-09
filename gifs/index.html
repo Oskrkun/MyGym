@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#111111">
+  <title>MiGym - Rutina</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="topbar">
+    <div>
+      <div class="brand">Mi<span>GYM</span></div>
+      <div id="dayLabel" class="subtitle">DÍA 1</div>
+    </div>
+    <button id="dayButton" class="day-button" type="button">Cambiar día</button>
+  </header>
+
+  <main class="app">
+    <section class="progress-card">
+      <div>
+        <p class="eyebrow">ENTRENAMIENTO</p>
+        <h1 id="routineTitle">Día 1</h1>
+      </div>
+      <div class="progress-ring">
+        <strong id="progressPercent">0%</strong>
+        <span>completo</span>
+      </div>
+    </section>
+
+    <section id="exerciseList" class="exercise-list"></section>
+
+    <section id="finishCard" class="finish-card hidden">
+      <div class="finish-icon">✓</div>
+      <h2>¡Rutina completada!</h2>
+      <p>Terminaste todas las series de hoy.</p>
+      <button id="resetButton" class="secondary-button">Reiniciar rutina</button>
+    </section>
+  </main>
+
+  <!-- Modal para cambiar de día -->
+  <div id="dayModal" class="modal hidden">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h2>Elegir día</h2>
+        <button id="closeModal" class="icon-button">×</button>
+      </div>
+      <div id="dayOptions" class="day-options"></div>
+    </div>
+  </div>
+
+  <!-- Cronómetro -->
+  <div id="timerOverlay" class="timer-overlay hidden">
+    <div class="timer-box">
+      <p class="eyebrow">DESCANSO</p>
+      <div id="timerValue" class="timer">01:00</div>
+      <p id="timerMessage">Recuperá fuerzas para la siguiente serie.</p>
+      <div class="timer-actions">
+        <button id="addTime" class="timer-small">+15 s</button>
+        <button id="pauseTimer" class="timer-main">Pausar</button>
+        <button id="skipTimer" class="timer-small">Saltar</button>
+      </div>
+    </div>
+  </div>
+
+<script>
+/*
+  PROTOTIPO MiGYM
+  Los datos de series/repeticiones/peso son fáciles de modificar.
+  En esta primera versión se usan 3 series por ejercicio como ejemplo.
+*/
+
+const routines = {
+  1: {
+    name: "Día 1",
+    exercises: [
+      { name: "Pecho plano c/barra", group: "Pecho", sets: 3, reps: 12, weight: "" },
+      { name: "Pecho inclinado c/máquina", group: "Pecho", sets: 3, reps: 12, weight: "" },
+      { name: "Jalón dorsal T. abierto", group: "Espalda", sets: 3, reps: 12, weight: "" },
+      { name: "Plaq espalda", group: "Espalda", sets: 3, reps: 12, weight: "" },
+      { name: "Camilla cuádriceps", group: "Piernas", sets: 3, reps: 12, weight: "" },
+      { name: "Camilla isquio", group: "Piernas", sets: 3, reps: 12, weight: "" }
+    ]
+  },
+  2: {
+    name: "Día 2",
+    exercises: [
+      { name: "Prensa + gemelos", group: "Piernas", sets: 3, reps: 12, weight: "" },
+      { name: "Extensiones", group: "Piernas", sets: 3, reps: 12, weight: "" },
+      { name: "Posterior hombros", group: "Hombros", sets: 3, reps: 12, weight: "" },
+      { name: "Tríceps P. alta barra", group: "Tríceps", sets: 3, reps: 12, weight: "" },
+      { name: "Tríceps patada burro", group: "Tríceps", sets: 3, reps: 12, weight: "" },
+      { name: "Bíceps P. bajo c/barra", group: "Bíceps", sets: 3, reps: 12, weight: "" }
+    ]
+  },
+  3: {
+    name: "Día 3",
+    exercises: [
+      { name: "Hack frontal", group: "Piernas", sets: 3, reps: 12, weight: "" },
+      { name: "Hip thrust", group: "Glúteos", sets: 3, reps: 12, weight: "" },
+      { name: "Polea c/barra V y P. alto", group: "Espalda", sets: 3, reps: 12, weight: "" },
+      { name: "Semiflexo c/máquina", group: "Piernas", sets: 3, reps: 12, weight: "" },
+      { name: "Apertura c/poleas, banco", group: "Pecho", sets: 3, reps: 12, weight: "" },
+      { name: "Bíceps martillo", group: "Bíceps", sets: 3, reps: 12, weight: "" }
+    ]
+  }
+};
+
+let currentDay = 1;
+let state = {};
+let timer = null;
+let remaining = 60;
+let paused = false;
+
+const exerciseList = document.getElementById("exerciseList");
+const progressPercent = document.getElementById("progressPercent");
+const finishCard = document.getElementById("finishCard");
+const timerOverlay = document.getElementById("timerOverlay");
+const timerValue = document.getElementById("timerValue");
+const pauseTimer = document.getElementById("pauseTimer");
+
+function storageKey(day) {
+  return "migym_day_" + day;
+}
+
+function loadState() {
+  const saved = localStorage.getItem(storageKey(currentDay));
+  if (saved) {
+    state = JSON.parse(saved);
+  } else {
+    state = routines[currentDay].exercises.map(ex => ({
+      completed: Array(ex.sets).fill(false),
+      collapsed: false
+    }));
+  }
+}
+
+function saveState() {
+  localStorage.setItem(storageKey(currentDay), JSON.stringify(state));
+}
+
+function render() {
+  const routine = routines[currentDay];
+  document.getElementById("dayLabel").textContent = routine.name.toUpperCase();
+  document.getElementById("routineTitle").textContent = routine.name;
+
+  exerciseList.innerHTML = "";
+
+  let totalSets = 0;
+  let completedSets = 0;
+
+  routine.exercises.forEach((ex, index) => {
+    totalSets += ex.sets;
+    completedSets += state[index].completed.filter(Boolean).length;
+
+    const card = document.createElement("article");
+    card.className = "exercise-card" + (state[index].collapsed ? " collapsed" : "");
+
+    const done = state[index].completed.every(Boolean);
+
+    card.innerHTML = `
+      <div class="exercise-head">
+        <div class="exercise-number">${String(index + 1).padStart(2, "0")}</div>
+        <div class="exercise-title">
+          <div class="group">${ex.group}</div>
+          <h2>${ex.name}</h2>
+          <p>${ex.sets} series · ${ex.reps} repeticiones${ex.weight ? " · " + ex.weight + " kg" : ""}</p>
+        </div>
+        <div class="exercise-status ${done ? "done" : ""}">${done ? "✓" : ""}</div>
+      </div>
+
+      <div class="series-container">
+        ${ex.completed = state[index].completed, state[index].completed.map((checked, setIndex) => `
+          <label class="set-row ${checked ? "checked" : ""}">
+            <input type="checkbox"
+              data-exercise="${index}"
+              data-set="${setIndex}"
+              ${checked ? "checked" : ""}>
+            <span class="fake-check">✓</span>
+            <span class="set-info">
+              <strong>Serie ${setIndex + 1}</strong>
+              <small>${ex.reps} repeticiones${ex.weight ? " · " + ex.weight + " kg" : ""}</small>
+            </span>
+            <span class="set-state">${checked ? "COMPLETADA" : "PENDIENTE"}</span>
+          </label>
+        `).join("")}
+      </div>
+
+      <div class="exercise-actions">
+        <button class="collapse-button" data-collapse="${index}">
+          ${state[index].collapsed ? "Expandir series ↑" : "Contraer y seguir ↓"}
+        </button>
+      </div>
+    `;
+
+    exerciseList.appendChild(card);
+  });
+
+  const percent = totalSets ? Math.round((completedSets / totalSets) * 100) : 0;
+  progressPercent.textContent = percent + "%";
+
+  finishCard.classList.toggle("hidden", percent !== 100);
+
+  document.querySelectorAll(".set-row input").forEach(input => {
+    input.addEventListener("change", onSetChange);
+  });
+
+  document.querySelectorAll("[data-collapse]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const i = Number(btn.dataset.collapse);
+      state[i].collapsed = !state[i].collapsed;
+      saveState();
+      render();
+      if (state[i].collapsed) {
+        const next = document.querySelectorAll(".exercise-card")[i + 1];
+        if (next) next.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+    });
+  });
+}
+
+function onSetChange(event) {
+  const exIndex = Number(event.target.dataset.exercise);
+  const setIndex = Number(event.target.dataset.set);
+  const checked = event.target.checked;
+
+  state[exIndex].completed[setIndex] = checked;
+  saveState();
+
+  if (checked) {
+    const allSetsOfExercise = state[exIndex].completed.every(Boolean);
+    render();
+
+    // El cronómetro aparece después de marcar una serie.
+    // No se muestra después de la última serie del último ejercicio.
+    const lastExercise = exIndex === routines[currentDay].exercises.length - 1;
+    const lastSet = setIndex === routines[currentDay].exercises[exIndex].sets - 1;
+
+    if (!(allSetsOfExercise && lastExercise && lastSet)) {
+      startTimer();
+    }
+  } else {
+    render();
+  }
+}
+
+function startTimer() {
+  clearInterval(timer);
+  remaining = 60;
+  paused = false;
+  pauseTimer.textContent = "Pausar";
+  timerOverlay.classList.remove("hidden");
+  updateTimer();
+
+  timer = setInterval(() => {
+    if (!paused) {
+      remaining--;
+      updateTimer();
+
+      if (remaining <= 0) {
+        clearInterval(timer);
+        if (navigator.vibrate) navigator.vibrate([250, 120, 250]);
+        document.getElementById("timerMessage").textContent = "¡Descanso terminado! Siguiente serie.";
+        pauseTimer.textContent = "Cerrar";
+      }
+    }
+  }, 1000);
+}
+
+function updateTimer() {
+  const min = Math.floor(remaining / 60).toString().padStart(2, "0");
+  const sec = (remaining % 60).toString().padStart(2, "0");
+  timerValue.textContent = `${min}:${sec}`;
+}
+
+pauseTimer.addEventListener("click", () => {
+  if (remaining <= 0) {
+    timerOverlay.classList.add("hidden");
+    return;
+  }
+  paused = !paused;
+  pauseTimer.textContent = paused ? "Continuar" : "Pausar";
+});
+
+document.getElementById("addTime").addEventListener("click", () => {
+  remaining += 15;
+  updateTimer();
+});
+
+document.getElementById("skipTimer").addEventListener("click", () => {
+  clearInterval(timer);
+  timerOverlay.classList.add("hidden");
+});
+
+document.getElementById("resetButton").addEventListener("click", () => {
+  localStorage.removeItem(storageKey(currentDay));
+  loadState();
+  render();
+});
+
+const modal = document.getElementById("dayModal");
+
+document.getElementById("dayButton").addEventListener("click", () => {
+  const options = document.getElementById("dayOptions");
+  options.innerHTML = "";
+  Object.keys(routines).forEach(day => {
+    const button = document.createElement("button");
+    button.textContent = routines[day].name;
+    button.addEventListener("click", () => {
+      currentDay = Number(day);
+      loadState();
+      render();
+      modal.classList.add("hidden");
+      window.scrollTo({top: 0, behavior: "smooth"});
+    });
+    options.appendChild(button);
+  });
+  modal.classList.remove("hidden");
+});
+
+document.getElementById("closeModal").addEventListener("click", () => {
+  modal.classList.add("hidden");
+});
+
+modal.addEventListener("click", e => {
+  if (e.target === modal) modal.classList.add("hidden");
+});
+
+loadState();
+render();
+</script>
+</body>
+</html>

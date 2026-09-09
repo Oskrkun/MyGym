@@ -1,0 +1,980 @@
+{
+  "migym_state_1788976045153.702": [
+    {
+      "completed": [
+        false,
+        false,
+        false
+      ],
+      "collapsed": false,
+      "weights": [
+        "",
+        "",
+        ""
+      ]
+    }
+  ],
+  "migym_day_2": [
+    {
+      "completed": [
+        false,
+        false,
+        false
+      ],
+      "collapsed": false
+    },
+    {
+      "completed": [
+        false,
+        false,
+        false
+      ],
+      "collapsed": false
+    },
+    {
+      "completed": [
+        false,
+        false,
+        false
+      ],
+      "collapsed": false
+    },
+    {
+      "completed": [
+        false,
+        false,
+        false
+      ],
+      "collapsed": false
+    },
+    {
+      "completed": [
+        false,
+        false,
+        false
+      ],
+      "collapsed": false
+    },
+    {
+      "completed": [
+        false,
+        false,
+        false
+      ],
+      "collapsed": false
+    }
+  ],
+  "migym_rest_seconds": 60,
+  "migym_state_1788976045154.702": [
+    {
+      "completed": [
+        true,
+        true,
+        true,
+        true
+      ],
+      "collapsed": true,
+      "weights": [
+        "",
+        "",
+        "",
+        ""
+      ],
+      "imageIndex": 0
+    }
+  ],
+  "migym_state_1788976045155.702": [
+    {
+      "completed": [
+        false,
+        false,
+        false
+      ],
+      "collapsed": true,
+      "weights": [
+        "",
+        "",
+        ""
+      ],
+      "imageIndex": 0
+    }
+  ],
+  "migym_exercises": [
+    {
+      "id": 1788975924693.296,
+      "name": "Pecho plano c/barra",
+      "group": "Pecho",
+      "images": [
+        "pecho plano con barra.gif"
+      ]
+    },
+    {
+      "id": 1788975924694.7563,
+      "name": "Pecho inclinado c/máquina",
+      "group": "Pecho",
+      "images": [
+        "pecho inclinado con maquina.gif"
+      ]
+    },
+    {
+      "id": 1788975924695.87,
+      "name": "Jalón dorsal T. abierto",
+      "group": "Espalda",
+      "images": [
+        "jalon dorsal t. abierto.gif"
+      ]
+    },
+    {
+      "id": 1788975924696.8604,
+      "name": "Plaq espalda",
+      "group": "Espalda",
+      "images": [
+        "maquina espalda.gif"
+      ]
+    },
+    {
+      "id": 1788975924697.193,
+      "name": "Camilla cuádriceps",
+      "group": "Piernas",
+      "images": [
+        "camilla cuadriceps.gif"
+      ]
+    },
+    {
+      "id": 1788975924698.716,
+      "name": "Camilla isquio",
+      "group": "Piernas",
+      "images": [
+        "camilla isquio.gif"
+      ]
+    },
+    {
+      "id": 1788975924699.809,
+      "name": "Prensa + gemelos",
+      "group": "Piernas",
+      "images": [
+        "press pierna.jpg",
+        "press gemelos 01.jpg"
+      ]
+    },
+    {
+      "id": 1788975924700.5107,
+      "name": "Extensiones",
+      "group": "Piernas",
+      "images": [
+        "camilla cuadriceps.gif"
+      ]
+    },
+    {
+      "id": 1788975924701.8098,
+      "name": "Posterior hombros",
+      "group": "Hombros",
+      "images": [
+        "posterior hombros 01.gif",
+        "posterior hombros 02.gif"
+      ]
+    },
+    {
+      "id": 1788975924702.174,
+      "name": "Tríceps P. alta barra",
+      "group": "Tríceps",
+      "images": [
+        "triceps parte alta barra 01.gif",
+        "triceps parte alta barra 02.gif"
+      ]
+    },
+    {
+      "id": 1788975924703.187,
+      "name": "Tríceps patada burro",
+      "group": "Tríceps",
+      "images": [
+        "triceps patada burro 01.gif"
+      ]
+    },
+    {
+      "id": 1788975924704.7017,
+      "name": "Bíceps P. bajo c/barra",
+      "group": "Bíceps",
+      "images": [
+        "biceps parte baja con barra 01.gif",
+        "biceps parte baja con barra 02.gif"
+      ]
+    },
+    {
+      "id": 1788975924705.9324,
+      "name": "Hack frontal",
+      "group": "Piernas",
+      "images": [
+        "hack frontal 01.gif"
+      ]
+    },
+    {
+      "id": 1788975924706.621,
+      "name": "Hip thrust",
+      "group": "Glúteos",
+      "images": [
+        "hip thrust 01.gif"
+      ]
+    },
+    {
+      "id": 1788975924707.3574,
+      "name": "Polea c/barra V y P. alto",
+      "group": "Espalda",
+      "images": [
+        "pullover en polea alta 01.gif"
+      ]
+    },
+    {
+      "id": 1788975924708.6606,
+      "name": "Semiflexo c/máquina",
+      "group": "Piernas",
+      "images": [
+        "camilla isquio.gif"
+      ]
+    },
+    {
+      "id": 1788975924709.2942,
+      "name": "Apertura c/poleas, banco",
+      "group": "Pecho",
+      "images": [
+        "apertura con poleas 01.gif"
+      ]
+    },
+    {
+      "id": 1788975924710.3442,
+      "name": "Bíceps martillo",
+      "group": "Bíceps",
+      "images": [
+        "biceps martillo.gif"
+      ]
+    }
+  ],
+  "migym_global_history": {
+    "9": {
+      "routineName": "Dia 1",
+      "status": "completed",
+      "exercises": [
+        {
+          "name": "Caminadora (Cardio)",
+          "isCardio": true,
+          "cardioTime": "20",
+          "weights": [
+            ""
+          ],
+          "speed": 6,
+          "incline": 6,
+          "completed": [
+            false
+          ]
+        },
+        {
+          "name": "Pecho plano c/barra",
+          "isCardio": false,
+          "cardioTime": "15 min",
+          "weights": [
+            "",
+            "",
+            "",
+            ""
+          ],
+          "speed": 0,
+          "incline": 0,
+          "completed": [
+            false,
+            false,
+            false,
+            false
+          ]
+        },
+        {
+          "name": "Pecho inclinado c/máquina",
+          "isCardio": false,
+          "cardioTime": "15 min",
+          "weights": [
+            "",
+            "",
+            "",
+            ""
+          ],
+          "speed": 0,
+          "incline": 0,
+          "completed": [
+            false,
+            false,
+            false,
+            false
+          ]
+        },
+        {
+          "name": "Jalón dorsal T. abierto",
+          "isCardio": false,
+          "cardioTime": "15 min",
+          "weights": [
+            "",
+            "",
+            "",
+            ""
+          ],
+          "speed": 0,
+          "incline": 0,
+          "completed": [
+            false,
+            false,
+            false,
+            false
+          ]
+        },
+        {
+          "name": "Plaq espalda",
+          "isCardio": false,
+          "cardioTime": "15 min",
+          "weights": [
+            "",
+            "",
+            "",
+            ""
+          ],
+          "speed": 0,
+          "incline": 0,
+          "completed": [
+            false,
+            false,
+            false,
+            false
+          ]
+        },
+        {
+          "name": "Camilla cuádriceps",
+          "isCardio": false,
+          "cardioTime": "15 min",
+          "weights": [
+            "",
+            "",
+            "",
+            ""
+          ],
+          "speed": 0,
+          "incline": 0,
+          "completed": [
+            false,
+            false,
+            false,
+            false
+          ]
+        },
+        {
+          "name": "Camilla isquio",
+          "isCardio": false,
+          "cardioTime": "15 min",
+          "weights": [
+            "",
+            "",
+            "",
+            ""
+          ],
+          "speed": 0,
+          "incline": 0,
+          "completed": [
+            false,
+            false,
+            false,
+            false
+          ]
+        }
+      ]
+    }
+  },
+  "migym_state_3": [
+    {
+      "completed": [
+        false
+      ],
+      "collapsed": true,
+      "weights": [
+        ""
+      ],
+      "cardioTime": "20",
+      "speed": 6,
+      "incline": 6,
+      "imageIndex": 0
+    },
+    {
+      "completed": [
+        false,
+        false,
+        false,
+        false
+      ],
+      "collapsed": true,
+      "weights": [
+        "",
+        "",
+        "",
+        ""
+      ],
+      "cardioTime": "15 min",
+      "speed": 0,
+      "incline": 0,
+      "imageIndex": 0
+    },
+    {
+      "completed": [
+        false,
+        false,
+        false,
+        false
+      ],
+      "collapsed": true,
+      "weights": [
+        "",
+        "",
+        "",
+        ""
+      ],
+      "cardioTime": "15 min",
+      "speed": 0,
+      "incline": 0,
+      "imageIndex": 0
+    },
+    {
+      "completed": [
+        false,
+        false,
+        false,
+        false
+      ],
+      "collapsed": true,
+      "weights": [
+        "",
+        "",
+        "",
+        ""
+      ],
+      "cardioTime": "15 min",
+      "speed": 0,
+      "incline": 0,
+      "imageIndex": 0
+    },
+    {
+      "completed": [
+        false,
+        false,
+        false,
+        false
+      ],
+      "collapsed": true,
+      "weights": [
+        "",
+        "",
+        "",
+        ""
+      ],
+      "cardioTime": "15 min",
+      "speed": 0,
+      "incline": 0,
+      "imageIndex": 0
+    },
+    {
+      "completed": [
+        false,
+        false,
+        false,
+        false
+      ],
+      "collapsed": true,
+      "weights": [
+        "",
+        "",
+        "",
+        ""
+      ],
+      "cardioTime": "15 min",
+      "speed": 0,
+      "incline": 0,
+      "imageIndex": 0
+    },
+    {
+      "completed": [
+        false,
+        false,
+        false,
+        false
+      ],
+      "collapsed": true,
+      "weights": [
+        "",
+        "",
+        "",
+        ""
+      ],
+      "cardioTime": "15 min",
+      "speed": 0,
+      "incline": 0,
+      "imageIndex": 0
+    }
+  ],
+  "migym_routine_pointer": 1,
+  "migym_routines": [
+    {
+      "id": 1,
+      "name": "Dia 1",
+      "exercises": [
+        {
+          "exerciseId": 19,
+          "sets": 1,
+          "reps": 0,
+          "time": "20",
+          "weight": "",
+          "speed": 6,
+          "incline": 6
+        },
+        {
+          "exerciseId": 1,
+          "sets": 4,
+          "reps": 12,
+          "weight": "10"
+        },
+        {
+          "exerciseId": 2,
+          "sets": 4,
+          "reps": 12,
+          "weight": "5"
+        },
+        {
+          "exerciseId": 3,
+          "sets": 4,
+          "reps": 12,
+          "weight": "4"
+        },
+        {
+          "exerciseId": 4,
+          "sets": 4,
+          "reps": 12,
+          "weight": "10"
+        },
+        {
+          "exerciseId": 5,
+          "sets": 4,
+          "reps": 12,
+          "weight": "10"
+        },
+        {
+          "exerciseId": 6,
+          "sets": 4,
+          "reps": 12,
+          "weight": "10"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "name": "Dia 2",
+      "exercises": [
+        {
+          "exerciseId": 19,
+          "sets": 1,
+          "reps": 0,
+          "time": "20",
+          "weight": "",
+          "speed": 6,
+          "incline": 6
+        },
+        {
+          "exerciseId": 7,
+          "sets": 4,
+          "reps": 12,
+          "weight": "40"
+        },
+        {
+          "exerciseId": 9,
+          "sets": 4,
+          "reps": 12,
+          "weight": "5"
+        },
+        {
+          "exerciseId": 10,
+          "sets": 4,
+          "reps": 12,
+          "weight": "5"
+        },
+        {
+          "exerciseId": 11,
+          "sets": 4,
+          "reps": 12,
+          "weight": "5"
+        },
+        {
+          "exerciseId": 12,
+          "sets": 4,
+          "reps": 12,
+          "weight": "5"
+        },
+        {
+          "exerciseId": 18,
+          "sets": 4,
+          "reps": 12,
+          "weight": "5"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "name": "Dia 3",
+      "exercises": [
+        {
+          "exerciseId": 19,
+          "sets": 1,
+          "reps": 0,
+          "time": "20",
+          "weight": "",
+          "speed": 6,
+          "incline": 6
+        },
+        {
+          "exerciseId": 13,
+          "sets": 4,
+          "reps": 12,
+          "weight": "40"
+        },
+        {
+          "exerciseId": 14,
+          "sets": 4,
+          "reps": 12,
+          "weight": "10"
+        },
+        {
+          "exerciseId": 22,
+          "sets": 4,
+          "reps": 12,
+          "weight": "10"
+        },
+        {
+          "exerciseId": 21,
+          "sets": 4,
+          "reps": 12,
+          "weight": "5"
+        },
+        {
+          "exerciseId": 17,
+          "sets": 4,
+          "reps": 12,
+          "weight": "10"
+        },
+        {
+          "exerciseId": 18,
+          "sets": 4,
+          "reps": 12,
+          "weight": "5"
+        }
+      ]
+    }
+  ],
+  "migym_state_1": [
+    {
+      "completed": [
+        false
+      ],
+      "collapsed": true,
+      "weights": [
+        ""
+      ],
+      "cardioTime": "20",
+      "speed": 6,
+      "incline": 6,
+      "imageIndex": 0
+    },
+    {
+      "completed": [
+        false,
+        false,
+        false,
+        false
+      ],
+      "collapsed": true,
+      "weights": [
+        "",
+        "",
+        "",
+        ""
+      ],
+      "cardioTime": "15 min",
+      "speed": 0,
+      "incline": 0,
+      "imageIndex": 0
+    },
+    {
+      "completed": [
+        false,
+        false,
+        false,
+        false
+      ],
+      "collapsed": true,
+      "weights": [
+        "",
+        "",
+        "",
+        ""
+      ],
+      "cardioTime": "15 min",
+      "speed": 0,
+      "incline": 0,
+      "imageIndex": 0
+    },
+    {
+      "completed": [
+        false,
+        false,
+        false,
+        false
+      ],
+      "collapsed": true,
+      "weights": [
+        "",
+        "",
+        "",
+        ""
+      ],
+      "cardioTime": "15 min",
+      "speed": 0,
+      "incline": 0,
+      "imageIndex": 0
+    },
+    {
+      "completed": [
+        false,
+        false,
+        false,
+        false
+      ],
+      "collapsed": true,
+      "weights": [
+        "",
+        "",
+        "",
+        ""
+      ],
+      "cardioTime": "15 min",
+      "speed": 0,
+      "incline": 0,
+      "imageIndex": 0
+    },
+    {
+      "completed": [
+        false,
+        false,
+        false,
+        false
+      ],
+      "collapsed": true,
+      "weights": [
+        "",
+        "",
+        "",
+        ""
+      ],
+      "cardioTime": "15 min",
+      "speed": 0,
+      "incline": 0,
+      "imageIndex": 0
+    },
+    {
+      "completed": [
+        false,
+        false,
+        false,
+        false
+      ],
+      "collapsed": true,
+      "weights": [
+        "",
+        "",
+        "",
+        ""
+      ],
+      "cardioTime": "15 min",
+      "speed": 0,
+      "incline": 0,
+      "imageIndex": 0
+    }
+  ],
+  "migym_day_1": [
+    {
+      "completed": [
+        true,
+        true,
+        true
+      ],
+      "collapsed": true
+    },
+    {
+      "completed": [
+        true,
+        true,
+        true
+      ],
+      "collapsed": true
+    },
+    {
+      "completed": [
+        true,
+        true,
+        true
+      ],
+      "collapsed": false
+    },
+    {
+      "completed": [
+        false,
+        false,
+        false
+      ],
+      "collapsed": false
+    },
+    {
+      "completed": [
+        false,
+        false,
+        false
+      ],
+      "collapsed": false
+    },
+    {
+      "completed": [
+        false,
+        false,
+        false
+      ],
+      "collapsed": false
+    }
+  ],
+  "migym_state_2": [
+    {
+      "completed": [
+        false
+      ],
+      "collapsed": true,
+      "weights": [
+        ""
+      ],
+      "cardioTime": "20",
+      "speed": 6,
+      "incline": 6,
+      "imageIndex": 0
+    },
+    {
+      "completed": [
+        false,
+        false,
+        false,
+        false
+      ],
+      "collapsed": true,
+      "weights": [
+        "",
+        "",
+        "",
+        ""
+      ],
+      "cardioTime": "15 min",
+      "speed": 0,
+      "incline": 0,
+      "imageIndex": 0
+    },
+    {
+      "completed": [
+        false,
+        false,
+        false,
+        false
+      ],
+      "collapsed": true,
+      "weights": [
+        "",
+        "",
+        "",
+        ""
+      ],
+      "cardioTime": "15 min",
+      "speed": 0,
+      "incline": 0,
+      "imageIndex": 0
+    },
+    {
+      "completed": [
+        false,
+        false,
+        false,
+        false
+      ],
+      "collapsed": true,
+      "weights": [
+        "",
+        "",
+        "",
+        ""
+      ],
+      "cardioTime": "15 min",
+      "speed": 0,
+      "incline": 0,
+      "imageIndex": 0
+    },
+    {
+      "completed": [
+        false,
+        false,
+        false,
+        false
+      ],
+      "collapsed": true,
+      "weights": [
+        "",
+        "",
+        "",
+        ""
+      ],
+      "cardioTime": "15 min",
+      "speed": 0,
+      "incline": 0,
+      "imageIndex": 0
+    },
+    {
+      "completed": [
+        false,
+        false,
+        false,
+        false
+      ],
+      "collapsed": true,
+      "weights": [
+        "",
+        "",
+        "",
+        ""
+      ],
+      "cardioTime": "15 min",
+      "speed": 0,
+      "incline": 0,
+      "imageIndex": 0
+    },
+    {
+      "completed": [
+        false,
+        false,
+        false,
+        false
+      ],
+      "collapsed": true,
+      "weights": [
+        "",
+        "",
+        "",
+        ""
+      ],
+      "cardioTime": "15 min",
+      "speed": 0,
+      "incline": 0,
+      "imageIndex": 0
+    }
+  ]
+}
