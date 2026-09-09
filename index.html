@@ -487,6 +487,10 @@
     ::-webkit-scrollbar-track { background: var(--bg); }
     ::-webkit-scrollbar-thumb { background: var(--line); border-radius: 3px; }
     ::-webkit-scrollbar-thumb:hover { background: var(--muted); }
+    /* Oculta el GIF únicamente cuando la tarjeta está contraída */
+    .exercise-card.collapsed .gif-container {
+        display: none;
+    }
   </style>
 </head>
 <body>
