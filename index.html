@@ -4,7 +4,6 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>MiGym - Usuario / Admin</title>
-  <!-- Enlace al archivo CSS externo -->
   <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
@@ -23,17 +22,53 @@
 
 <main class="app">
   <div id="progressView" class="hidden">
+    <!-- Perfil de Usuario -->
+    <section class="progress-panel-card">
+      <h2>👤 Perfil del Atleta</h2>
+      <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:10px;">
+        <div style="flex:1; min-width:120px;">
+          <label for="profileName" style="font-size:12px; color:var(--muted);">Nombre</label>
+          <input type="text" id="profileName" name="profileName" placeholder="Tu nombre" style="width:100%; padding:8px; background:var(--bg); border:1px solid var(--line); color:#fff; border-radius:8px; margin-top:4px;">
+        </div>
+        <div style="flex:1; min-width:90px;">
+          <label for="profileAge" style="font-size:12px; color:var(--muted);">Edad</label>
+          <input type="number" id="profileAge" name="profileAge" placeholder="Años" style="width:100%; padding:8px; background:var(--bg); border:1px solid var(--line); color:#fff; border-radius:8px; margin-top:4px;">
+        </div>
+        <div style="flex:1; min-width:100px;">
+          <label for="profileGender" style="font-size:12px; color:var(--muted);">Sexo</label>
+          <select id="profileGender" name="profileGender" style="width:100%; padding:8px; background:var(--bg); border:1px solid var(--line); color:#fff; border-radius:8px; margin-top:4px;">
+            <option value="">Seleccionar</option>
+            <option value="Masculino">Masculino</option>
+            <option value="Femenino">Femenino</option>
+            <option value="Otro">Otro</option>
+          </select>
+        </div>
+      </div>
+      <button id="saveProfileBtn" class="day-button" type="button" style="margin-top:12px; width:100%;">Guardar Perfil</button>
+    </section>
+
+    <!-- Registro de Peso Rapido -->
+    <section class="progress-panel-card">
+      <h2>⚖️ Registro de Peso corporal</h2>
+      <div style="display:flex; gap:10px; align-items:center; margin-top:10px;">
+        <label for="weightInputVal" style="display:none;">Peso actual en kg</label>
+        <input type="number" id="weightInputVal" name="weightInputVal" step="0.1" placeholder="Ej: 75.5" style="flex:1; padding:10px; background:var(--bg); border:1px solid var(--line); color:#fff; border-radius:8px;" aria-label="Ingresar peso corporal en kg">
+        <span>kg</span>
+        <button id="addWeightBtn" class="day-button" type="button" style="background:var(--accent); color:#0c0d0f;">Añadir</button>
+      </div>
+    </section>
+
+    <!-- Historial y Evolucion -->
+    <section class="progress-panel-card">
+      <h2>📈 Evolución General (Peso)</h2>
+      <div id="weightHistoryList" style="max-height:180px; overflow-y:auto; margin-top:10px; display:flex; flex-direction:column; gap:8px;"></div>
+    </section>
+
+    <!-- Heatmap -->
     <section class="progress-panel-card">
       <h2>Calendario de Actividad (Heatmap)</h2>
       <p style="color: var(--muted); font-size: 0.85rem;">Haz clic en cualquier día del mes para ver el detalle de la rutina guardada:</p>
       <div class="heatmap-grid" id="heatmapContainer"></div>
-    </section>
-
-    <section class="progress-panel-card">
-      <h2>Evolución General</h2>
-      <div style="background: var(--bg); padding: 20px; border-radius: 12px; text-align: center; color: var(--muted);">
-        <strong id="progressLevel" style="color: var(--accent); font-size: 1.2rem; display:inline-block;">Ciclo Actual de Entrenamiento</strong>
-      </div>
     </section>
   </div>
 
@@ -67,7 +102,7 @@
   <div id="adminView" class="hidden">
     <section class="admin-section">
       <h2>💾 Copia de Seguridad</h2>
-      <p style="color:var(--muted); font-size:0.85rem; margin-top:-5px; margin-bottom:12px;">Exporta todo tu progreso y rutinas a un archivo JSON para cargarlo en otro celular o navegador.</p>
+      <p style="color:var(--muted); font-size:0.85rem; margin-top:-5px; margin-bottom:12px;">Exporta todo tu progreso, perfil y peso a un JSON.</p>
       <div style="display:flex; gap:10px; flex-wrap:wrap;">
         <button id="btnExportar" class="day-button" type="button" style="background:var(--card-2);">📥 Respaldo (JSON)</button>
         <button id="btnImportar" class="day-button" type="button" style="background:var(--accent); color:#0c0d0f;">📤 Cargar Datos</button>
@@ -144,7 +179,9 @@
   </div>
 </div>
 
-<!-- Enlace al archivo JavaScript externo -->
+<!-- Módulos JavaScript divididos -->
+<script src="js/timer.js"></script>
+<script src="js/progress.js"></script>
 <script src="js/apps.js"></script>
 </body>
 </html>

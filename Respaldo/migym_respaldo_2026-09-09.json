@@ -251,134 +251,134 @@
   ],
   "migym_global_history": {
     "9": {
-      "routineName": "Dia 1",
+      "routineName": "Dia 3",
       "status": "completed",
       "exercises": [
         {
           "name": "Caminadora (Cardio)",
           "isCardio": true,
-          "cardioTime": "20",
+          "cardioTime": "21",
           "weights": [
             ""
           ],
           "speed": 6,
           "incline": 6,
           "completed": [
-            false
+            true
           ]
         },
         {
-          "name": "Pecho plano c/barra",
+          "name": "Hack frontal",
           "isCardio": false,
           "cardioTime": "15 min",
           "weights": [
-            "",
-            "",
-            "",
-            ""
+            "80",
+            "80",
+            "80",
+            "80"
           ],
           "speed": 0,
           "incline": 0,
           "completed": [
-            false,
-            false,
-            false,
-            false
+            true,
+            true,
+            true,
+            true
           ]
         },
         {
-          "name": "Pecho inclinado c/máquina",
+          "name": "Hip thrust",
           "isCardio": false,
           "cardioTime": "15 min",
           "weights": [
-            "",
-            "",
-            "",
-            ""
+            "35",
+            "35",
+            "35",
+            "35"
           ],
           "speed": 0,
           "incline": 0,
           "completed": [
-            false,
-            false,
-            false,
-            false
+            true,
+            true,
+            true,
+            true
           ]
         },
         {
-          "name": "Jalón dorsal T. abierto",
+          "name": "Pullover en polea alta",
           "isCardio": false,
           "cardioTime": "15 min",
           "weights": [
-            "",
-            "",
-            "",
-            ""
+            "15",
+            "15",
+            "15",
+            "15"
           ],
           "speed": 0,
           "incline": 0,
           "completed": [
-            false,
-            false,
-            false,
-            false
+            true,
+            true,
+            true,
+            true
           ]
         },
         {
-          "name": "Plaq espalda",
+          "name": "Apertura c/poleas",
           "isCardio": false,
           "cardioTime": "15 min",
           "weights": [
-            "",
-            "",
-            "",
-            ""
+            "15",
+            "15",
+            "15",
+            "15"
           ],
           "speed": 0,
           "incline": 0,
           "completed": [
-            false,
-            false,
-            false,
-            false
+            true,
+            true,
+            true,
+            true
           ]
         },
         {
-          "name": "Camilla cuádriceps",
+          "name": "Serrucho c/mancuerna",
           "isCardio": false,
           "cardioTime": "15 min",
           "weights": [
-            "",
-            "",
-            "",
-            ""
+            "3",
+            "3",
+            "3",
+            "3"
           ],
           "speed": 0,
           "incline": 0,
           "completed": [
-            false,
-            false,
-            false,
-            false
+            true,
+            true,
+            true,
+            true
           ]
         },
         {
-          "name": "Camilla isquio",
+          "name": "Bíceps martillo",
           "isCardio": false,
           "cardioTime": "15 min",
           "weights": [
-            "",
-            "",
-            "",
-            ""
+            "3",
+            "3",
+            "8",
+            "8"
           ],
           "speed": 0,
           "incline": 0,
           "completed": [
-            false,
-            false,
-            false,
-            false
+            true,
+            true,
+            true,
+            true
           ]
         }
       ]
@@ -649,16 +649,16 @@
           "weight": "10"
         },
         {
-          "exerciseId": 21,
-          "sets": 4,
-          "reps": 12,
-          "weight": "5"
-        },
-        {
           "exerciseId": 17,
           "sets": 4,
           "reps": 12,
           "weight": "10"
+        },
+        {
+          "exerciseId": 21,
+          "sets": 4,
+          "reps": 12,
+          "weight": "5"
         },
         {
           "exerciseId": 18,
