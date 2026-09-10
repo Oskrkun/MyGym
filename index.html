@@ -4,7 +4,6 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>MiGym - Usuario / Admin</title>
-  <!-- Enlace al archivo CSS externo -->
   <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
@@ -22,29 +21,125 @@
 </header>
 
 <main class="app">
+
+  <!-- ============================================================ -->
+  <!-- VISTA PROGRESO                                                -->
+  <!-- ============================================================ -->
   <div id="progressView" class="hidden">
-    <section class="progress-panel-card">
+
+    <!-- TARJETA PERFIL (colapsable) -->
+    <article id="profileCard" class="exercise-card collapsed">
+      <div class="exercise-head" id="profileHead">
+        <div class="card-icon">👤</div>
+        <div class="exercise-number"></div>
+        <div class="exercise-title">
+          <div class="group">PERFIL</div>
+          <h2 id="profileDisplayName">Sin nombre</h2>
+          <p id="profileDisplayNick">—</p>
+        </div>
+        <div id="profileChevron" class="exercise-chevron">▾</div>
+      </div>
+
+      <div class="series-container" id="profileBody">
+        <div class="set-row" style="cursor:default;">
+          <div class="set-info" style="flex:1;">
+            <strong>Nombre</strong>
+            <input type="text" id="profileName" placeholder="Tu nombre" class="weight-input" style="width:100%; margin-top:4px;" />
+          </div>
+        </div>
+        <div class="set-row" style="cursor:default;">
+          <div class="set-info" style="flex:1;">
+            <strong>Apodo</strong>
+            <input type="text" id="profileNick" placeholder="Cómo te dicen" class="weight-input" style="width:100%; margin-top:4px;" />
+          </div>
+        </div>
+        <div class="set-row" style="cursor:default;">
+          <div class="set-info" style="flex:1;">
+            <strong>Sexo</strong>
+            <select id="profileSex" class="weight-input" style="width:100%; margin-top:4px;">
+              <option value="">—</option>
+              <option value="M">Masculino</option>
+              <option value="F">Femenino</option>
+              <option value="O">Otro / prefiero no decir</option>
+            </select>
+          </div>
+        </div>
+        <div class="set-row" style="cursor:default;">
+          <div class="set-info" style="flex:1;">
+            <strong>Altura (cm)</strong>
+            <input type="number" id="profileHeight" placeholder="178" class="weight-input" style="width:100%; margin-top:4px;" />
+          </div>
+        </div>
+        <div class="set-row" style="cursor:default;">
+          <div class="set-info" style="flex:1;">
+            <strong>Año de nacimiento</strong>
+            <input type="number" id="profileBirthYear" placeholder="1988" class="weight-input" style="width:100%; margin-top:4px;" />
+          </div>
+        </div>
+        <div class="set-row" style="cursor:default;">
+          <div class="set-info" style="flex:1;">
+            <strong>Objetivo</strong>
+            <select id="profileGoal" class="weight-input" style="width:100%; margin-top:4px;">
+              <option value="">—</option>
+              <option value="bajar">Bajar de peso</option>
+              <option value="mantener">Mantener</option>
+              <option value="subir">Subir de peso</option>
+            </select>
+          </div>
+        </div>
+
+        <button id="saveProfileBtn" class="collapse-button" type="button" style="margin-top:10px;">
+          Guardar perfil
+        </button>
+      </div>
+    </article>
+
+    <!-- TARJETA PESO (colapsable) -->
+    <article id="weightCard" class="exercise-card collapsed" style="margin-top:12px;">
+      <div class="exercise-head" id="weightHead">
+        <div class="card-icon">⚖️</div>
+        <div class="exercise-number"></div>
+        <div class="exercise-title">
+          <div class="group">PESO</div>
+          <h2 id="weightCurrent">—</h2>
+          <p id="weightLastDate">Sin registros</p>
+        </div>
+        <div id="weightChevron" class="exercise-chevron">▾</div>
+      </div>
+
+      <div class="series-container" id="weightBody" style="padding-top:10px;">
+        <div id="weightGoalMessage" style="display:none; margin-bottom:10px; padding:10px 12px; border-radius:10px; background:var(--bg); font-size:13px;"></div>
+        <button id="registerWeightBtn" class="collapse-button" type="button" style="background:var(--accent); color:#0c0d0f;">
+          + Registrar peso
+        </button>
+      </div>
+    </article>
+
+    <!-- HEATMAP -->
+    <section class="progress-panel-card" style="margin-top:12px;">
       <h2>Calendario de Actividad (Heatmap)</h2>
-      
-      <!-- Navegador de Meses -->
+
       <div class="month-navigator">
         <button id="prevMonthBtn" class="day-button" type="button">◀ Anterior</button>
         <span id="monthLabel" style="font-weight: bold; font-size: 1.1rem; color: var(--accent);"></span>
         <button id="nextMonthBtn" class="day-button" type="button">Siguiente ▶</button>
       </div>
+      <button id="todayBtn" class="day-button" type="button" style="width:100%; margin-bottom:12px;">📍 Ir a hoy</button>
 
       <p style="color: var(--muted); font-size: 0.85rem;">Haz clic en cualquier día del mes para ver el detalle de la rutina guardada:</p>
       <div class="heatmap-grid" id="heatmapContainer"></div>
     </section>
 
+    <!-- GRÁFICA DE EVOLUCIÓN -->
     <section class="progress-panel-card">
-      <h2>Evolución General</h2>
-      <div style="background: var(--bg); padding: 20px; border-radius: 12px; text-align: center; color: var(--muted);">
-        <strong id="progressLevel" style="color: var(--accent); font-size: 1.2rem; display:inline-block;">Ciclo Actual de Entrenamiento</strong>
-      </div>
+      <h2>Evolución de Peso</h2>
+      <div id="weightChartContainer" style="margin-top:12px;"></div>
     </section>
   </div>
 
+  <!-- ============================================================ -->
+  <!-- VISTA USUARIO (RUTINA)                                        -->
+  <!-- ============================================================ -->
   <div id="userView">
     <section class="progress-card">
       <div>
@@ -56,9 +151,9 @@
         <span>completo</span>
       </div>
     </section>
-    
+
     <section id="exerciseList" class="exercise-list"></section>
-    
+
     <div class="routine-actions-footer">
       <button class="day-button" type="button" style="background: var(--card-2); width:100%; text-align:center;" onclick="completeRoutineAndAdvance(true)">Terminar Rutina</button>
       <button class="day-button" type="button" style="background: var(--line); width:100%; text-align:center;" onclick="completeRoutineAndAdvance(false)">Dejar incompleta / Siguiente</button>
@@ -72,6 +167,9 @@
     </section>
   </div>
 
+  <!-- ============================================================ -->
+  <!-- VISTA ADMIN                                                   -->
+  <!-- ============================================================ -->
   <div id="adminView" class="hidden">
     <section class="admin-section">
       <h2>💾 Copia de Seguridad</h2>
@@ -100,10 +198,10 @@
 
       <div id="routineForm" class="admin-form hidden">
         <h3 id="formTitle">Nueva rutina</h3>
-        
+
         <label for="routineName">Nombre</label>
         <input type="text" id="routineName" name="routineName" placeholder="Ej: Día 1" />
-        
+
         <label for="exerciseSelector">Ejercicios</label>
         <div style="display:flex;gap:10px;flex-wrap:wrap;">
           <select id="exerciseSelector" name="exerciseSelector" style="flex:1;min-width:200px;"></select>
@@ -118,6 +216,10 @@
     </section>
   </div>
 </main>
+
+<!-- ============================================================ -->
+<!-- MODALES                                                       -->
+<!-- ============================================================ -->
 
 <div id="dayModal" class="modal hidden">
   <div class="modal-box">
@@ -139,6 +241,27 @@
   </div>
 </div>
 
+<div id="weightModal" class="modal hidden">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h2>Registrar peso</h2>
+      <button id="closeWeightModal" class="icon-button" type="button" aria-label="Cerrar modal de peso">×</button>
+    </div>
+    <div style="margin-top:15px; display:grid; gap:12px;">
+      <label for="weightDate" style="font-weight:700; font-size:0.85rem;">Fecha</label>
+      <input type="date" id="weightDate" name="weightDate" style="background:#0c0d0f;border:1px solid var(--line);color:#fff;padding:10px;border-radius:10px;" />
+
+      <label for="weightKg" style="font-weight:700; font-size:0.85rem;">Peso (kg)</label>
+      <input type="number" id="weightKg" name="weightKg" step="0.1" placeholder="82.5" style="background:#0c0d0f;border:1px solid var(--line);color:#fff;padding:10px;border-radius:10px;" />
+
+      <label for="weightNote" style="font-weight:700; font-size:0.85rem;">Nota (opcional)</label>
+      <input type="text" id="weightNote" name="weightNote" placeholder="en ayunas, post-entreno..." style="background:#0c0d0f;border:1px solid var(--line);color:#fff;padding:10px;border-radius:10px;" />
+
+      <button id="saveWeightBtn" class="save-btn" type="button" style="padding:12px; border-radius:10px; border:none; font-weight:700;">Guardar peso</button>
+    </div>
+  </div>
+</div>
+
 <div id="timerOverlay" class="timer-overlay hidden">
   <div class="timer-box">
     <p class="eyebrow">DESCANSO</p>
@@ -152,7 +275,8 @@
   </div>
 </div>
 
-<!-- Enlace al archivo JavaScript externo -->
+<!-- ORDEN IMPORTANTE: apps.js primero, progress.js después -->
 <script src="js/apps.js"></script>
+<script src="js/progress.js"></script>
 </body>
 </html>

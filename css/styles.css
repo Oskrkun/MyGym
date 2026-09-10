@@ -132,24 +132,65 @@ button { cursor: pointer; }
   border-color: var(--accent-dark);
   opacity: 0.7;
 }
+
+/* ====== CABECERA DE TARJETA (ejercicio, perfil, peso) ====== */
 .exercise-head {
   display: grid;
-  grid-template-columns: 38px 1fr 32px;
-  gap: 12px;
+  grid-template-columns: 28px 38px 1fr 34px;
+  gap: 10px;
   align-items: center;
   padding: 17px 16px 14px;
+  cursor: pointer;
+  user-select: none;
 }
 .exercise-number { color: var(--accent); font-weight: 900; font-size: 14px; }
 .exercise-title h2 { margin: 2px 0 5px; font-size: 18px; line-height: 1.15; }
 .exercise-title p { margin: 0; color: var(--muted); font-size: 12px; }
+
+/* Círculo de estado del ejercicio (a la izquierda) */
 .exercise-status {
-  width: 28px; height: 28px;
-  display: grid; place-items: center;
-  border: 1px solid var(--line); border-radius: 50%;
-  color: var(--bg); font-weight: 900;
-  transition: 0.3s;
+  width: 24px;
+  height: 24px;
+  display: grid;
+  place-items: center;
+  border: 2px solid #5c636c;
+  border-radius: 50%;
+  color: transparent;
+  font-weight: 900;
+  font-size: 13px;
+  transition: 0.25s;
 }
-.exercise-status.done { background: var(--accent); border-color: var(--accent); }
+.exercise-status.done {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #0c0d0f;
+}
+
+/* Ícono decorativo (perfil, peso) sin el círculo */
+.card-icon {
+  font-size: 20px;
+  display: grid;
+  place-items: center;
+  line-height: 1;
+}
+
+/* Flechita de colapso (perfil, peso, ejercicios) */
+.exercise-chevron {
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  font-size: 16px;
+  font-weight: 900;
+  color: var(--accent);
+  border-radius: 50%;
+  transition: 0.2s;
+  background: rgba(184, 255, 53, 0.10);
+}
+.exercise-chevron:hover {
+  background: var(--accent);
+  color: #0c0d0f;
+}
 
 .gif-container {
   position: relative;
@@ -236,7 +277,16 @@ button { cursor: pointer; }
 .set-state { color: var(--muted); font-size: 9px; font-weight: 900; }
 .set-row.checked .set-state { color: var(--accent); }
 
-.exercise-actions { padding: 5px 12px 13px; }
+/* Hint "Última vez: X kg" debajo del input de peso */
+.last-weight-hint {
+  color: var(--muted);
+  font-size: 10px;
+  font-style: italic;
+  margin-top: 2px;
+  display: block;
+}
+
+/* Botón usado por Perfil, Peso y Admin */
 .collapse-button {
   width: 100%;
   padding: 11px;
@@ -249,8 +299,9 @@ button { cursor: pointer; }
   transition: 0.2s;
 }
 .collapse-button:hover { background: #3a3f47; }
+
 .exercise-card.collapsed .series-container { display: none; }
-.exercise-card.collapsed .exercise-actions { padding-top: 0; }
+.exercise-card.collapsed .gif-container { display: none; }
 
 .finish-card {
   margin-top: 14px;
@@ -364,9 +415,11 @@ button { cursor: pointer; }
 }
 .timer-box p:not(.eyebrow) { color: var(--muted); font-size: 13px; }
 .timer-actions {
-  display: grid;
-  grid-template-columns: 1fr 1.5fr 1fr;
-  gap: 8px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
   margin-top: 20px;
 }
 .timer-small, .timer-main {
@@ -481,20 +534,6 @@ button { cursor: pointer; }
 ::-webkit-scrollbar-thumb { background: var(--line); border-radius: 3px; }
 ::-webkit-scrollbar-thumb:hover { background: var(--muted); }
 
-/* Oculta el GIF únicamente cuando la tarjeta está contraída */
-.exercise-card.collapsed .gif-container {
-    display: none;
-}
-
-/* Centrado automático y espacio parejo para los botones del temporizador */
-.timer-actions {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 12px;
-  width: 100%;
-}
-
 .month-navigator {
   display: flex;
   align-items: center;
@@ -503,4 +542,18 @@ button { cursor: pointer; }
   background: var(--bg);
   padding: 8px 12px;
   border-radius: 10px;
+}
+
+.heatmap-day.today {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+#todayBtn {
+  background: var(--card-2);
+  border-color: var(--line);
+  font-weight: 700;
+}
+#todayBtn:hover {
+  background: var(--line);
 }

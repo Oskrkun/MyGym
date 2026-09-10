@@ -1,7 +1,3 @@
-// ==========================================
-// 1. BASE DE DATOS Y VALORES POR DEFECTO
-// ==========================================
-
 const EXERCISES_DB = [
   { id: 1, name: "Pecho plano c/barra", group: "Pecho", images: ["gifs/pecho plano con barra.gif"] },
   { id: 2, name: "Pecho inclinado c/máquina", group: "Pecho", images: ["gifs/pecho inclinado con maquina.gif"] },
@@ -38,11 +34,6 @@ const DEFAULT_ROUTINES = [
 ];
 
 const DEFAULT_REST_SECONDS = 60;
-
-
-// ==========================================
-// 2. PERSISTENCIA (LOCALSTORAGE)
-// ==========================================
 
 function getExercises() { return EXERCISES_DB; }
 function getExerciseById(id) { return EXERCISES_DB.find(ex => ex.id === id); }
@@ -90,7 +81,7 @@ function getDayState(routineId) {
   const key = `migym_state_${routineId}`;
   const saved = localStorage.getItem(key);
   if (saved) return JSON.parse(saved);
-
+  
   const routines = getRoutines();
   const routine = routines.find(r => r.id === routineId);
   if (!routine) return null;
@@ -112,27 +103,6 @@ function saveDayState(routineId, state) {
   localStorage.setItem(`migym_state_${routineId}`, JSON.stringify(state));
 }
 
-/**
- * Devuelve la última sesión registrada en el historial para una rutina
- * con un nombre específico. Devuelve el array de ejercicios o null.
- */
-function getLastSessionForRoutine(routineName) {
-  const history = getGlobalHistory();
-  const keys = Object.keys(history).sort().reverse(); // más reciente primero
-  for (const key of keys) {
-    const session = history[key];
-    if (session && session.routineName === routineName) {
-      return { date: key, exercises: session.exercises || [] };
-    }
-  }
-  return null;
-}
-
-
-// ==========================================
-// 3. VARIABLES GLOBALES Y DOM
-// ==========================================
-
 let currentRoutineId = getCurrentRoutinePointer();
 let state = {};
 let timerInterval = null;
@@ -140,9 +110,13 @@ let remaining = 0;
 let paused = false;
 let restSeconds = getRestSeconds();
 let currentMode = 'user';
-let showingProgress = false;
 let editingRoutineIndex = -1;
 let tempExercises = [];
+
+// Control de fecha para la vista del Heatmap
+let now = new Date();
+let viewYear = now.getFullYear();
+let viewMonth = now.getMonth(); // 0 - 11
 
 const $ = id => document.getElementById(id);
 const dayLabel = $('dayLabel');
@@ -155,6 +129,10 @@ const dayButton = $('dayButton');
 const dayModal = $('dayModal');
 const dayOptions = $('dayOptions');
 const closeModal = $('closeModal');
+const historyModal = $('historyModal');
+const historyModalTitle = $('historyModalTitle');
+const historyModalContent = $('historyModalContent');
+const closeHistoryModal = $('closeHistoryModal');
 
 const timerOverlay = $('timerOverlay');
 const timerValue = $('timerValue');
@@ -183,15 +161,14 @@ const btnExportar = $('btnExportar');
 const btnImportar = $('btnImportar');
 const inputImportar = $('inputImportar');
 
-
-// ==========================================
-// 4. RENDERIZADO DE LA VISTA USUARIO
-// ==========================================
+const monthLabel = $('monthLabel');
+const prevMonthBtn = $('prevMonthBtn');
+const nextMonthBtn = $('nextMonthBtn');
 
 function renderUser() {
   const routines = getRoutines();
   let routine = routines.find(r => r.id === currentRoutineId);
-
+  
   if (!routine) {
     currentRoutineId = routines.length > 0 ? routines[0].id : 1;
     saveCurrentRoutinePointer(currentRoutineId);
@@ -208,9 +185,6 @@ function renderUser() {
 
   state = getDayState(currentRoutineId);
   if (!state) return;
-
-  // Buscamos la última sesión hecha para esta rutina (por nombre)
-  const lastSession = getLastSessionForRoutine(routine.name);
 
   let totalSets = 0, completedSets = 0;
   exerciseList.innerHTML = '';
@@ -229,15 +203,6 @@ function renderUser() {
     const imageUrl = images[currentImageIndex] || 'gifs/default.gif';
     const allDone = exState.completed.every(Boolean);
     const isCardio = exerciseData.group === "Cardio" || ex.time;
-
-    // Última sesión: intentamos matchear el mismo ejercicio por nombre
-    let lastExerciseData = null;
-    if (lastSession && lastSession.exercises[idx]) {
-      const candidate = lastSession.exercises[idx];
-      if (candidate.name === exerciseData.name) {
-        lastExerciseData = candidate;
-      }
-    }
 
     const card = document.createElement('article');
     card.className = `exercise-card${exState.collapsed ? ' collapsed' : ''}${allDone ? ' completed-exercise' : ''}`;
@@ -267,15 +232,14 @@ function renderUser() {
     }
 
     card.innerHTML = `
-      <div class="exercise-head" data-collapse-head="${idx}">
-        <div class="exercise-status ${allDone ? 'done' : ''}">${allDone ? '✓' : ''}</div>
+      <div class="exercise-head">
         <div class="exercise-number">${String(idx + 1).padStart(2, '0')}</div>
         <div class="exercise-title">
           <div class="group">${exerciseData.group}</div>
           <h2>${exerciseData.name}</h2>
           <p>${subtitleText}</p>
         </div>
-        <div class="exercise-chevron">${exState.collapsed ? '▾' : '▴'}</div>
+        <div class="exercise-status ${allDone ? 'done' : ''}">${allDone ? '✓' : ''}</div>
       </div>
 
       <div class="gif-container">
@@ -285,30 +249,24 @@ function renderUser() {
 
       <div class="series-container">
         ${cardioHtml}
-        ${exState.completed.map((checked, setIndex) => {
-          const lastWeight = lastExerciseData && lastExerciseData.weights
-            ? lastExerciseData.weights[setIndex]
-            : null;
-          const currentWeight = exState.weights[setIndex] || '';
-          const displayedWeight = currentWeight || lastWeight || '';
-          const showHint = !isCardio && lastWeight && String(lastWeight).trim() !== '' && String(lastWeight) !== currentWeight;
-
-          return `
+        ${exState.completed.map((checked, setIndex) => `
           <div class="set-row ${checked ? 'checked' : ''}" data-exercise="${idx}" data-set="${setIndex}">
             <input type="checkbox" id="check_${idx}_${setIndex}" name="check_${idx}_${setIndex}" data-exercise="${idx}" data-set="${setIndex}" ${checked ? 'checked' : ''} aria-label="Marcar serie ${setIndex + 1}">
             <span class="fake-check">✓</span>
             <div class="set-info">
               <strong>${isCardio ? 'Completar sesión' : 'Serie ' + (setIndex + 1)}</strong>
               <small>${isCardio ? 'Tiempo objetivo: ' + (ex.time || '15 min') : ex.reps + ' repeticiones'}</small>
-              ${!isCardio ? `
-                <input class="weight-input" id="weight_${idx}_${setIndex}" name="weight_${idx}_${setIndex}" data-exercise="${idx}" data-set="${setIndex}" placeholder="Peso (kg)" value="${displayedWeight}" aria-label="Peso para serie ${setIndex + 1}" />
-                ${showHint ? `<span class="last-weight-hint">Última vez: ${lastWeight} kg</span>` : ''}
-              ` : ''}
+              ${!isCardio ? `<input class="weight-input" id="weight_${idx}_${setIndex}" name="weight_${idx}_${setIndex}" data-exercise="${idx}" data-set="${setIndex}" placeholder="Peso (kg)" value="${exState.weights[setIndex] || ''}" aria-label="Peso para serie ${setIndex + 1}" />` : ''}
             </div>
             <span class="set-state">${checked ? 'COMPLETADA' : 'PENDIENTE'}</span>
           </div>
-          `;
-        }).join('')}
+        `).join('')}
+      </div>
+
+      <div class="exercise-actions">
+        <button type="button" class="collapse-button" data-collapse="${idx}">
+          ${exState.collapsed ? 'Expandir series ↑' : 'Contraer y seguir ↓'}
+        </button>
       </div>
     `;
 
@@ -328,6 +286,7 @@ function renderUser() {
       const currentState = state[exIdx].completed[setIdx];
 
       state[exIdx].completed[setIdx] = !currentState;
+      saveDayState(currentRoutineId, state);
 
       if (!currentState) {
         const routines = getRoutines();
@@ -339,20 +298,17 @@ function renderUser() {
 
         if (allDone) {
           state[exIdx].collapsed = true;
+          saveDayState(currentRoutineId, state);
           if (!lastExercise && state[exIdx + 1]) {
             state[exIdx + 1].collapsed = false;
+            saveDayState(currentRoutineId, state);
           }
         }
-
-        saveDayState(currentRoutineId, state);
 
         if (!(allDone && lastExercise && lastSet)) {
           startTimer(restSeconds);
         }
-      } else {
-        saveDayState(currentRoutineId, state);
       }
-
       renderUser();
     });
   });
@@ -390,12 +346,10 @@ function renderUser() {
     });
   });
 
-  // Click en la cabecera para colapsar/expandir
-  exerciseList.querySelectorAll('.exercise-head').forEach(head => {
-    head.addEventListener('click', (e) => {
-      if (e.target.closest('input, select, textarea')) return;
-
-      const idx = Number(head.dataset.collapseHead);
+  exerciseList.querySelectorAll('.collapse-button').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const idx = Number(btn.dataset.collapse);
       state[idx].collapsed = !state[idx].collapsed;
       saveDayState(currentRoutineId, state);
       renderUser();
@@ -406,27 +360,23 @@ function renderUser() {
 function completeRoutineAndAdvance(isSuccess) {
   const routines = getRoutines();
   const currentRoutine = routines.find(r => r.id === currentRoutineId);
-
-  if (!currentRoutine) {
-    alert("No hay una rutina seleccionada para completar.");
-    return;
-  }
-
   const currentStateData = getDayState(currentRoutineId);
-  const history = getGlobalHistory();
 
+  const history = getGlobalHistory();
+  
+  // Guardado con fecha completa en formato YYYY-MM-DD
   const todayDate = new Date();
   const yyyy = todayDate.getFullYear();
   const mm = String(todayDate.getMonth() + 1).padStart(2, '0');
   const dd = String(todayDate.getDate()).padStart(2, '0');
   const todayKey = `${yyyy}-${mm}-${dd}`;
-
+  
   history[todayKey] = {
-    routineName: currentRoutine.name,
+    routineName: currentRoutine ? currentRoutine.name : "Rutina",
     status: isSuccess ? 'completed' : 'incomplete',
-    exercises: (currentRoutine.exercises || []).map((ex, idx) => {
+    exercises: currentRoutine.exercises.map((ex, idx) => {
       const exData = getExerciseById(ex.exerciseId);
-      const exState = currentStateData ? currentStateData[idx] : null;
+      const exState = currentStateData[idx];
       return {
         name: exData ? exData.name : "Ejercicio",
         isCardio: exData ? exData.group === "Cardio" || !!ex.time : false,
@@ -441,7 +391,7 @@ function completeRoutineAndAdvance(isSuccess) {
   saveGlobalHistory(history);
 
   const currentIndex = routines.findIndex(r => r.id === currentRoutineId);
-
+  
   if (currentIndex !== -1 && currentIndex < routines.length - 1) {
     currentRoutineId = routines[currentIndex + 1].id;
     saveCurrentRoutinePointer(currentRoutineId);
@@ -457,12 +407,113 @@ function completeRoutineAndAdvance(isSuccess) {
 
   state = getDayState(currentRoutineId);
   renderUser();
+  renderHeatmap();
 }
 
+function renderHeatmap() {
+  const container = $('heatmapContainer');
+  container.innerHTML = '';
+  const history = getGlobalHistory();
 
-// ==========================================
-// 5. TEMPORIZADOR
-// ==========================================
+  const monthNames = [
+    "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
+    "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
+  ];
+  
+  if (monthLabel) {
+    monthLabel.textContent = `${monthNames[viewMonth]} ${viewYear}`;
+  }
+
+  const daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
+
+  for (let dayNum = 1; dayNum <= daysInMonth; dayNum++) {
+    const mm = String(viewMonth + 1).padStart(2, '0');
+    const dd = String(dayNum).padStart(2, '0');
+    const fullDateKey = `${viewYear}-${mm}-${dd}`;
+
+    // Compatibilidad: buscar clave nueva YYYY-MM-DD o legacy numérico
+    const session = history[fullDateKey] || (
+      (viewYear === now.getFullYear() && viewMonth === now.getMonth()) ? history[dayNum] : null
+    );
+
+    let className = 'heatmap-day';
+    let text = `${dayNum}`;
+    
+    if (session) {
+      if (session.status === 'completed') className += ' completed';
+      else if (session.status === 'incomplete') className += ' incomplete';
+      text += `<span>${session.routineName.replace('Día ', 'D')}</span>`;
+    }
+
+    const div = document.createElement('div');
+    div.className = className;
+    div.innerHTML = text;
+    
+    div.addEventListener('click', () => {
+      showHistoryDetail(fullDateKey, dayNum, session);
+    });
+
+    container.appendChild(div);
+  }
+}
+
+if (prevMonthBtn) {
+  prevMonthBtn.addEventListener('click', () => {
+    viewMonth--;
+    if (viewMonth < 0) {
+      viewMonth = 11;
+      viewYear--;
+    }
+    renderHeatmap();
+  });
+}
+
+if (nextMonthBtn) {
+  nextMonthBtn.addEventListener('click', () => {
+    viewMonth++;
+    if (viewMonth > 11) {
+      viewMonth = 0;
+      viewYear++;
+    }
+    renderHeatmap();
+  });
+}
+
+function showHistoryDetail(fullDateKey, dayNum, session) {
+  historyModalTitle.textContent = `Fecha: ${fullDateKey}`;
+  if (!session) {
+    historyModalContent.innerHTML = `<p style="color:var(--muted); text-align:center; padding: 20px;">No hay registros de entrenamiento guardados para esta fecha.</p>`;
+  } else {
+    let html = `<p><strong>Rutina:</strong> ${session.routineName} (${session.status === 'completed' ? '✅ Completada' : '⏳ Incompleta'})</p><hr style="border-color:var(--line); margin: 10px 0;">`;
+    session.exercises.forEach((ex, i) => {
+      html += `<div style="margin-bottom: 12px; background:var(--bg); padding:10px; border-radius:10px;"><strong>${i+1}. ${ex.name}</strong><br>`;
+      
+      if (ex.isCardio) {
+        const timeVal = ex.cardioTime && ex.cardioTime.trim() !== '' ? ex.cardioTime : '0 min';
+        html += `<small style="color:var(--accent);">⏱️ Tiempo: ${timeVal}</small>`;
+        if (ex.speed || ex.incline) {
+          html += `<br><small style="color:var(--muted);">Velocidad: ${ex.speed || 0} | Inclinación: ${ex.incline || 0}</small>`;
+        }
+      } else {
+        if (ex.weights && ex.weights.length > 0) {
+          const seriesDetail = ex.weights.map((w, s) => {
+            const pesoText = w && String(w).trim() !== '' ? `${w}kg` : '0kg';
+            return `S${s+1}: <strong>${pesoText}</strong>`;
+          }).join(' | ');
+          html += `<small style="color:var(--text); display:block; margin-top:3px;">💪 Pesos: ${seriesDetail}</small>`;
+        } else {
+          html += `<small style="color:var(--muted);">Sin registros de peso (0kg)</small>`;
+        }
+      }
+      html += `</div>`;
+    });
+    historyModalContent.innerHTML = html;
+  }
+  historyModal.classList.remove('hidden');
+}
+
+closeHistoryModal.addEventListener('click', () => historyModal.classList.add('hidden'));
+historyModal.addEventListener('click', (e) => { if (e.target === historyModal) historyModal.classList.add('hidden'); });
 
 function startTimer(seconds) {
   clearInterval(timerInterval);
@@ -496,17 +547,17 @@ function updateTimerDisplay() {
 }
 
 pauseTimer.addEventListener('click', () => {
-  if (remaining <= 0) {
-    timerOverlay.classList.add('hidden');
-    return;
+  if (remaining <= 0) { 
+    timerOverlay.classList.add('hidden'); 
+    return; 
   }
   paused = !paused;
   pauseTimer.textContent = paused ? 'Continuar' : 'Pausar';
 });
 
-addTime.addEventListener('click', () => {
+addTime.addEventListener('click', () => { 
   const wasZero = remaining <= 0;
-  remaining += 15;
+  remaining += 15; 
   updateTimerDisplay();
 
   if (wasZero) {
@@ -517,9 +568,9 @@ addTime.addEventListener('click', () => {
   }
 });
 
-skipTimer.addEventListener('click', () => {
-  clearInterval(timerInterval);
-  timerOverlay.classList.add('hidden');
+skipTimer.addEventListener('click', () => { 
+  clearInterval(timerInterval); 
+  timerOverlay.classList.add('hidden'); 
 });
 
 resetButton.addEventListener('click', () => {
@@ -530,25 +581,20 @@ resetButton.addEventListener('click', () => {
   }
 });
 
-
-// ==========================================
-// 6. MODAL "CAMBIAR DÍA"
-// ==========================================
-
 function populateDayModal() {
   const routines = getRoutines();
   dayOptions.innerHTML = '';
   routines.forEach(r => {
     const isCurrent = r.id === currentRoutineId;
     const rState = getDayState(r.id);
-
+    
     let isCompleted = false;
     let isIncomplete = false;
 
     if (rState) {
       const totalSets = rState.reduce((acc, curr) => acc + curr.completed.length, 0);
       const doneSets = rState.reduce((acc, curr) => acc + curr.completed.filter(Boolean).length, 0);
-
+      
       if (totalSets > 0) {
         if (doneSets === totalSets) isCompleted = true;
         else if (doneSets > 0) isIncomplete = true;
@@ -585,22 +631,17 @@ dayButton.addEventListener('click', () => { populateDayModal(); dayModal.classLi
 closeModal.addEventListener('click', () => dayModal.classList.add('hidden'));
 dayModal.addEventListener('click', (e) => { if (e.target === dayModal) dayModal.classList.add('hidden'); });
 
-
-// ==========================================
-// 7. PANEL ADMINISTRADOR
-// ==========================================
-
 function renderAdminRoutines() {
   const routines = getRoutines();
   routineListAdmin.innerHTML = '';
   routines.forEach((r, idx) => {
     const div = document.createElement('div');
     div.className = 'admin-item';
-    const exerciseNames = (r.exercises || []).map(ex => {
+    const exerciseNames = r.exercises.map(ex => {
       const exData = getExerciseById(ex.exerciseId);
       return exData ? `${exData.name}` : '❌';
     }).join(', ');
-
+    
     div.innerHTML = `
       <div>
         <strong>${r.name}</strong>
@@ -773,11 +814,6 @@ saveRest.addEventListener('click', () => {
   if (sec > 0) { setRestSeconds(sec); restSeconds = sec; alert('Tiempo de descanso actualizado'); }
 });
 
-
-// ==========================================
-// 8. IMPORTACIÓN Y EXPORTACIÓN (JSON)
-// ==========================================
-
 btnExportar.addEventListener('click', () => {
   const backup = {};
   for (let i = 0; i < localStorage.length; i++) {
@@ -819,92 +855,59 @@ inputImportar.addEventListener('change', (event) => {
   reader.readAsText(file);
 });
 
-
-// ==========================================
-// 9. CONTROL DE NAVEGACIÓN
-// ==========================================
-
-function updateNavigationVisibility() {
-  if (showingProgress) {
-    userView.classList.add('hidden');
-    adminView.classList.add('hidden');
-    progressView.classList.remove('hidden');
-
-    progressToggleBtn.textContent = '🏋️ Rutina';
-    progressToggleBtn.style.display = 'inline-block';
-
-    modeToggle.textContent = '⚙️ Admin';
-    modeToggle.style.display = 'inline-block';
-
-    if (dayButton) dayButton.style.display = 'none';
-
-    if (typeof window.renderProgressView === 'function') {
-      window.renderProgressView();
-    }
-
-  } else if (currentMode === 'admin') {
-    userView.classList.add('hidden');
-    progressView.classList.add('hidden');
-    adminView.classList.remove('hidden');
-
-    progressToggleBtn.textContent = '📊 Progreso';
-    progressToggleBtn.style.display = 'inline-block';
-
-    modeToggle.textContent = '🏋️ Rutina';
-    modeToggle.style.display = 'inline-block';
-
-    if (dayButton) dayButton.style.display = 'none';
-    renderAdminRoutines();
-    restInput.value = getRestSeconds();
-
-  } else {
-    adminView.classList.add('hidden');
-    progressView.classList.add('hidden');
-    userView.classList.remove('hidden');
-
-    progressToggleBtn.textContent = '📊 Progreso';
-    progressToggleBtn.style.display = 'inline-block';
-
-    modeToggle.textContent = '⚙️ Admin';
-    modeToggle.style.display = 'inline-block';
-
-    if (dayButton) dayButton.style.display = 'inline-block';
-    state = getDayState(currentRoutineId);
-    renderUser();
-  }
-}
+let showingProgress = false;
 
 progressToggleBtn.addEventListener('click', () => {
   showingProgress = !showingProgress;
   if (showingProgress) {
-    currentMode = 'user';
+    userView.classList.add('hidden');
+    adminView.classList.add('hidden');
+    progressView.classList.remove('hidden');
+    progressToggleBtn.textContent = '🏋️ Rutina';
+    modeToggle.style.display = 'none';
+    renderHeatmap();
+  } else {
+    progressView.classList.add('hidden');
+    userView.classList.remove('hidden');
+    progressToggleBtn.textContent = '📊 Progreso';
+    modeToggle.style.display = 'inline-block';
+    renderUser();
   }
-  updateNavigationVisibility();
 });
 
 function toggleMode() {
   if (currentMode === 'user') {
     currentMode = 'admin';
+    userView.classList.add('hidden');
+    progressView.classList.add('hidden');
+    adminView.classList.remove('hidden');
+    modeToggle.textContent = '👤 Usuario';
+    progressToggleBtn.style.display = 'none';
+    renderAdminRoutines();
+    restInput.value = getRestSeconds();
   } else {
     currentMode = 'user';
+    adminView.classList.add('hidden');
+    userView.classList.remove('hidden');
+    modeToggle.textContent = '⚙️ Admin';
+    progressToggleBtn.style.display = 'inline-block';
+    state = getDayState(currentRoutineId);
+    renderUser();
   }
-  showingProgress = false;
-  updateNavigationVisibility();
 }
 
 modeToggle.addEventListener('click', toggleMode);
 
-
-// ==========================================
-// 10. INICIALIZACIÓN
-// ==========================================
-
 function init() {
   currentRoutineId = getCurrentRoutinePointer();
   state = getDayState(currentRoutineId);
-  showingProgress = false;
+  renderUser();
+  renderHeatmap();
   currentMode = 'user';
-  updateNavigationVisibility();
+  userView.classList.remove('hidden');
+  adminView.classList.add('hidden');
+  progressView.classList.add('hidden');
+  modeToggle.textContent = '⚙️ Admin';
 }
 
 init();
