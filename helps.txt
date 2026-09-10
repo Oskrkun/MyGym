@@ -1,0 +1,12 @@
+Plaintext
+migym/
+├── css/
+│   └── styles.css          # Todos los estilos CSS consolidados
+├── js/
+│   ├── db.js              # Bases de datos fijas (EXERCISES_DB, DEFAULT_ROUTINES, etc.)
+│   ├── storage.js         # Manejo de LocalStorage, exportación e importación JSON
+│   ├── timer.js           # Lógica y manejo del temporizador de descanso
+│   ├── heatmap.js         # Vista de progreso, calendario/heatmap y modales de historial
+│   ├── admin.js           # Panel de administración (crear/editar rutinas, configuraciones)
+│   └── app.js             # Controlador principal y renderizado de la vista de usuario
+└── index.html             # HTML limpio conectando los componentes
