@@ -494,3 +494,13 @@ button { cursor: pointer; }
   gap: 12px;
   width: 100%;
 }
+
+.month-navigator {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  background: var(--bg);
+  padding: 8px 12px;
+  border-radius: 10px;
+}
