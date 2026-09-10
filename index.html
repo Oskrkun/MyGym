@@ -8,8 +8,14 @@
 </head>
 <body>
 
+  <!-- NAVEGACIÓN SUPERIOR RESTAURADA -->
   <header>
     <h1>MiGym</h1>
+    <nav class="nav-tabs">
+      <button class="tab-btn active" data-tab="workoutTab">🏋️ Entrenamiento</button>
+      <button class="tab-btn" data-tab="progressTab">📊 Progreso</button>
+      <button class="tab-btn" data-tab="adminTab">⚙️ Ajustes</button>
+    </nav>
   </header>
 
   <main class="container">
@@ -17,7 +23,7 @@
     <section id="workoutTab" class="tab-content">
       <div style="margin-bottom: 1rem;">
         <label for="routineSelect">Seleccionar Rutina:</label>
-        <select id="routineSelect" style="width: 100%; padding: 0.5rem; margin-top: 0.4rem; background: var(--surface); color: var(--text); border: 1px solid var(--border); border-radius: 8px;"></select>
+        <select id="routineSelect" name="routineSelect" style="width: 100%; padding: 0.5rem; margin-top: 0.4rem; background: var(--surface); color: var(--text); border: 1px solid var(--border); border-radius: 8px;"></select>
       </div>
 
       <div id="workoutContainer"></div>
@@ -37,7 +43,7 @@
       <div class="card" style="margin-top: 1rem;">
         <h3>Tiempo de Descanso</h3>
         <label for="restSecondsInput">Segundos entre series:</label>
-        <input type="number" id="restSecondsInput" class="set-input" style="width: 100%; margin-top: 0.5rem;" min="10" max="300">
+        <input type="number" id="restSecondsInput" name="restSecondsInput" class="set-input" style="width: 100%; margin-top: 0.5rem;" min="10" max="300">
       </div>
 
       <div class="card">
@@ -48,25 +54,22 @@
       <div class="card">
         <h3>Respaldo de Datos</h3>
         <button id="exportJsonBtn" class="btn" style="margin-bottom: 0.5rem;">Exportar Datos (JSON)</button>
-        <label for="importJsonInput" class="btn" style="display: block; text-align: center; background: var(--surface-hover);">Importar Datos (JSON)</label>
-        <input type="file" id="importJsonInput" accept=".json" style="display: none;">
+        <label for="importJsonInput" class="btn" style="display: block; text-align: center; background: var(--surface-hover); cursor: pointer;">Importar Datos (JSON)</label>
+        <input type="file" id="importJsonInput" name="importJsonInput" accept=".json" style="display: none;">
       </div>
     </section>
   </main>
 
-  <!-- NAVEGACIÓN INFERIOR -->
-  <nav class="nav-tabs">
-    <button class="tab-btn active" data-tab="workoutTab">🏋️ Entrenamiento</button>
-    <button class="tab-btn" data-tab="progressTab">📊 Progreso</button>
-    <button class="tab-btn" data-tab="adminTab">⚙️ Ajustes</button>
-  </nav>
-
-  <!-- OVERLAY DEL TEMPORIZADOR -->
+  <!-- OVERLAY DEL TEMPORIZADOR CON CONTROLES COMPLETOS -->
   <div id="timerOverlay" class="overlay">
     <div class="modal-content" style="text-align: center;">
       <h3>Descanso</h3>
       <div id="timerDisplay" style="font-size: 3rem; font-weight: bold; margin: 1rem 0;">60s</div>
-      <button id="stopTimerBtn" class="btn" style="background: var(--danger);">Omitir</button>
+      <div style="display: flex; gap: 8px; justify-content: center; margin-top: 1rem;">
+        <button id="addTimeTimerBtn" class="btn" style="background: var(--surface-hover);">+15s</button>
+        <button id="pauseTimerBtn" class="btn" style="background: var(--primary);">Pausar</button>
+        <button id="stopTimerBtn" class="btn" style="background: var(--danger);">Saltar</button>
+      </div>
     </div>
   </div>
 

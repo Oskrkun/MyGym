@@ -1,8 +1,7 @@
 // js/app.js
-
-import { getRoutines, getCurrentRoutinePointer, saveCurrentRoutinePointer, getDayState, saveDayState } from './storage.js';
+import { getRoutines, getCurrentRoutinePointer, saveCurrentRoutinePointer, getDayState, saveDayState, getGlobalHistory, saveGlobalHistory } from './storage.js';
 import { getExerciseById } from './db.js';
-import { startRestTimer, stopRestTimer } from './timer.js';
+import { startRestTimer, stopRestTimer, pauseRestTimer, addTimeRestTimer } from './timer.js';
 import { renderHeatmap } from './heatmap.js';
 import { initAdminPanel } from './admin.js';
 
@@ -18,8 +17,10 @@ document.addEventListener('DOMContentLoaded', () => {
     renderWorkoutView();
   });
 
-  const stopTimerBtn = document.getElementById('stopTimerBtn');
-  if (stopTimerBtn) stopTimerBtn.addEventListener('click', stopRestTimer);
+  // Eventos de controles del temporizador
+  document.getElementById('stopTimerBtn')?.addEventListener('click', stopRestTimer);
+  document.getElementById('pauseTimerBtn')?.addEventListener('click', pauseRestTimer);
+  document.getElementById('addTimeTimerBtn')?.addEventListener('click', () => addTimeRestTimer(15));
 });
 
 function initTabs() {
@@ -70,10 +71,7 @@ function renderWorkoutView() {
 
   const routines = getRoutines();
   const routine = routines.find(r => r.id === currentRoutineId);
-  if (!routine) {
-    container.innerHTML = '<p>No se encontró la rutina seleccionada.</p>';
-    return;
-  }
+  if (!routine) return;
 
   const dayState = getDayState(currentRoutineId);
   container.innerHTML = '';
@@ -82,7 +80,11 @@ function renderWorkoutView() {
     const exercise = getExerciseById(exItem.exerciseId);
     if (!exercise) return;
 
-    const state = dayState[exIdx] || { completed: [], weights: [] };
+    const state = dayState[exIdx] || { completed: [], weights: [], imageIndex: 0 };
+    const currentImg = exercise.images && exercise.images.length > 0 
+      ? exercise.images[state.imageIndex || 0] 
+      : 'gifs/default.gif';
+
     const card = document.createElement('div');
     card.className = 'card';
 
@@ -91,11 +93,14 @@ function renderWorkoutView() {
         <span class="card-title">${exercise.name}</span>
         <small>${exercise.group}</small>
       </div>
+      <div class="exercise-media" style="text-align: center; margin: 10px 0;">
+        <img src="${currentImg}" alt="${exercise.name}" style="max-width: 100%; height: auto; border-radius: 8px;">
+      </div>
       <div class="sets-grid">
         ${Array.from({ length: exItem.sets }).map((_, setIdx) => `
           <div class="set-row">
             <span>Serie ${setIdx + 1}</span>
-            <input type="number" class="set-input weight-input" placeholder="kg" value="${state.weights[setIdx] || ''}" data-ex="${exIdx}" data-set="${setIdx}">
+            <input type="number" id="weight_${exIdx}_${setIdx}" name="weight_${exIdx}_${setIdx}" class="set-input weight-input" placeholder="kg" value="${state.weights[setIdx] || ''}" data-ex="${exIdx}" data-set="${setIdx}">
             <button class="check-btn ${state.completed[setIdx] ? 'completed' : ''}" data-ex="${exIdx}" data-set="${setIdx}">
               ✓
             </button>
@@ -104,7 +109,7 @@ function renderWorkoutView() {
       </div>
     `;
 
-    // Eventos de Check y Peso
+    // Guardado de peso y marcado de series
     card.querySelectorAll('.check-btn').forEach(btn => {
       btn.addEventListener('click', (e) => {
         const eIdx = Number(e.currentTarget.dataset.ex);
@@ -112,13 +117,11 @@ function renderWorkoutView() {
 
         dayState[eIdx].completed[sIdx] = !dayState[eIdx].completed[sIdx];
         saveDayState(currentRoutineId, dayState);
+        registerHistoryEntry(routine.name, dayState, routine);
         renderWorkoutView();
 
         if (dayState[eIdx].completed[sIdx]) {
-          startRestTimer((left) => {
-            const display = document.getElementById('timerDisplay');
-            if (display) display.textContent = `${left}s`;
-          });
+          startRestTimer();
         }
       });
     });
@@ -134,4 +137,27 @@ function renderWorkoutView() {
 
     container.appendChild(card);
   });
+}
+
+function registerHistoryEntry(routineName, dayState, routine) {
+  const todayStr = new Date().toISOString().split('T')[0];
+  const history = getGlobalHistory();
+  
+  const details = routine.exercises.map((exItem, i) => {
+    const ex = getExerciseById(exItem.exerciseId);
+    const completedCount = (dayState[i]?.completed || []).filter(Boolean).length;
+    return {
+      name: ex ? ex.name : 'Ejercicio',
+      summary: `${completedCount}/${exItem.sets} series`
+    };
+  });
+
+  history[todayStr] = history[todayStr] || [];
+  history[todayStr].push({
+    routineName,
+    timestamp: new Date().toISOString(),
+    details
+  });
+
+  saveGlobalHistory(history);
 }

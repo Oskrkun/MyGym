@@ -1,29 +1,44 @@
 // js/timer.js
-
 import { getRestSeconds } from './storage.js';
 
 let timerInterval = null;
 let currentSecondsLeft = 0;
+let isPaused = false;
 
 export function startRestTimer(onTick, onEnd) {
   stopRestTimer();
+  isPaused = false;
   currentSecondsLeft = getRestSeconds();
   
   const timerOverlay = document.getElementById('timerOverlay');
   if (timerOverlay) timerOverlay.style.display = 'flex';
 
-  if (onTick) onTick(currentSecondsLeft);
+  updateTimerUI(onTick);
 
   timerInterval = setInterval(() => {
-    currentSecondsLeft--;
-    if (onTick) onTick(currentSecondsLeft);
+    if (!isPaused) {
+      currentSecondsLeft--;
+      updateTimerUI(onTick);
 
-    if (currentSecondsLeft <= 0) {
-      stopRestTimer();
-      playTimerBeep();
-      if (onEnd) onEnd();
+      if (currentSecondsLeft <= 0) {
+        stopRestTimer();
+        playTimerBeep();
+        if (onEnd) onEnd();
+      }
     }
   }, 1000);
+}
+
+export function pauseRestTimer() {
+  isPaused = !isPaused;
+  const pauseBtn = document.getElementById('pauseTimerBtn');
+  if (pauseBtn) pauseBtn.textContent = isPaused ? 'Reanudar' : 'Pausar';
+}
+
+export function addTimeRestTimer(seconds = 15) {
+  currentSecondsLeft += seconds;
+  const display = document.getElementById('timerDisplay');
+  if (display) display.textContent = `${currentSecondsLeft}s`;
 }
 
 export function stopRestTimer() {
@@ -31,8 +46,15 @@ export function stopRestTimer() {
     clearInterval(timerInterval);
     timerInterval = null;
   }
+  isPaused = false;
   const timerOverlay = document.getElementById('timerOverlay');
   if (timerOverlay) timerOverlay.style.display = 'none';
+}
+
+function updateTimerUI(onTick) {
+  const display = document.getElementById('timerDisplay');
+  if (display) display.textContent = `${currentSecondsLeft}s`;
+  if (onTick) onTick(currentSecondsLeft);
 }
 
 function playTimerBeep() {
@@ -41,7 +63,7 @@ function playTimerBeep() {
     const osc = audioCtx.createOscillator();
     const gain = audioCtx.createGain();
     osc.type = 'sine';
-    osc.frequency.setValueAtTime(880, audioCtx.currentTime); // Tono A5
+    osc.frequency.setValueAtTime(880, audioCtx.currentTime);
     gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
     osc.connect(gain);
     gain.connect(audioCtx.destination);
