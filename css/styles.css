@@ -485,3 +485,12 @@ button { cursor: pointer; }
 .exercise-card.collapsed .gif-container {
     display: none;
 }
+
+/* Centrado automático y espacio parejo para los botones del temporizador */
+.timer-actions {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+}
