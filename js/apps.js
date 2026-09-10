@@ -1,3 +1,8 @@
+// ==========================================
+// 1. BASE DE DATOS Y VALORES POR DEFECTO
+// ==========================================
+
+// Base de datos local de ejercicios disponibles con sus imágenes/GIFs
 const EXERCISES_DB = [
   { id: 1, name: "Pecho plano c/barra", group: "Pecho", images: ["gifs/pecho plano con barra.gif"] },
   { id: 2, name: "Pecho inclinado c/máquina", group: "Pecho", images: ["gifs/pecho inclinado con maquina.gif"] },
@@ -24,6 +29,7 @@ const EXERCISES_DB = [
   { id: 23, name: "Hip Thrust", group: "Piernas", images: ["gifs/default.gif"] }
 ];
 
+// Rutinas precargadas por defecto si no existen en localStorage
 const DEFAULT_ROUTINES = [
   { id: 1, name: "Día 1", exercises: [{ exerciseId: 1, sets: 3, reps: 12, weight: "" }, { exerciseId: 2, sets: 3, reps: 12, weight: "" }] },
   { id: 2, name: "Día 2", exercises: [{ exerciseId: 3, sets: 3, reps: 12, weight: "" }, { exerciseId: 4, sets: 3, reps: 12, weight: "" }] },
@@ -33,11 +39,17 @@ const DEFAULT_ROUTINES = [
   { id: 6, name: "Día 6", exercises: [{ exerciseId: 19, sets: 1, reps: 0, time: "20 min", weight: "", speed: 8, incline: 2 }] }
 ];
 
-const DEFAULT_REST_SECONDS = 60;
+const DEFAULT_REST_SECONDS = 60; // Tiempo de descanso predeterminado en segundos
+
+
+// ==========================================
+// 2. FUNCIONES DE PERSISTENCIA (LOCALSTORAGE)
+// ==========================================
 
 function getExercises() { return EXERCISES_DB; }
 function getExerciseById(id) { return EXERCISES_DB.find(ex => ex.id === id); }
 
+// Carga las rutinas guardadas o inicializa las predeterminadas
 function getRoutines() {
   const stored = localStorage.getItem('migym_routines');
   if (stored) return JSON.parse(stored);
@@ -45,10 +57,12 @@ function getRoutines() {
   return DEFAULT_ROUTINES;
 }
 
+// Guarda la lista de rutinas editadas/creadas
 function saveRoutines(routines) {
   localStorage.setItem('migym_routines', JSON.stringify(routines));
 }
 
+// Obtiene y establece el tiempo global de descanso
 function getRestSeconds() {
   const stored = localStorage.getItem('migym_rest_seconds');
   return stored ? Number(stored) : DEFAULT_REST_SECONDS;
@@ -58,6 +72,7 @@ function setRestSeconds(sec) {
   localStorage.setItem('migym_rest_seconds', String(sec));
 }
 
+// Manejo del historial global finalizado por fechas
 function getGlobalHistory() {
   return JSON.parse(localStorage.getItem('migym_global_history')) || {};
 }
@@ -66,6 +81,7 @@ function saveGlobalHistory(history) {
   localStorage.setItem('migym_global_history', JSON.stringify(history));
 }
 
+// Indicador de la rutina actualmente seleccionada por el usuario
 function getCurrentRoutinePointer() {
   const ptr = localStorage.getItem('migym_routine_pointer');
   if (ptr !== null) return Number(ptr);
@@ -77,6 +93,7 @@ function saveCurrentRoutinePointer(id) {
   localStorage.setItem('migym_routine_pointer', String(id));
 }
 
+// Obtiene o crea el estado actual de los pesos, checks y datos de un día/rutina específica
 function getDayState(routineId) {
   const key = `migym_state_${routineId}`;
   const saved = localStorage.getItem(key);
@@ -103,15 +120,26 @@ function saveDayState(routineId, state) {
   localStorage.setItem(`migym_state_${routineId}`, JSON.stringify(state));
 }
 
+
+// ==========================================
+// 3. VARIABLES GLOBALES Y REFERENCIAS AL DOM
+// ==========================================
+
 let currentRoutineId = getCurrentRoutinePointer();
 let state = {};
 let timerInterval = null;
 let remaining = 0;
 let paused = false;
 let restSeconds = getRestSeconds();
-let currentMode = 'user';
+let currentMode = 'user'; // 'user' o 'admin'
+let showingProgress = false; // Control de vista de Progreso
 let editingRoutineIndex = -1;
 let tempExercises = [];
+
+// Control de fecha para la vista del Heatmap / Calendario
+let now = new Date();
+let viewYear = now.getFullYear();
+let viewMonth = now.getMonth(); // 0 - 11
 
 const $ = id => document.getElementById(id);
 const dayLabel = $('dayLabel');
@@ -120,7 +148,7 @@ const exerciseList = $('exerciseList');
 const progressPercent = $('progressPercent');
 const finishCard = $('finishCard');
 const resetButton = $('resetButton');
-const dayButton = $('dayButton');
+const dayButton = $('dayButton'); // Botón Cambiar Día
 const dayModal = $('dayModal');
 const dayOptions = $('dayOptions');
 const closeModal = $('closeModal');
@@ -156,6 +184,16 @@ const btnExportar = $('btnExportar');
 const btnImportar = $('btnImportar');
 const inputImportar = $('inputImportar');
 
+const monthLabel = $('monthLabel');
+const prevMonthBtn = $('prevMonthBtn');
+const nextMonthBtn = $('nextMonthBtn');
+
+
+// ==========================================
+// 4. RENDERIZADO DE LA VISTA USUARIO (RUTINA)
+// ==========================================
+
+// Renderiza las tarjetas de ejercicios, progreso diario, inputs de pesos y cardio
 function renderUser() {
   const routines = getRoutines();
   let routine = routines.find(r => r.id === currentRoutineId);
@@ -268,6 +306,7 @@ function renderUser() {
   progressPercent.textContent = percent + '%';
   finishCard.classList.toggle('hidden', percent !== 100);
 
+  // Escuchadores de eventos en las filas de series
   exerciseList.querySelectorAll('.set-row').forEach(row => {
     row.addEventListener('click', (e) => {
       if (e.target.classList.contains('weight-input')) return;
@@ -304,6 +343,7 @@ function renderUser() {
     });
   });
 
+  // Guardar inputs de pesos y cardio
   exerciseList.querySelectorAll('.weight-input').forEach(input => {
     input.addEventListener('input', (e) => {
       const exIdx = Number(e.target.dataset.exercise);
@@ -322,6 +362,7 @@ function renderUser() {
     input.addEventListener('click', (e) => e.stopPropagation());
   });
 
+  // Cambiar imagen alternativa
   exerciseList.querySelectorAll('.change-image-btn').forEach(btn => {
     btn.addEventListener('click', (e) => {
       e.stopPropagation();
@@ -337,6 +378,7 @@ function renderUser() {
     });
   });
 
+  // Expandir o contraer tarjeta
   exerciseList.querySelectorAll('.collapse-button').forEach(btn => {
     btn.addEventListener('click', (e) => {
       e.stopPropagation();
@@ -348,13 +390,19 @@ function renderUser() {
   });
 }
 
+// Finaliza la rutina actual, guarda en historial y avanza al siguiente día/ciclo
 function completeRoutineAndAdvance(isSuccess) {
   const routines = getRoutines();
   const currentRoutine = routines.find(r => r.id === currentRoutineId);
   const currentStateData = getDayState(currentRoutineId);
 
   const history = getGlobalHistory();
-  const todayKey = new Date().getDate();
+  
+  const todayDate = new Date();
+  const yyyy = todayDate.getFullYear();
+  const mm = String(todayDate.getMonth() + 1).padStart(2, '0');
+  const dd = String(todayDate.getDate()).padStart(2, '0');
+  const todayKey = `${yyyy}-${mm}-${dd}`;
   
   history[todayKey] = {
     routineName: currentRoutine ? currentRoutine.name : "Rutina",
@@ -395,13 +443,37 @@ function completeRoutineAndAdvance(isSuccess) {
   renderHeatmap();
 }
 
+
+// ==========================================
+// 5. RENDERIZADO DE PROGRESO (HEATMAP / CALENDARIO)
+// ==========================================
+
+// Dibuja la cuadrícula de días del mes y consulta registros previos
 function renderHeatmap() {
   const container = $('heatmapContainer');
   container.innerHTML = '';
   const history = getGlobalHistory();
 
-  for (let dayNum = 1; dayNum <= 31; dayNum++) {
-    const session = history[dayNum];
+  const monthNames = [
+    "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
+    "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
+  ];
+  
+  if (monthLabel) {
+    monthLabel.textContent = `${monthNames[viewMonth]} ${viewYear}`;
+  }
+
+  const daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
+
+  for (let dayNum = 1; dayNum <= daysInMonth; dayNum++) {
+    const mm = String(viewMonth + 1).padStart(2, '0');
+    const dd = String(dayNum).padStart(2, '0');
+    const fullDateKey = `${viewYear}-${mm}-${dd}`;
+
+    const session = history[fullDateKey] || (
+      (viewYear === now.getFullYear() && viewMonth === now.getMonth()) ? history[dayNum] : null
+    );
+
     let className = 'heatmap-day';
     let text = `${dayNum}`;
     
@@ -416,17 +488,41 @@ function renderHeatmap() {
     div.innerHTML = text;
     
     div.addEventListener('click', () => {
-      showHistoryDetail(dayNum, session);
+      showHistoryDetail(fullDateKey, dayNum, session);
     });
 
     container.appendChild(div);
   }
 }
 
-function showHistoryDetail(dayNum, session) {
-  historyModalTitle.textContent = `Día ${dayNum} del mes`;
+// Botones para pasar de mes en la vista Progreso
+if (prevMonthBtn) {
+  prevMonthBtn.addEventListener('click', () => {
+    viewMonth--;
+    if (viewMonth < 0) {
+      viewMonth = 11;
+      viewYear--;
+    }
+    renderHeatmap();
+  });
+}
+
+if (nextMonthBtn) {
+  nextMonthBtn.addEventListener('click', () => {
+    viewMonth++;
+    if (viewMonth > 11) {
+      viewMonth = 0;
+      viewYear++;
+    }
+    renderHeatmap();
+  });
+}
+
+// Muestra modal con los pesos e info detallada de un día seleccionado en el mapa
+function showHistoryDetail(fullDateKey, dayNum, session) {
+  historyModalTitle.textContent = `Fecha: ${fullDateKey}`;
   if (!session) {
-    historyModalContent.innerHTML = `<p style="color:var(--muted); text-align:center; padding: 20px;">No hay registros de entrenamiento guardados para este día.</p>`;
+    historyModalContent.innerHTML = `<p style="color:var(--muted); text-align:center; padding: 20px;">No hay registros de entrenamiento guardados para esta fecha.</p>`;
   } else {
     let html = `<p><strong>Rutina:</strong> ${session.routineName} (${session.status === 'completed' ? '✅ Completada' : '⏳ Incompleta'})</p><hr style="border-color:var(--line); margin: 10px 0;">`;
     session.exercises.forEach((ex, i) => {
@@ -459,12 +555,17 @@ function showHistoryDetail(dayNum, session) {
 closeHistoryModal.addEventListener('click', () => historyModal.classList.add('hidden'));
 historyModal.addEventListener('click', (e) => { if (e.target === historyModal) historyModal.classList.add('hidden'); });
 
+
+// ==========================================
+// 6. TEMPORIZADOR DE DESCANSO
+// ==========================================
+
 function startTimer(seconds) {
   clearInterval(timerInterval);
   remaining = seconds;
   paused = false;
   pauseTimer.textContent = 'Pausar';
-  skipTimer.classList.remove('hidden'); // Asegura que el botón "Saltar" esté visible al iniciar
+  skipTimer.classList.remove('hidden');
   timerOverlay.classList.remove('hidden');
   timerMessage.textContent = 'Recuperá fuerzas para la siguiente serie.';
   updateTimerDisplay();
@@ -478,7 +579,7 @@ function startTimer(seconds) {
         if (navigator.vibrate) navigator.vibrate([250, 120, 250]);
         timerMessage.textContent = '¡Descanso terminado! Siguiente serie.';
         pauseTimer.textContent = 'Cerrar';
-        skipTimer.classList.add('hidden'); // Oculta "Saltar" al llegar a 0
+        skipTimer.classList.add('hidden');
       }
     }
   }, 1000);
@@ -504,7 +605,6 @@ addTime.addEventListener('click', () => {
   remaining += 15; 
   updateTimerDisplay();
 
-  // Si estaba en 0 y se agregaron 15s, reiniciar la cuenta regresiva si estaba detenida
   if (wasZero) {
     skipTimer.classList.remove('hidden');
     pauseTimer.textContent = 'Pausar';
@@ -525,6 +625,11 @@ resetButton.addEventListener('click', () => {
     renderUser();
   }
 });
+
+
+// ==========================================
+// 7. MODAL "CAMBIAR DÍA"
+// ==========================================
 
 function populateDayModal() {
   const routines = getRoutines();
@@ -575,6 +680,11 @@ function populateDayModal() {
 dayButton.addEventListener('click', () => { populateDayModal(); dayModal.classList.remove('hidden'); });
 closeModal.addEventListener('click', () => dayModal.classList.add('hidden'));
 dayModal.addEventListener('click', (e) => { if (e.target === dayModal) dayModal.classList.add('hidden'); });
+
+
+// ==========================================
+// 8. PANEL DE ADMINISTRACIÓN (CREAR Y EDITAR)
+// ==========================================
 
 function renderAdminRoutines() {
   const routines = getRoutines();
@@ -759,7 +869,11 @@ saveRest.addEventListener('click', () => {
   if (sec > 0) { setRestSeconds(sec); restSeconds = sec; alert('Tiempo de descanso actualizado'); }
 });
 
-// EXPORTAR E IMPORTAR RESPALDO JSON
+
+// ==========================================
+// 9. IMPORTACIÓN Y EXPORTACIÓN DE DATOS (JSON)
+// ==========================================
+
 btnExportar.addEventListener('click', () => {
   const backup = {};
   for (let i = 0; i < localStorage.length; i++) {
@@ -801,59 +915,104 @@ inputImportar.addEventListener('change', (event) => {
   reader.readAsText(file);
 });
 
-let showingProgress = false;
 
-progressToggleBtn.addEventListener('click', () => {
-  showingProgress = !showingProgress;
+// ==========================================
+// 10. CONTROL DE NAVEGACIÓN Y VISIBILIDAD DE BOTONES
+// ==========================================
+
+/**
+ * Función centralizada que controla qué pestaña se muestra y la visibilidad 
+ * de los botones de navegación (Cambiar Día, Admin y Progreso).
+ */
+function updateNavigationVisibility() {
   if (showingProgress) {
+    // -------------------------------------------------------------
+    // Pestaña: PROGRESO (Muestra botones para ir a Rutina y a Admin)
+    // -------------------------------------------------------------
     userView.classList.add('hidden');
     adminView.classList.add('hidden');
     progressView.classList.remove('hidden');
-    progressToggleBtn.textContent = '🏋️ Rutina';
-    modeToggle.style.display = 'none';
-    renderHeatmap();
-  } else {
-    progressView.classList.add('hidden');
-    userView.classList.remove('hidden');
-    progressToggleBtn.textContent = '📊 Progreso';
-    modeToggle.style.display = 'inline-block';
-    renderUser();
-  }
-});
 
-function toggleMode() {
-  if (currentMode === 'user') {
-    currentMode = 'admin';
+    progressToggleBtn.textContent = '🏋️ Rutina';
+    progressToggleBtn.style.display = 'inline-block';
+
+    modeToggle.textContent = '⚙️ Admin';
+    modeToggle.style.display = 'inline-block';
+
+    if (dayButton) dayButton.style.display = 'none'; // Se oculta Cambiar Día
+    renderHeatmap();
+
+  } else if (currentMode === 'admin') {
+    // -------------------------------------------------------------
+    // Pestaña: ADMIN (Muestra botones para ir a Rutina y a Progreso)
+    // -------------------------------------------------------------
     userView.classList.add('hidden');
     progressView.classList.add('hidden');
     adminView.classList.remove('hidden');
-    modeToggle.textContent = '👤 Usuario';
-    progressToggleBtn.style.display = 'none';
+
+    progressToggleBtn.textContent = '📊 Progreso';
+    progressToggleBtn.style.display = 'inline-block';
+
+    modeToggle.textContent = '🏋️ Rutina';
+    modeToggle.style.display = 'inline-block';
+
+    if (dayButton) dayButton.style.display = 'none'; // Se oculta Cambiar Día
     renderAdminRoutines();
     restInput.value = getRestSeconds();
+
   } else {
-    currentMode = 'user';
+    // -------------------------------------------------------------
+    // Pestaña: RUTINA / USUARIO (Muestra Cambiar Día, Admin y Progreso)
+    // -------------------------------------------------------------
     adminView.classList.add('hidden');
+    progressView.classList.add('hidden');
     userView.classList.remove('hidden');
-    modeToggle.textContent = '⚙️ Admin';
+
+    progressToggleBtn.textContent = '📊 Progreso';
     progressToggleBtn.style.display = 'inline-block';
+
+    modeToggle.textContent = '⚙️ Admin';
+    modeToggle.style.display = 'inline-block';
+
+    if (dayButton) dayButton.style.display = 'inline-block'; // Se muestra Cambiar Día
     state = getDayState(currentRoutineId);
     renderUser();
   }
 }
 
+// Evento para toggle de la vista Progreso
+progressToggleBtn.addEventListener('click', () => {
+  showingProgress = !showingProgress;
+  if (showingProgress) {
+    currentMode = 'user'; // Resetea modo para asegurar estado correcto
+  }
+  updateNavigationVisibility();
+});
+
+// Evento para toggle del modo Admin / Usuario
+function toggleMode() {
+  if (currentMode === 'user') {
+    currentMode = 'admin';
+  } else {
+    currentMode = 'user';
+  }
+  showingProgress = false; // Desactiva vista de progreso
+  updateNavigationVisibility();
+}
+
 modeToggle.addEventListener('click', toggleMode);
+
+
+// ==========================================
+// 11. INICIALIZACIÓN
+// ==========================================
 
 function init() {
   currentRoutineId = getCurrentRoutinePointer();
   state = getDayState(currentRoutineId);
-  renderUser();
-  renderHeatmap();
+  showingProgress = false;
   currentMode = 'user';
-  userView.classList.remove('hidden');
-  adminView.classList.add('hidden');
-  progressView.classList.add('hidden');
-  modeToggle.textContent = '⚙️ Admin';
+  updateNavigationVisibility();
 }
 
 init();
