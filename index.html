@@ -16,7 +16,7 @@
   </div>
   <div style="display:flex;gap:8px;flex-wrap:wrap;">
     <button id="progressToggleBtn" class="day-button" type="button">📊 Progreso</button>
-    <button id="modeToggle" class="day-button">⚙️ Admin</button>
+    <button id="modeToggle" class="day-button" type="button">⚙️ Admin</button>
     <button id="dayButton" class="day-button" type="button">📅 Cambiar día</button>
   </div>
 </header>
@@ -52,15 +52,15 @@
     <section id="exerciseList" class="exercise-list"></section>
     
     <div class="routine-actions-footer">
-      <button class="day-button" style="background: var(--card-2); width:100%; text-align:center;" onclick="completeRoutineAndAdvance(true)">Terminar Rutina</button>
-      <button class="day-button" style="background: var(--line); width:100%; text-align:center;" onclick="completeRoutineAndAdvance(false)">Dejar incompleta / Siguiente</button>
+      <button class="day-button" type="button" style="background: var(--card-2); width:100%; text-align:center;" onclick="completeRoutineAndAdvance(true)">Terminar Rutina</button>
+      <button class="day-button" type="button" style="background: var(--line); width:100%; text-align:center;" onclick="completeRoutineAndAdvance(false)">Dejar incompleta / Siguiente</button>
     </div>
 
     <section id="finishCard" class="finish-card hidden">
       <div class="finish-icon">✓</div>
       <h2>¡Rutina completada!</h2>
       <p>Terminaste todas las series de hoy. ¡Excelente trabajo!</p>
-      <button id="resetButton" class="secondary-button">Reiniciar rutina actual</button>
+      <button id="resetButton" class="secondary-button" type="button">Reiniciar rutina actual</button>
     </section>
   </div>
 
@@ -69,39 +69,42 @@
       <h2>💾 Copia de Seguridad</h2>
       <p style="color:var(--muted); font-size:0.85rem; margin-top:-5px; margin-bottom:12px;">Exporta todo tu progreso y rutinas a un archivo JSON para cargarlo en otro celular o navegador.</p>
       <div style="display:flex; gap:10px; flex-wrap:wrap;">
-        <button id="btnExportar" class="day-button" style="background:var(--card-2);">📥 Respaldo (JSON)</button>
-        <button id="btnImportar" class="day-button" style="background:var(--accent); color:#0c0d0f;">📤 Cargar Datos</button>
-        <input type="file" id="inputImportar" accept=".json" style="display: none;" />
+        <button id="btnExportar" class="day-button" type="button" style="background:var(--card-2);">📥 Respaldo (JSON)</button>
+        <button id="btnImportar" class="day-button" type="button" style="background:var(--accent); color:#0c0d0f;">📤 Cargar Datos</button>
+        <input type="file" id="inputImportar" name="inputImportar" accept=".json" style="display: none;" aria-label="Cargar archivo de copia de seguridad" />
       </div>
     </section>
 
     <section class="admin-section">
       <h2>⏱️ Tiempo de descanso</h2>
       <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
-        <input type="number" id="restInput" value="60" style="width:80px;background:#0c0d0f;border:1px solid var(--line);color:#fff;padding:8px;border-radius:8px;" />
+        <label for="restInput" style="display:none;">Segundos de descanso</label>
+        <input type="number" id="restInput" name="restSeconds" value="60" style="width:80px;background:#0c0d0f;border:1px solid var(--line);color:#fff;padding:8px;border-radius:8px;" aria-label="Segundos de descanso" />
         <span>segundos</span>
-        <button id="saveRest" class="day-button">Guardar</button>
+        <button id="saveRest" class="day-button" type="button">Guardar</button>
       </div>
     </section>
 
     <section class="admin-section">
       <h2>📅 Rutinas</h2>
-      <button id="addRoutineBtn" class="day-button" style="margin-bottom:15px;">+ Crear rutina</button>
+      <button id="addRoutineBtn" class="day-button" type="button" style="margin-bottom:15px;">+ Crear rutina</button>
       <div id="routineListAdmin"></div>
 
       <div id="routineForm" class="admin-form hidden">
         <h3 id="formTitle">Nueva rutina</h3>
-        <label>Nombre</label>
-        <input type="text" id="routineName" placeholder="Ej: Día 1" />
-        <label>Ejercicios</label>
+        
+        <label for="routineName">Nombre</label>
+        <input type="text" id="routineName" name="routineName" placeholder="Ej: Día 1" />
+        
+        <label for="exerciseSelector">Ejercicios</label>
         <div style="display:flex;gap:10px;flex-wrap:wrap;">
-          <select id="exerciseSelector" style="flex:1;min-width:200px;"></select>
-          <button id="addExerciseBtn" class="day-button" style="padding:8px 16px;">+ Agregar</button>
+          <select id="exerciseSelector" name="exerciseSelector" style="flex:1;min-width:200px;"></select>
+          <button id="addExerciseBtn" class="day-button" type="button" style="padding:8px 16px;">+ Agregar</button>
         </div>
         <div id="routineExercisesList"></div>
         <div class="admin-actions">
-          <button id="submitRoutine" class="save-btn">Guardar rutina</button>
-          <button id="cancelRoutine" class="cancel-btn">Cancelar</button>
+          <button id="submitRoutine" class="save-btn" type="button">Guardar rutina</button>
+          <button id="cancelRoutine" class="cancel-btn" type="button">Cancelar</button>
         </div>
       </div>
     </section>
@@ -112,7 +115,7 @@
   <div class="modal-box">
     <div class="modal-header">
       <h2>Elegir día</h2>
-      <button id="closeModal" class="icon-button">×</button>
+      <button id="closeModal" class="icon-button" type="button" aria-label="Cerrar modal">×</button>
     </div>
     <div id="dayOptions" class="day-options"></div>
   </div>
@@ -122,7 +125,7 @@
   <div class="modal-box">
     <div class="modal-header">
       <h2 id="historyModalTitle">Detalle del día</h2>
-      <button id="closeHistoryModal" class="icon-button">×</button>
+      <button id="closeHistoryModal" class="icon-button" type="button" aria-label="Cerrar modal de historial">×</button>
     </div>
     <div id="historyModalContent" style="margin-top: 15px; font-size: 14px; max-height: 320px; overflow-y: auto; color: var(--muted);"></div>
   </div>
@@ -134,9 +137,9 @@
     <div id="timerValue" class="timer">01:00</div>
     <p id="timerMessage">Recuperá fuerzas para la siguiente serie.</p>
     <div class="timer-actions">
-      <button id="addTime" class="timer-small">+15 s</button>
-      <button id="pauseTimer" class="timer-main">Pausar</button>
-      <button id="skipTimer" class="timer-small">Saltar</button>
+      <button id="addTime" class="timer-small" type="button">+15 s</button>
+      <button id="pauseTimer" class="timer-main" type="button">Pausar</button>
+      <button id="skipTimer" class="timer-small" type="button">Saltar</button>
     </div>
   </div>
 </div>

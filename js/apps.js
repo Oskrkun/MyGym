@@ -207,16 +207,16 @@ function renderUser() {
       cardioHtml = `
         <div style="display:flex; gap:12px; margin-top:10px; padding:10px; background:var(--bg); border-radius:10px; flex-wrap:wrap;">
           <div style="flex:1; min-width:110px;">
-            <label style="font-size:11px; color:var(--muted);">Tiempo realizado</label>
-            <input type="text" class="weight-input cardio-time" data-exercise="${idx}" value="${exState.cardioTime || ex.time || '15 min'}" placeholder="0 min" style="width:100%; margin-top:4px;" />
+            <label for="cardioTime_${idx}" style="font-size:11px; color:var(--muted);">Tiempo realizado</label>
+            <input type="text" id="cardioTime_${idx}" name="cardioTime_${idx}" class="weight-input cardio-time" data-exercise="${idx}" value="${exState.cardioTime || ex.time || '15 min'}" placeholder="0 min" style="width:100%; margin-top:4px;" />
           </div>
           <div style="flex:1; min-width:90px;">
-            <label style="font-size:11px; color:var(--muted);">Velocidad</label>
-            <input type="number" class="weight-input cardio-speed" data-exercise="${idx}" value="${exState.speed || 0}" style="width:100%; margin-top:4px;" />
+            <label for="cardioSpeed_${idx}" style="font-size:11px; color:var(--muted);">Velocidad</label>
+            <input type="number" id="cardioSpeed_${idx}" name="cardioSpeed_${idx}" class="weight-input cardio-speed" data-exercise="${idx}" value="${exState.speed || 0}" style="width:100%; margin-top:4px;" />
           </div>
           <div style="flex:1; min-width:90px;">
-            <label style="font-size:11px; color:var(--muted);">Inclinación</label>
-            <input type="number" class="weight-input cardio-incline" data-exercise="${idx}" value="${exState.incline || 0}" style="width:100%; margin-top:4px;" />
+            <label for="cardioIncline_${idx}" style="font-size:11px; color:var(--muted);">Inclinación</label>
+            <input type="number" id="cardioIncline_${idx}" name="cardioIncline_${idx}" class="weight-input cardio-incline" data-exercise="${idx}" value="${exState.incline || 0}" style="width:100%; margin-top:4px;" />
           </div>
         </div>
       `;
@@ -235,19 +235,19 @@ function renderUser() {
 
       <div class="gif-container">
         <img src="${imageUrl}" alt="${exerciseData.name}" class="exercise-gif" onerror="this.src='gifs/default.gif'" />
-        ${showImageBtn ? `<button class="change-image-btn" data-exercise="${idx}">⇄</button>` : ''}
+        ${showImageBtn ? `<button type="button" class="change-image-btn" data-exercise="${idx}" aria-label="Cambiar imagen">⇄</button>` : ''}
       </div>
 
       <div class="series-container">
         ${cardioHtml}
         ${exState.completed.map((checked, setIndex) => `
           <div class="set-row ${checked ? 'checked' : ''}" data-exercise="${idx}" data-set="${setIndex}">
-            <input type="checkbox" data-exercise="${idx}" data-set="${setIndex}" ${checked ? 'checked' : ''}>
+            <input type="checkbox" id="check_${idx}_${setIndex}" name="check_${idx}_${setIndex}" data-exercise="${idx}" data-set="${setIndex}" ${checked ? 'checked' : ''} aria-label="Marcar serie ${setIndex + 1}">
             <span class="fake-check">✓</span>
             <div class="set-info">
               <strong>${isCardio ? 'Completar sesión' : 'Serie ' + (setIndex + 1)}</strong>
               <small>${isCardio ? 'Tiempo objetivo: ' + (ex.time || '15 min') : ex.reps + ' repeticiones'}</small>
-              ${!isCardio ? `<input class="weight-input" data-exercise="${idx}" data-set="${setIndex}" placeholder="Peso (kg)" value="${exState.weights[setIndex] || ''}" />` : ''}
+              ${!isCardio ? `<input class="weight-input" id="weight_${idx}_${setIndex}" name="weight_${idx}_${setIndex}" data-exercise="${idx}" data-set="${setIndex}" placeholder="Peso (kg)" value="${exState.weights[setIndex] || ''}" aria-label="Peso para serie ${setIndex + 1}" />` : ''}
             </div>
             <span class="set-state">${checked ? 'COMPLETADA' : 'PENDIENTE'}</span>
           </div>
@@ -255,7 +255,7 @@ function renderUser() {
       </div>
 
       <div class="exercise-actions">
-        <button class="collapse-button" data-collapse="${idx}">
+        <button type="button" class="collapse-button" data-collapse="${idx}">
           ${exState.collapsed ? 'Expandir series ↑' : 'Contraer y seguir ↓'}
         </button>
       </div>
@@ -464,6 +464,7 @@ function startTimer(seconds) {
   remaining = seconds;
   paused = false;
   pauseTimer.textContent = 'Pausar';
+  skipTimer.classList.remove('hidden'); // Asegura que el botón "Saltar" esté visible al iniciar
   timerOverlay.classList.remove('hidden');
   timerMessage.textContent = 'Recuperá fuerzas para la siguiente serie.';
   updateTimerDisplay();
@@ -477,6 +478,7 @@ function startTimer(seconds) {
         if (navigator.vibrate) navigator.vibrate([250, 120, 250]);
         timerMessage.textContent = '¡Descanso terminado! Siguiente serie.';
         pauseTimer.textContent = 'Cerrar';
+        skipTimer.classList.add('hidden'); // Oculta "Saltar" al llegar a 0
       }
     }
   }, 1000);
@@ -489,12 +491,32 @@ function updateTimerDisplay() {
 }
 
 pauseTimer.addEventListener('click', () => {
-  if (remaining <= 0) { timerOverlay.classList.add('hidden'); return; }
+  if (remaining <= 0) { 
+    timerOverlay.classList.add('hidden'); 
+    return; 
+  }
   paused = !paused;
   pauseTimer.textContent = paused ? 'Continuar' : 'Pausar';
 });
-addTime.addEventListener('click', () => { remaining += 15; updateTimerDisplay(); });
-skipTimer.addEventListener('click', () => { clearInterval(timerInterval); timerOverlay.classList.add('hidden'); });
+
+addTime.addEventListener('click', () => { 
+  const wasZero = remaining <= 0;
+  remaining += 15; 
+  updateTimerDisplay();
+
+  // Si estaba en 0 y se agregaron 15s, reiniciar la cuenta regresiva si estaba detenida
+  if (wasZero) {
+    skipTimer.classList.remove('hidden');
+    pauseTimer.textContent = 'Pausar';
+    timerMessage.textContent = 'Recuperá fuerzas para la siguiente serie.';
+    startTimer(remaining);
+  }
+});
+
+skipTimer.addEventListener('click', () => { 
+  clearInterval(timerInterval); 
+  timerOverlay.classList.add('hidden'); 
+});
 
 resetButton.addEventListener('click', () => {
   if (confirm('¿Seguro que querés reiniciar esta rutina actual?')) {
@@ -536,6 +558,7 @@ function populateDayModal() {
     }
 
     const btn = document.createElement('button');
+    btn.type = 'button';
     btn.innerHTML = `<span>${r.name}</span> ${statusTag}`;
     btn.addEventListener('click', () => {
       currentRoutineId = r.id;
@@ -570,8 +593,8 @@ function renderAdminRoutines() {
         <div class="exercise-list-small">${exerciseNames}</div>
       </div>
       <div class="admin-item-actions">
-        <button class="edit-routine-btn" data-idx="${idx}">Editar</button>
-        <button class="delete-routine-btn" data-idx="${idx}">Eliminar</button>
+        <button type="button" class="edit-routine-btn" data-idx="${idx}">Editar</button>
+        <button type="button" class="delete-routine-btn" data-idx="${idx}">Eliminar</button>
       </div>
     `;
     routineListAdmin.appendChild(div);
@@ -643,9 +666,9 @@ function renderTempExercises() {
     div.className = 'routine-exercise-item';
     div.innerHTML = `
       <span style="flex:1;"><strong>${exData.name}</strong> · ${desc}</span>
-      <button class="action-btn-small move-up" data-idx="${idx}">▲</button>
-      <button class="action-btn-small move-down" data-idx="${idx}">▼</button>
-      <button class="remove-exercise" data-idx="${idx}">✕</button>
+      <button type="button" class="action-btn-small move-up" data-idx="${idx}">▲</button>
+      <button type="button" class="action-btn-small move-down" data-idx="${idx}">▼</button>
+      <button type="button" class="remove-exercise" data-idx="${idx}">✕</button>
     `;
     routineExercisesList.appendChild(div);
   });
