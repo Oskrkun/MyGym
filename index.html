@@ -25,6 +25,14 @@
   <div id="progressView" class="hidden">
     <section class="progress-panel-card">
       <h2>Calendario de Actividad (Heatmap)</h2>
+      
+      <!-- Navegador de Meses -->
+      <div class="month-navigator">
+        <button id="prevMonthBtn" class="day-button" type="button">◀ Anterior</button>
+        <span id="monthLabel" style="font-weight: bold; font-size: 1.1rem; color: var(--accent);"></span>
+        <button id="nextMonthBtn" class="day-button" type="button">Siguiente ▶</button>
+      </div>
+
       <p style="color: var(--muted); font-size: 0.85rem;">Haz clic en cualquier día del mes para ver el detalle de la rutina guardada:</p>
       <div class="heatmap-grid" id="heatmapContainer"></div>
     </section>
