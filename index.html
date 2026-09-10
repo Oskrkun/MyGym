@@ -2,85 +2,1471 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>MiGym App</title>
-  <link rel="stylesheet" href="css/styles.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>MiGym - Usuario / Admin</title>
+  <style>
+    * { box-sizing: border-box; }
+    :root {
+      --bg: #0c0d0f;
+      --card: #17191d;
+      --card-2: #202329;
+      --text: #f4f5f6;
+      --muted: #8e949d;
+      --line: #30343b;
+      --accent: #b8ff35;
+      --accent-dark: #8fc91e;
+      --success: #22c55e;
+      --warning: #eab308;
+    }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--bg);
+      color: var(--text);
+      font-family: Inter, system-ui, sans-serif;
+    }
+    button, input { font: inherit; }
+    button { cursor: pointer; }
+
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px 18px 14px;
+      background: rgba(12,13,15,.94);
+      backdrop-filter: blur(14px);
+      border-bottom: 1px solid #202328;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .brand { font-size: 22px; font-weight: 900; letter-spacing: -1px; }
+    .brand span { color: var(--accent); }
+    .subtitle, .eyebrow, .group {
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 1.5px;
+    }
+    .day-button {
+      border: 1px solid var(--line);
+      color: var(--text);
+      background: var(--card);
+      border-radius: 12px;
+      padding: 10px 12px;
+      font-weight: 700;
+      text-decoration: none;
+      font-size: 14px;
+      transition: 0.2s;
+    }
+    .day-button:hover { background: var(--card-2); }
+    .day-button.active { background: var(--accent); color: #0c0d0f; border-color: var(--accent); }
+
+    .app {
+      width: min(100%, 720px);
+      margin: auto;
+      padding: 18px 14px 50px;
+    }
+
+    .progress-card {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 18px;
+      padding: 20px;
+      margin-bottom: 14px;
+      border: 1px solid var(--line);
+      border-radius: 22px;
+      background: linear-gradient(145deg, #1a1c20, #121417);
+    }
+    .progress-card h1 { margin: 5px 0 0; font-size: 28px; letter-spacing: -1px; }
+    .progress-ring {
+      min-width: 74px;
+      height: 74px;
+      display: grid;
+      place-items: center;
+      align-content: center;
+      border: 3px solid var(--accent);
+      border-radius: 50%;
+    }
+    .progress-ring strong { font-size: 18px; }
+    .progress-ring span { color: var(--muted); font-size: 9px; }
+
+    .progress-panel-card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+    .heatmap-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 8px;
+      margin-top: 15px;
+    }
+    .heatmap-day {
+      aspect-ratio: 1;
+      background-color: var(--line);
+      border-radius: 6px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.75rem;
+      font-weight: bold;
+      color: var(--muted);
+      cursor: pointer;
+      transition: 0.2s;
+    }
+    .heatmap-day:hover { border: 1px solid var(--accent); }
+    .heatmap-day.completed { background-color: var(--success); color: #fff; }
+    .heatmap-day.incomplete { background-color: var(--warning); color: #0c0d0f; }
+    .heatmap-day span { font-size: 9px; opacity: 0.8; }
+
+    .exercise-list { display: grid; gap: 12px; }
+    .exercise-card {
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      background: var(--card);
+      transition: all 0.3s ease;
+    }
+    .exercise-card.completed-exercise {
+      border-color: var(--accent-dark);
+      opacity: 0.7;
+    }
+    .exercise-head {
+      display: grid;
+      grid-template-columns: 38px 1fr 32px;
+      gap: 12px;
+      align-items: center;
+      padding: 17px 16px 14px;
+    }
+    .exercise-number { color: var(--accent); font-weight: 900; font-size: 14px; }
+    .exercise-title h2 { margin: 2px 0 5px; font-size: 18px; line-height: 1.15; }
+    .exercise-title p { margin: 0; color: var(--muted); font-size: 12px; }
+    .exercise-status {
+      width: 28px; height: 28px;
+      display: grid; place-items: center;
+      border: 1px solid var(--line); border-radius: 50%;
+      color: var(--bg); font-weight: 900;
+      transition: 0.3s;
+    }
+    .exercise-status.done { background: var(--accent); border-color: var(--accent); }
+
+    .gif-container {
+      position: relative;
+      padding: 8px 16px;
+      background: #101214;
+      border-top: 1px solid var(--line);
+      border-bottom: 1px solid var(--line);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 120px;
+    }
+    .exercise-gif {
+      max-width: 100%;
+      max-height: 150px;
+      border-radius: 12px;
+      object-fit: contain;
+      background: #0a0b0d;
+    }
+    .change-image-btn {
+      position: absolute;
+      right: 20px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: var(--card-2);
+      border: 1px solid var(--line);
+      color: var(--text);
+      width: 36px; height: 36px;
+      border-radius: 50%;
+      font-size: 18px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+    .change-image-btn:hover { background: var(--accent); color: #0c0d0f; }
+
+    .series-container { padding: 0 12px 6px; }
+    .set-row {
+      min-height: 62px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 7px;
+      padding: 10px 12px;
+      border: 1px solid var(--line);
+      border-radius: 15px;
+      background: var(--card-2);
+      transition: .18s ease;
+      cursor: pointer;
+    }
+    .set-row:hover { border-color: var(--accent-dark); }
+    .set-row.checked { border-color: var(--accent-dark); background: rgba(184,255,53,.08); }
+    .set-row input[type="checkbox"] {
+      position: absolute;
+      opacity: 0;
+      pointer-events: none;
+    }
+    .fake-check {
+      width: 28px; height: 28px; flex: 0 0 28px;
+      display: grid; place-items: center;
+      border: 2px solid #5c636c; border-radius: 8px;
+      color: transparent; font-weight: 1000;
+      transition: 0.2s;
+    }
+    .set-row.checked .fake-check { background: var(--accent); border-color: var(--accent); color: #0c0d0f; }
+    .set-info {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      flex: 1;
+    }
+    .set-info strong { font-size: 14px; }
+    .set-info small { color: var(--muted); font-size: 11px; }
+    .weight-input {
+      background: #0c0d0f;
+      border: 1px solid var(--line);
+      color: var(--text);
+      padding: 4px 8px;
+      border-radius: 6px;
+      width: 100px;
+      font-size: 12px;
+    }
+    .weight-input:focus { outline: 1px solid var(--accent); }
+    .set-state { color: var(--muted); font-size: 9px; font-weight: 900; }
+    .set-row.checked .set-state { color: var(--accent); }
+
+    .exercise-actions { padding: 5px 12px 13px; }
+    .collapse-button {
+      width: 100%;
+      padding: 11px;
+      border: 0;
+      border-radius: 11px;
+      background: #272b31;
+      color: #dfe2e5;
+      font-size: 12px;
+      font-weight: 800;
+      transition: 0.2s;
+    }
+    .collapse-button:hover { background: #3a3f47; }
+    .exercise-card.collapsed .series-container { display: none; }
+    .exercise-card.collapsed .exercise-actions { padding-top: 0; }
+
+    .finish-card {
+      margin-top: 14px;
+      padding: 30px 20px;
+      text-align: center;
+      border: 1px solid var(--accent-dark);
+      border-radius: 22px;
+      background: rgba(184,255,53,.08);
+      animation: fadeIn 0.5s ease;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .finish-icon {
+      width: 58px; height: 58px;
+      display: grid; place-items: center;
+      margin: auto;
+      border-radius: 50%;
+      background: var(--accent);
+      color: #0c0d0f;
+      font-size: 30px;
+      font-weight: 1000;
+    }
+    .finish-card h2 { margin: 14px 0 5px; }
+    .finish-card p { margin: 0 0 18px; color: var(--muted); }
+    
+    .routine-actions-footer {
+      display: flex;
+      gap: 10px;
+      margin-top: 14px;
+    }
+    .routine-actions-footer button {
+      flex: 1;
+      padding: 12px;
+      border-radius: 12px;
+      font-weight: bold;
+    }
+
+    .secondary-button {
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 11px 15px;
+      color: var(--text);
+      background: var(--card);
+      transition: 0.2s;
+    }
+    .secondary-button:hover { background: var(--card-2); }
+    .hidden { display: none !important; }
+
+    .modal, .timer-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 100;
+      display: grid;
+      place-items: center;
+      padding: 20px;
+      background: rgba(0,0,0,.72);
+      animation: fadeIn 0.3s ease;
+    }
+    .modal-box, .timer-box {
+      width: min(100%, 420px);
+      padding: 20px;
+      border: 1px solid var(--line);
+      border-radius: 24px;
+      background: #17191d;
+      box-shadow: 0 25px 80px rgba(0,0,0,.45);
+    }
+    .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .modal-header h2 { margin: 0; }
+    .icon-button {
+      width: 38px; height: 38px;
+      border: 0;
+      border-radius: 50%;
+      color: var(--text);
+      background: var(--card-2);
+      font-size: 25px;
+      transition: 0.2s;
+    }
+    .icon-button:hover { background: var(--line); }
+    .day-options { display: grid; gap: 10px; margin-top: 18px; }
+    .day-options button {
+      padding: 16px;
+      text-align: left;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      color: var(--text);
+      background: var(--card-2);
+      font-weight: 800;
+      transition: 0.2s;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .day-options button:hover { border-color: var(--accent); background: var(--card); }
+    .day-options button .day-status { font-size: 12px; }
+
+    .timer-box { text-align: center; padding: 30px 20px 22px; }
+    .timer {
+      margin: 12px 0 5px;
+      color: var(--accent);
+      font-size: clamp(68px, 20vw, 110px);
+      font-weight: 1000;
+      line-height: 1;
+      letter-spacing: -5px;
+      font-variant-numeric: tabular-nums;
+    }
+    .timer-box p:not(.eyebrow) { color: var(--muted); font-size: 13px; }
+    .timer-actions {
+      display: grid;
+      grid-template-columns: 1fr 1.5fr 1fr;
+      gap: 8px;
+      margin-top: 20px;
+    }
+    .timer-small, .timer-main {
+      min-height: 48px;
+      border-radius: 12px;
+      font-weight: 900;
+      transition: 0.2s;
+    }
+    .timer-small { border: 1px solid var(--line); color: var(--text); background: var(--card-2); }
+    .timer-small:hover { background: var(--line); }
+    .timer-main { border: 0; color: #0c0d0f; background: var(--accent); }
+    .timer-main:hover { background: var(--accent-dark); }
+
+    /* Admin */
+    .admin-section {
+      margin: 20px 0;
+      padding: 20px;
+      background: var(--card);
+      border-radius: 20px;
+      border: 1px solid var(--line);
+    }
+    .admin-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 0;
+      border-bottom: 1px solid var(--line);
+      gap: 10px;
+    }
+    .admin-item:last-child { border: none; }
+    .admin-item-actions { display: flex; gap: 6px; }
+    .admin-item-actions button {
+      background: var(--card-2);
+      border: 1px solid var(--line);
+      color: var(--text);
+      padding: 6px 10px;
+      border-radius: 8px;
+      font-weight: bold;
+    }
+    .admin-item-actions button:hover { background: var(--line); }
+    .admin-item-actions .delete-routine-btn {
+      background: rgba(255, 68, 68, 0.15);
+      color: #ff6666;
+      border-color: rgba(255, 68, 68, 0.3);
+    }
+    .admin-item-actions .delete-routine-btn:hover { background: #ff4444; color: white; }
+
+    .admin-form {
+      margin-top: 15px;
+      padding: 15px;
+      background: var(--card-2);
+      border-radius: 16px;
+      display: grid;
+      gap: 10px;
+    }
+    .admin-form label { font-weight: 700; font-size: 0.8rem; }
+    .admin-form input, .admin-form select {
+      background: #0c0d0f;
+      border: 1px solid var(--line);
+      color: var(--text);
+      padding: 10px;
+      border-radius: 10px;
+      width: 100%;
+    }
+    .admin-form select option { background: var(--card-2); }
+    .admin-actions { display: flex; gap: 10px; margin-top: 5px; }
+    .admin-actions button { padding: 8px 16px; border-radius: 10px; font-weight: 700; border: none; transition: 0.2s; }
+    .admin-actions .save-btn { background: var(--accent); color: #0c0d0f; }
+    .admin-actions .save-btn:hover { background: var(--accent-dark); }
+    .admin-actions .cancel-btn { background: var(--line); color: var(--text); }
+    .admin-actions .cancel-btn:hover { background: #3a3f47; }
+
+    .routine-exercise-item {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      padding: 8px;
+      background: var(--bg);
+      border-radius: 10px;
+      margin-bottom: 5px;
+      font-size: 13px;
+    }
+    .routine-exercise-item .action-btn-small {
+      background: var(--card-2);
+      border: 1px solid var(--line);
+      color: var(--text);
+      border-radius: 6px;
+      padding: 4px 8px;
+      font-size: 12px;
+      cursor: pointer;
+    }
+    .routine-exercise-item .action-btn-small:hover { background: var(--line); }
+    .routine-exercise-item .remove-exercise {
+      background: #ff4444;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      padding: 4px 8px;
+      font-size: 12px;
+      cursor: pointer;
+    }
+    .routine-exercise-item .remove-exercise:hover { background: #ff2222; }
+    .exercise-list-small { color: var(--muted); font-size: 0.8rem; margin-top: 2px; }
+
+    @media (min-width: 700px) {
+      .app { padding-top: 28px; }
+      .exercise-card { border-radius: 22px; }
+      .exercise-head { padding: 20px; }
+    }
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: var(--bg); }
+    ::-webkit-scrollbar-thumb { background: var(--line); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--muted); }
+    /* Oculta el GIF únicamente cuando la tarjeta está contraída */
+    .exercise-card.collapsed .gif-container {
+        display: none;
+    }
+  </style>
 </head>
 <body>
 
-  <!-- NAVEGACIÓN SUPERIOR RESTAURADA -->
-  <header>
-    <h1>MiGym</h1>
-    <nav class="nav-tabs">
-      <button class="tab-btn active" data-tab="workoutTab">🏋️ Entrenamiento</button>
-      <button class="tab-btn" data-tab="progressTab">📊 Progreso</button>
-      <button class="tab-btn" data-tab="adminTab">⚙️ Ajustes</button>
-    </nav>
-  </header>
+<header class="topbar">
+  <div>
+    <div class="brand">Mi<span>GYM</span></div>
+    <div id="dayLabel" class="subtitle">DÍA 1</div>
+  </div>
+  <div style="display:flex;gap:8px;flex-wrap:wrap;">
+    <button id="progressToggleBtn" class="day-button" type="button">📊 Progreso</button>
+    <button id="modeToggle" class="day-button">⚙️ Admin</button>
+    <button id="dayButton" class="day-button" type="button">📅 Cambiar día</button>
+  </div>
+</header>
 
-  <main class="container">
-    <!-- PESTAÑA: ENTRENAMIENTO -->
-    <section id="workoutTab" class="tab-content">
-      <div style="margin-bottom: 1rem;">
-        <label for="routineSelect">Seleccionar Rutina:</label>
-        <select id="routineSelect" name="routineSelect" style="width: 100%; padding: 0.5rem; margin-top: 0.4rem; background: var(--surface); color: var(--text); border: 1px solid var(--border); border-radius: 8px;"></select>
+<main class="app">
+  <div id="progressView" class="hidden">
+    <section class="progress-panel-card">
+      <h2>Calendario de Actividad (Heatmap)</h2>
+      <p style="color: var(--muted); font-size: 0.85rem;">Haz clic en cualquier día del mes para ver el detalle de la rutina guardada:</p>
+      <div class="heatmap-grid" id="heatmapContainer">
+        </div>
+    </section>
+
+    <section class="progress-panel-card">
+      <h2>Evolución General</h2>
+      <div style="background: var(--bg); padding: 20px; border-radius: 12px; text-align: center; color: var(--muted);">
+        <strong id="progressLevel" style="color: var(--accent); font-size: 1.2rem; display:inline-block;">Ciclo Actual de Entrenamiento</strong>
+      </div>
+    </section>
+  </div>
+
+  <div id="userView">
+    <section class="progress-card">
+      <div>
+        <p class="eyebrow">ENTRENAMIENTO</p>
+        <h1 id="routineTitle">Día 1</h1>
+      </div>
+      <div class="progress-ring">
+        <strong id="progressPercent">0%</strong>
+        <span>completo</span>
+      </div>
+    </section>
+    
+    <section id="exerciseList" class="exercise-list"></section>
+    
+    <div class="routine-actions-footer">
+      <button class="day-button" style="background: var(--card-2); width:100%; text-align:center;" onclick="completeRoutineAndAdvance(true)">Terminar Rutina</button>
+      <button class="day-button" style="background: var(--line); width:100%; text-align:center;" onclick="completeRoutineAndAdvance(false)">Dejar incompleta / Siguiente</button>
+    </div>
+
+    <section id="finishCard" class="finish-card hidden">
+      <div class="finish-icon">✓</div>
+      <h2>¡Rutina completada!</h2>
+      <p>Terminaste todas las series de hoy. ¡Excelente trabajo!</p>
+      <button id="resetButton" class="secondary-button">Reiniciar rutina actual</button>
+    </section>
+  </div>
+
+  <div id="adminView" class="hidden">
+    <section class="admin-section">
+      <h2>💾 Copia de Seguridad</h2>
+      <p style="color:var(--muted); font-size:0.85rem; margin-top:-5px; margin-bottom:12px;">Exporta todo tu progreso y rutinas a un archivo JSON para cargarlo en otro celular o navegador.</p>
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button id="btnExportar" class="day-button" style="background:var(--card-2);">📥 Respaldo (JSON)</button>
+        <button id="btnImportar" class="day-button" style="background:var(--accent); color:#0c0d0f;">📤 Cargar Datos</button>
+        <input type="file" id="inputImportar" accept=".json" style="display: none;" />
+      </div>
+    </section>
+
+    <section class="admin-section">
+      <h2>⏱️ Tiempo de descanso</h2>
+      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+        <input type="number" id="restInput" value="60" style="width:80px;background:#0c0d0f;border:1px solid var(--line);color:#fff;padding:8px;border-radius:8px;" />
+        <span>segundos</span>
+        <button id="saveRest" class="day-button">Guardar</button>
+      </div>
+    </section>
+
+    <section class="admin-section">
+      <h2>📅 Rutinas</h2>
+      <button id="addRoutineBtn" class="day-button" style="margin-bottom:15px;">+ Crear rutina</button>
+      <div id="routineListAdmin"></div>
+
+      <div id="routineForm" class="admin-form hidden">
+        <h3 id="formTitle">Nueva rutina</h3>
+        <label>Nombre</label>
+        <input type="text" id="routineName" placeholder="Ej: Día 1" />
+        <label>Ejercicios</label>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;">
+          <select id="exerciseSelector" style="flex:1;min-width:200px;"></select>
+          <button id="addExerciseBtn" class="day-button" style="padding:8px 16px;">+ Agregar</button>
+        </div>
+        <div id="routineExercisesList"></div>
+        <div class="admin-actions">
+          <button id="submitRoutine" class="save-btn">Guardar rutina</button>
+          <button id="cancelRoutine" class="cancel-btn">Cancelar</button>
+        </div>
+      </div>
+    </section>
+  </div>
+</main>
+
+<div id="dayModal" class="modal hidden">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h2>Elegir día</h2>
+      <button id="closeModal" class="icon-button">×</button>
+    </div>
+    <div id="dayOptions" class="day-options"></div>
+  </div>
+</div>
+
+<div id="historyModal" class="modal hidden">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h2 id="historyModalTitle">Detalle del día</h2>
+      <button id="closeHistoryModal" class="icon-button">×</button>
+    </div>
+    <div id="historyModalContent" style="margin-top: 15px; font-size: 14px; max-height: 320px; overflow-y: auto; color: var(--muted);">
+      </div>
+  </div>
+</div>
+
+<div id="timerOverlay" class="timer-overlay hidden">
+  <div class="timer-box">
+    <p class="eyebrow">DESCANSO</p>
+    <div id="timerValue" class="timer">01:00</div>
+    <p id="timerMessage">Recuperá fuerzas para la siguiente serie.</p>
+    <div class="timer-actions">
+      <button id="addTime" class="timer-small">+15 s</button>
+      <button id="pauseTimer" class="timer-main">Pausar</button>
+      <button id="skipTimer" class="timer-small">Saltar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const EXERCISES_DB = [
+  { id: 1, name: "Pecho plano c/barra", group: "Pecho", images: ["gifs/pecho plano con barra.gif"] },
+  { id: 2, name: "Pecho inclinado c/máquina", group: "Pecho", images: ["gifs/pecho inclinado con maquina.gif"] },
+  { id: 3, name: "Jalón dorsal T. abierto", group: "Espalda", images: ["gifs/jalon dorsal t. abierto.gif"] },
+  { id: 4, name: "Plaq espalda", group: "Espalda", images: ["gifs/maquina espalda.gif"] },
+  { id: 5, name: "Camilla cuádriceps", group: "Piernas", images: ["gifs/camilla cuadriceps.gif"] },
+  { id: 6, name: "Camilla isquio", group: "Piernas", images: ["gifs/camilla isquio.gif"] },
+  { id: 7, name: "Prensa + gemelos", group: "Piernas", images: ["gifs/press pierna.jpg"] },
+  { id: 8, name: "Extensiones", group: "Piernas", images: ["gifs/camilla cuadriceps.gif"] },
+  { id: 9, name: "Posterior hombros", group: "Hombros", images: ["gifs/posterior hombros 01.gif"] },
+  { id: 10, name: "Tríceps P. alta barra", group: "Tríceps", images: ["gifs/triceps parte alta barra 01.gif"] },
+  { id: 11, name: "Tríceps patada burro", group: "Tríceps", images: ["gifs/triceps patada burro 01.gif"] },
+  { id: 12, name: "Bíceps P. bajo c/barra", group: "Bíceps", images: ["gifs/biceps parte baja con barra 01.gif"] },
+  { id: 13, name: "Hack frontal", group: "Piernas", images: ["gifs/hack frontal 01.gif"] },
+  { id: 14, name: "Hip thrust", group: "Glúteos", images: ["gifs/hip thrust 01.gif"] },
+  { id: 15, name: "Polea c/barra V y P. alto", group: "Espalda", images: ["gifs/pullover en polea alta 01.gif"] },
+  { id: 16, name: "Semiflexo c/máquina", group: "Piernas", images: ["gifs/camilla isquio.gif"] },
+  { id: 17, name: "Apertura c/poleas", group: "Pecho", images: ["gifs/apertura con poleas 01.gif"] },
+  { id: 18, name: "Bíceps martillo", group: "Bíceps", images: ["gifs/biceps martillo.gif"] },
+  { id: 19, name: "Caminadora (Cardio)", group: "Cardio", images: ["gifs/Caminadora (Cardio).gif"] },
+  { id: 20, name: "Bicicleta fija", group: "Cardio", images: ["gifs/default.gif"] },
+  { id: 21, name: "Serrucho c/mancuerna", group: "Bíceps", images: ["gifs/default.gif"] },
+  { id: 22, name: "Pullover en polea alta", group: "Espalda", images: ["gifs/default.gif"] },
+  { id: 23, name: "Hip Thrust", group: "Piernas", images: ["gifs/default.gif"] }
+
+];
+
+const DEFAULT_ROUTINES = [
+  { id: 1, name: "Día 1", exercises: [{ exerciseId: 1, sets: 3, reps: 12, weight: "" }, { exerciseId: 2, sets: 3, reps: 12, weight: "" }] },
+  { id: 2, name: "Día 2", exercises: [{ exerciseId: 3, sets: 3, reps: 12, weight: "" }, { exerciseId: 4, sets: 3, reps: 12, weight: "" }] },
+  { id: 3, name: "Día 3", exercises: [{ exerciseId: 5, sets: 3, reps: 12, weight: "" }, { exerciseId: 6, sets: 3, reps: 12, weight: "" }] },
+  { id: 4, name: "Día 4", exercises: [{ exerciseId: 9, sets: 3, reps: 12, weight: "" }, { exerciseId: 10, sets: 3, reps: 12, weight: "" }] },
+  { id: 5, name: "Día 5", exercises: [{ exerciseId: 12, sets: 3, reps: 12, weight: "" }, { exerciseId: 14, sets: 3, reps: 12, weight: "" }] },
+  { id: 6, name: "Día 6", exercises: [{ exerciseId: 19, sets: 1, reps: 0, time: "20 min", weight: "", speed: 8, incline: 2 }] }
+];
+
+const DEFAULT_REST_SECONDS = 60;
+
+function getExercises() { return EXERCISES_DB; }
+function getExerciseById(id) { return EXERCISES_DB.find(ex => ex.id === id); }
+
+function getRoutines() {
+  const stored = localStorage.getItem('migym_routines');
+  if (stored) return JSON.parse(stored);
+  localStorage.setItem('migym_routines', JSON.stringify(DEFAULT_ROUTINES));
+  return DEFAULT_ROUTINES;
+}
+
+function saveRoutines(routines) {
+  localStorage.setItem('migym_routines', JSON.stringify(routines));
+}
+
+function getRestSeconds() {
+  const stored = localStorage.getItem('migym_rest_seconds');
+  return stored ? Number(stored) : DEFAULT_REST_SECONDS;
+}
+
+function setRestSeconds(sec) {
+  localStorage.setItem('migym_rest_seconds', String(sec));
+}
+
+function getGlobalHistory() {
+  return JSON.parse(localStorage.getItem('migym_global_history')) || {};
+}
+
+function saveGlobalHistory(history) {
+  localStorage.setItem('migym_global_history', JSON.stringify(history));
+}
+
+function getCurrentRoutinePointer() {
+  const ptr = localStorage.getItem('migym_routine_pointer');
+  if (ptr !== null) return Number(ptr);
+  const routines = getRoutines();
+  return routines.length > 0 ? routines[0].id : 1;
+}
+
+function saveCurrentRoutinePointer(id) {
+  localStorage.setItem('migym_routine_pointer', String(id));
+}
+
+function getDayState(routineId) {
+  const key = `migym_state_${routineId}`;
+  const saved = localStorage.getItem(key);
+  if (saved) return JSON.parse(saved);
+  
+  const routines = getRoutines();
+  const routine = routines.find(r => r.id === routineId);
+  if (!routine) return null;
+
+  const state = routine.exercises.map(ex => ({
+    completed: Array(ex.sets).fill(false),
+    collapsed: true,
+    weights: Array(ex.sets).fill(''),
+    cardioTime: ex.time || '15 min',
+    speed: ex.speed || 0,
+    incline: ex.incline || 0,
+    imageIndex: 0
+  }));
+  saveDayState(routineId, state);
+  return state;
+}
+
+function saveDayState(routineId, state) {
+  localStorage.setItem(`migym_state_${routineId}`, JSON.stringify(state));
+}
+
+let currentRoutineId = getCurrentRoutinePointer();
+let state = {};
+let timerInterval = null;
+let remaining = 0;
+let paused = false;
+let restSeconds = getRestSeconds();
+let currentMode = 'user';
+let editingRoutineIndex = -1;
+let tempExercises = [];
+
+const $ = id => document.getElementById(id);
+const dayLabel = $('dayLabel');
+const routineTitle = $('routineTitle');
+const exerciseList = $('exerciseList');
+const progressPercent = $('progressPercent');
+const finishCard = $('finishCard');
+const resetButton = $('resetButton');
+const dayButton = $('dayButton');
+const dayModal = $('dayModal');
+const dayOptions = $('dayOptions');
+const closeModal = $('closeModal');
+const historyModal = $('historyModal');
+const historyModalTitle = $('historyModalTitle');
+const historyModalContent = $('historyModalContent');
+const closeHistoryModal = $('closeHistoryModal');
+
+const timerOverlay = $('timerOverlay');
+const timerValue = $('timerValue');
+const timerMessage = $('timerMessage');
+const pauseTimer = $('pauseTimer');
+const addTime = $('addTime');
+const skipTimer = $('skipTimer');
+const modeToggle = $('modeToggle');
+const userView = $('userView');
+const adminView = $('adminView');
+const progressView = $('progressView');
+const progressToggleBtn = $('progressToggleBtn');
+const routineListAdmin = $('routineListAdmin');
+const restInput = $('restInput');
+const saveRest = $('saveRest');
+const addRoutineBtn = $('addRoutineBtn');
+const routineForm = $('routineForm');
+const formTitle = $('formTitle');
+const routineName = $('routineName');
+const exerciseSelector = $('exerciseSelector');
+const addExerciseBtn = $('addExerciseBtn');
+const routineExercisesList = $('routineExercisesList');
+const submitRoutine = $('submitRoutine');
+const cancelRoutine = $('cancelRoutine');
+const btnExportar = $('btnExportar');
+const btnImportar = $('btnImportar');
+const inputImportar = $('inputImportar');
+
+function renderUser() {
+  const routines = getRoutines();
+  let routine = routines.find(r => r.id === currentRoutineId);
+  
+  if (!routine) {
+    currentRoutineId = routines.length > 0 ? routines[0].id : 1;
+    saveCurrentRoutinePointer(currentRoutineId);
+    routine = routines[0];
+  }
+
+  if (!routine) {
+    exerciseList.innerHTML = '<p style="color:var(--muted);text-align:center;">No hay rutinas creadas. Entra en Admin para crear una.</p>';
+    return;
+  }
+
+  dayLabel.textContent = routine.name.toUpperCase();
+  routineTitle.textContent = routine.name;
+
+  state = getDayState(currentRoutineId);
+  if (!state) return;
+
+  let totalSets = 0, completedSets = 0;
+  exerciseList.innerHTML = '';
+
+  routine.exercises.forEach((ex, idx) => {
+    const exState = state[idx];
+    if (!exState) return;
+    const exerciseData = getExerciseById(ex.exerciseId);
+    if (!exerciseData) return;
+
+    totalSets += ex.sets;
+    completedSets += exState.completed.filter(Boolean).length;
+
+    const images = exerciseData.images || ['gifs/default.gif'];
+    const currentImageIndex = exState.imageIndex || 0;
+    const imageUrl = images[currentImageIndex] || 'gifs/default.gif';
+    const allDone = exState.completed.every(Boolean);
+    const isCardio = exerciseData.group === "Cardio" || ex.time;
+
+    const card = document.createElement('article');
+    card.className = `exercise-card${exState.collapsed ? ' collapsed' : ''}${allDone ? ' completed-exercise' : ''}`;
+    card.dataset.exerciseIndex = idx;
+
+    const showImageBtn = images.length > 1;
+    const subtitleText = isCardio ? `Duración: ${exState.cardioTime || ex.time || '15 min'}` : `${ex.sets} series · ${ex.reps} repeticiones`;
+
+    let cardioHtml = '';
+    if (isCardio) {
+      cardioHtml = `
+        <div style="display:flex; gap:12px; margin-top:10px; padding:10px; background:var(--bg); border-radius:10px; flex-wrap:wrap;">
+          <div style="flex:1; min-width:110px;">
+            <label style="font-size:11px; color:var(--muted);">Tiempo realizado</label>
+            <input type="text" class="weight-input cardio-time" data-exercise="${idx}" value="${exState.cardioTime || ex.time || '15 min'}" placeholder="0 min" style="width:100%; margin-top:4px;" />
+          </div>
+          <div style="flex:1; min-width:90px;">
+            <label style="font-size:11px; color:var(--muted);">Velocidad</label>
+            <input type="number" class="weight-input cardio-speed" data-exercise="${idx}" value="${exState.speed || 0}" style="width:100%; margin-top:4px;" />
+          </div>
+          <div style="flex:1; min-width:90px;">
+            <label style="font-size:11px; color:var(--muted);">Inclinación</label>
+            <input type="number" class="weight-input cardio-incline" data-exercise="${idx}" value="${exState.incline || 0}" style="width:100%; margin-top:4px;" />
+          </div>
+        </div>
+      `;
+    }
+
+    card.innerHTML = `
+      <div class="exercise-head">
+        <div class="exercise-number">${String(idx + 1).padStart(2, '0')}</div>
+        <div class="exercise-title">
+          <div class="group">${exerciseData.group}</div>
+          <h2>${exerciseData.name}</h2>
+          <p>${subtitleText}</p>
+        </div>
+        <div class="exercise-status ${allDone ? 'done' : ''}">${allDone ? '✓' : ''}</div>
       </div>
 
-      <div id="workoutContainer"></div>
-    </section>
+      <div class="gif-container">
+        <img src="${imageUrl}" alt="${exerciseData.name}" class="exercise-gif" onerror="this.src='gifs/default.gif'" />
+        ${showImageBtn ? `<button class="change-image-btn" data-exercise="${idx}">⇄</button>` : ''}
+      </div>
 
-    <!-- PESTAÑA: PROGRESO -->
-    <section id="progressTab" class="tab-content" style="display: none;">
-      <h2>Tu Progreso</h2>
-      <p id="streakCounter" style="margin-top: 0.5rem; color: var(--accent); font-weight: bold;"></p>
-      <div id="heatmapContainer" class="heatmap-grid"></div>
-    </section>
+      <div class="series-container">
+        ${cardioHtml}
+        ${exState.completed.map((checked, setIndex) => `
+          <div class="set-row ${checked ? 'checked' : ''}" data-exercise="${idx}" data-set="${setIndex}">
+            <input type="checkbox" data-exercise="${idx}" data-set="${setIndex}" ${checked ? 'checked' : ''}>
+            <span class="fake-check">✓</span>
+            <div class="set-info">
+              <strong>${isCardio ? 'Completar sesión' : 'Serie ' + (setIndex + 1)}</strong>
+              <small>${isCardio ? 'Tiempo objetivo: ' + (ex.time || '15 min') : ex.reps + ' repeticiones'}</small>
+              ${!isCardio ? `<input class="weight-input" data-exercise="${idx}" data-set="${setIndex}" placeholder="Peso (kg)" value="${exState.weights[setIndex] || ''}" />` : ''}
+            </div>
+            <span class="set-state">${checked ? 'COMPLETADA' : 'PENDIENTE'}</span>
+          </div>
+        `).join('')}
+      </div>
 
-    <!-- PESTAÑA: AJUSTES / ADMIN -->
-    <section id="adminTab" class="tab-content" style="display: none;">
-      <h2>Configuración</h2>
+      <div class="exercise-actions">
+        <button class="collapse-button" data-collapse="${idx}">
+          ${exState.collapsed ? 'Expandir series ↑' : 'Contraer y seguir ↓'}
+        </button>
+      </div>
+    `;
+
+    exerciseList.appendChild(card);
+  });
+
+  const percent = totalSets ? Math.round((completedSets / totalSets) * 100) : 0;
+  progressPercent.textContent = percent + '%';
+  finishCard.classList.toggle('hidden', percent !== 100);
+
+  exerciseList.querySelectorAll('.set-row').forEach(row => {
+    row.addEventListener('click', (e) => {
+      if (e.target.classList.contains('weight-input')) return;
+
+      const exIdx = Number(row.dataset.exercise);
+      const setIdx = Number(row.dataset.set);
+      const currentState = state[exIdx].completed[setIdx];
+
+      state[exIdx].completed[setIdx] = !currentState;
+      saveDayState(currentRoutineId, state);
+
+      if (!currentState) {
+        const routines = getRoutines();
+        const routine = routines.find(r => r.id === currentRoutineId);
+        const ex = routine.exercises[exIdx];
+        const allDone = state[exIdx].completed.every(Boolean);
+        const lastExercise = exIdx === routine.exercises.length - 1;
+        const lastSet = setIdx === ex.sets - 1;
+
+        if (allDone) {
+          state[exIdx].collapsed = true;
+          saveDayState(currentRoutineId, state);
+          if (!lastExercise && state[exIdx + 1]) {
+            state[exIdx + 1].collapsed = false;
+            saveDayState(currentRoutineId, state);
+          }
+        }
+
+        if (!(allDone && lastExercise && lastSet)) {
+          startTimer(restSeconds);
+        }
+      }
+      renderUser();
+    });
+  });
+
+  exerciseList.querySelectorAll('.weight-input').forEach(input => {
+    input.addEventListener('input', (e) => {
+      const exIdx = Number(e.target.dataset.exercise);
+      if (e.target.classList.contains('cardio-time')) {
+        state[exIdx].cardioTime = e.target.value;
+      } else if (e.target.classList.contains('cardio-speed')) {
+        state[exIdx].speed = e.target.value;
+      } else if (e.target.classList.contains('cardio-incline')) {
+        state[exIdx].incline = e.target.value;
+      } else {
+        const setIdx = Number(e.target.dataset.set);
+        state[exIdx].weights[setIdx] = e.target.value;
+      }
+      saveDayState(currentRoutineId, state);
+    });
+    input.addEventListener('click', (e) => e.stopPropagation());
+  });
+
+  exerciseList.querySelectorAll('.change-image-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const exIdx = Number(btn.dataset.exercise);
+      const routines = getRoutines();
+      const routine = routines.find(r => r.id === currentRoutineId);
+      const exerciseData = getExerciseById(routine.exercises[exIdx].exerciseId);
+      if (!exerciseData || !exerciseData.images || exerciseData.images.length <= 1) return;
+      const current = state[exIdx].imageIndex || 0;
+      state[exIdx].imageIndex = (current + 1) % exerciseData.images.length;
+      saveDayState(currentRoutineId, state);
+      renderUser();
+    });
+  });
+
+  exerciseList.querySelectorAll('.collapse-button').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const idx = Number(btn.dataset.collapse);
+      state[idx].collapsed = !state[idx].collapsed;
+      saveDayState(currentRoutineId, state);
+      renderUser();
+    });
+  });
+}
+
+function completeRoutineAndAdvance(isSuccess) {
+  const routines = getRoutines();
+  const currentRoutine = routines.find(r => r.id === currentRoutineId);
+  const currentStateData = getDayState(currentRoutineId);
+
+  const history = getGlobalHistory();
+  const todayKey = new Date().getDate();
+  
+  history[todayKey] = {
+    routineName: currentRoutine ? currentRoutine.name : "Rutina",
+    status: isSuccess ? 'completed' : 'incomplete',
+    exercises: currentRoutine.exercises.map((ex, idx) => {
+      const exData = getExerciseById(ex.exerciseId);
+      const exState = currentStateData[idx];
+      return {
+        name: exData ? exData.name : "Ejercicio",
+        isCardio: exData ? exData.group === "Cardio" || !!ex.time : false,
+        cardioTime: exState ? exState.cardioTime || ex.time || '0 min' : (ex.time || '0 min'),
+        weights: exState ? [...exState.weights] : [],
+        speed: exState ? exState.speed : 0,
+        incline: exState ? exState.incline : 0,
+        completed: exState ? [...exState.completed] : []
+      };
+    })
+  };
+  saveGlobalHistory(history);
+
+  const currentIndex = routines.findIndex(r => r.id === currentRoutineId);
+  
+  if (currentIndex !== -1 && currentIndex < routines.length - 1) {
+    currentRoutineId = routines[currentIndex + 1].id;
+    saveCurrentRoutinePointer(currentRoutineId);
+    alert(isSuccess ? `¡Rutina completada! Avanzando a: ${routines[currentIndex + 1].name}` : `Guardado como incompleto. Avanzando a: ${routines[currentIndex + 1].name}`);
+  } else {
+    routines.forEach(r => {
+      localStorage.removeItem(`migym_state_${r.id}`);
+    });
+    currentRoutineId = routines[0].id;
+    saveCurrentRoutinePointer(currentRoutineId);
+    alert("🎉 ¡Has completado todo el ciclo de rutinas! El sistema se ha reiniciado automáticamente al Día 1 para un nuevo ciclo. Tus datos quedaron guardados en el historial.");
+  }
+
+  state = getDayState(currentRoutineId);
+  renderUser();
+  renderHeatmap();
+}
+
+function renderHeatmap() {
+  const container = $('heatmapContainer');
+  container.innerHTML = '';
+  const history = getGlobalHistory();
+
+  for (let dayNum = 1; dayNum <= 31; dayNum++) {
+    const session = history[dayNum];
+    let className = 'heatmap-day';
+    let text = `${dayNum}`;
+    
+    if (session) {
+      if (session.status === 'completed') className += ' completed';
+      else if (session.status === 'incomplete') className += ' incomplete';
+      text += `<span>${session.routineName.replace('Día ', 'D')}</span>`;
+    }
+
+    const div = document.createElement('div');
+    div.className = className;
+    div.innerHTML = text;
+    
+    div.addEventListener('click', () => {
+      showHistoryDetail(dayNum, session);
+    });
+
+    container.appendChild(div);
+  }
+}
+
+function showHistoryDetail(dayNum, session) {
+  historyModalTitle.textContent = `Día ${dayNum} del mes`;
+  if (!session) {
+    historyModalContent.innerHTML = `<p style="color:var(--muted); text-align:center; padding: 20px;">No hay registros de entrenamiento guardados para este día.</p>`;
+  } else {
+    let html = `<p><strong>Rutina:</strong> ${session.routineName} (${session.status === 'completed' ? '✅ Completada' : '⏳ Incompleta'})</p><hr style="border-color:var(--line); margin: 10px 0;">`;
+    session.exercises.forEach((ex, i) => {
+      html += `<div style="margin-bottom: 12px; background:var(--bg); padding:10px; border-radius:10px;"><strong>${i+1}. ${ex.name}</strong><br>`;
       
-      <div class="card" style="margin-top: 1rem;">
-        <h3>Tiempo de Descanso</h3>
-        <label for="restSecondsInput">Segundos entre series:</label>
-        <input type="number" id="restSecondsInput" name="restSecondsInput" class="set-input" style="width: 100%; margin-top: 0.5rem;" min="10" max="300">
+      if (ex.isCardio) {
+        const timeVal = ex.cardioTime && ex.cardioTime.trim() !== '' ? ex.cardioTime : '0 min';
+        html += `<small style="color:var(--accent);">⏱️ Tiempo: ${timeVal}</small>`;
+        if (ex.speed || ex.incline) {
+          html += `<br><small style="color:var(--muted);">Velocidad: ${ex.speed || 0} | Inclinación: ${ex.incline || 0}</small>`;
+        }
+      } else {
+        if (ex.weights && ex.weights.length > 0) {
+          const seriesDetail = ex.weights.map((w, s) => {
+            const pesoText = w && String(w).trim() !== '' ? `${w}kg` : '0kg';
+            return `S${s+1}: <strong>${pesoText}</strong>`;
+          }).join(' | ');
+          html += `<small style="color:var(--text); display:block; margin-top:3px;">💪 Pesos: ${seriesDetail}</small>`;
+        } else {
+          html += `<small style="color:var(--muted);">Sin registros de peso (0kg)</small>`;
+        }
+      }
+      html += `</div>`;
+    });
+    historyModalContent.innerHTML = html;
+  }
+  historyModal.classList.remove('hidden');
+}
+
+closeHistoryModal.addEventListener('click', () => historyModal.classList.add('hidden'));
+historyModal.addEventListener('click', (e) => { if (e.target === historyModal) historyModal.classList.add('hidden'); });
+
+function startTimer(seconds) {
+  clearInterval(timerInterval);
+  remaining = seconds;
+  paused = false;
+  pauseTimer.textContent = 'Pausar';
+  timerOverlay.classList.remove('hidden');
+  timerMessage.textContent = 'Recuperá fuerzas para la siguiente serie.';
+  updateTimerDisplay();
+
+  timerInterval = setInterval(() => {
+    if (!paused) {
+      remaining--;
+      updateTimerDisplay();
+      if (remaining <= 0) {
+        clearInterval(timerInterval);
+        if (navigator.vibrate) navigator.vibrate([250, 120, 250]);
+        timerMessage.textContent = '¡Descanso terminado! Siguiente serie.';
+        pauseTimer.textContent = 'Cerrar';
+      }
+    }
+  }, 1000);
+}
+
+function updateTimerDisplay() {
+  const min = String(Math.floor(remaining / 60)).padStart(2, '0');
+  const sec = String(remaining % 60).padStart(2, '0');
+  timerValue.textContent = `${min}:${sec}`;
+}
+
+pauseTimer.addEventListener('click', () => {
+  if (remaining <= 0) { timerOverlay.classList.add('hidden'); return; }
+  paused = !paused;
+  pauseTimer.textContent = paused ? 'Continuar' : 'Pausar';
+});
+addTime.addEventListener('click', () => { remaining += 15; updateTimerDisplay(); });
+skipTimer.addEventListener('click', () => { clearInterval(timerInterval); timerOverlay.classList.add('hidden'); });
+
+resetButton.addEventListener('click', () => {
+  if (confirm('¿Seguro que querés reiniciar esta rutina actual?')) {
+    localStorage.removeItem(`migym_state_${currentRoutineId}`);
+    state = getDayState(currentRoutineId);
+    renderUser();
+  }
+});
+
+function populateDayModal() {
+  const routines = getRoutines();
+  dayOptions.innerHTML = '';
+  routines.forEach(r => {
+    const isCurrent = r.id === currentRoutineId;
+    const rState = getDayState(r.id);
+    
+    let isCompleted = false;
+    let isIncomplete = false;
+
+    if (rState) {
+      const totalSets = rState.reduce((acc, curr) => acc + curr.completed.length, 0);
+      const doneSets = rState.reduce((acc, curr) => acc + curr.completed.filter(Boolean).length, 0);
+      
+      if (totalSets > 0) {
+        if (doneSets === totalSets) isCompleted = true;
+        else if (doneSets > 0) isIncomplete = true;
+      }
+    }
+
+    let statusTag = '';
+    if (isCurrent) {
+      statusTag = '<span class="day-status" style="color:var(--accent);">⭐ Actual</span>';
+    } else if (isCompleted) {
+      statusTag = '<span class="day-status" style="color:var(--success);">✅ Completado</span>';
+    } else if (isIncomplete) {
+      statusTag = '<span class="day-status" style="color:var(--warning);">⏳ Incompleto</span>';
+    } else {
+      statusTag = '<span class="day-status" style="color:var(--muted);">⚪ Pendiente</span>';
+    }
+
+    const btn = document.createElement('button');
+    btn.innerHTML = `<span>${r.name}</span> ${statusTag}`;
+    btn.addEventListener('click', () => {
+      currentRoutineId = r.id;
+      saveCurrentRoutinePointer(currentRoutineId);
+      state = getDayState(currentRoutineId);
+      renderUser();
+      dayModal.classList.add('hidden');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+    dayOptions.appendChild(btn);
+  });
+}
+
+dayButton.addEventListener('click', () => { populateDayModal(); dayModal.classList.remove('hidden'); });
+closeModal.addEventListener('click', () => dayModal.classList.add('hidden'));
+dayModal.addEventListener('click', (e) => { if (e.target === dayModal) dayModal.classList.add('hidden'); });
+
+function renderAdminRoutines() {
+  const routines = getRoutines();
+  routineListAdmin.innerHTML = '';
+  routines.forEach((r, idx) => {
+    const div = document.createElement('div');
+    div.className = 'admin-item';
+    const exerciseNames = r.exercises.map(ex => {
+      const exData = getExerciseById(ex.exerciseId);
+      return exData ? `${exData.name}` : '❌';
+    }).join(', ');
+    
+    div.innerHTML = `
+      <div>
+        <strong>${r.name}</strong>
+        <div class="exercise-list-small">${exerciseNames}</div>
       </div>
-
-      <div class="card">
-        <h3>Rutinas</h3>
-        <div id="adminRoutinesContainer"></div>
+      <div class="admin-item-actions">
+        <button class="edit-routine-btn" data-idx="${idx}">Editar</button>
+        <button class="delete-routine-btn" data-idx="${idx}">Eliminar</button>
       </div>
+    `;
+    routineListAdmin.appendChild(div);
+  });
 
-      <div class="card">
-        <h3>Respaldo de Datos</h3>
-        <button id="exportJsonBtn" class="btn" style="margin-bottom: 0.5rem;">Exportar Datos (JSON)</button>
-        <label for="importJsonInput" class="btn" style="display: block; text-align: center; background: var(--surface-hover); cursor: pointer;">Importar Datos (JSON)</label>
-        <input type="file" id="importJsonInput" name="importJsonInput" accept=".json" style="display: none;">
-      </div>
-    </section>
-  </main>
+  routineListAdmin.querySelectorAll('.edit-routine-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      openRoutineForm(Number(btn.dataset.idx));
+    });
+  });
 
-  <!-- OVERLAY DEL TEMPORIZADOR CON CONTROLES COMPLETOS -->
-  <div id="timerOverlay" class="overlay">
-    <div class="modal-content" style="text-align: center;">
-      <h3>Descanso</h3>
-      <div id="timerDisplay" style="font-size: 3rem; font-weight: bold; margin: 1rem 0;">60s</div>
-      <div style="display: flex; gap: 8px; justify-content: center; margin-top: 1rem;">
-        <button id="addTimeTimerBtn" class="btn" style="background: var(--surface-hover);">+15s</button>
-        <button id="pauseTimerBtn" class="btn" style="background: var(--primary);">Pausar</button>
-        <button id="stopTimerBtn" class="btn" style="background: var(--danger);">Saltar</button>
-      </div>
-    </div>
-  </div>
+  routineListAdmin.querySelectorAll('.delete-routine-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const idx = Number(btn.dataset.idx);
+      const currentRoutines = getRoutines();
+      if (confirm(`¿Eliminar rutina "${currentRoutines[idx].name}"?`)) {
+        currentRoutines.splice(idx, 1);
+        saveRoutines(currentRoutines);
+        renderAdminRoutines();
+        currentRoutineId = currentRoutines.length > 0 ? currentRoutines[0].id : 1;
+        saveCurrentRoutinePointer(currentRoutineId);
+        state = getDayState(currentRoutineId);
+        renderUser();
+      }
+    });
+  });
+}
 
-  <!-- MODAL HISTORIAL -->
-  <div id="historyModal" class="overlay">
-    <div class="modal-content">
-      <div id="historyModalBody"></div>
-      <button class="btn" style="margin-top: 1rem;" onclick="document.getElementById('historyModal').style.display='none'">Cerrar</button>
-    </div>
-  </div>
+function openRoutineForm(idx = -1) {
+  editingRoutineIndex = idx;
+  tempExercises = [];
+  routineForm.classList.remove('hidden');
 
-  <script type="module" src="js/app.js"></script>
+  const routines = getRoutines();
+  if (idx >= 0 && idx < routines.length) {
+    const r = routines[idx];
+    routineName.value = r.name;
+    tempExercises = r.exercises.map(ex => ({ ...ex }));
+    formTitle.textContent = 'Editar rutina';
+  } else {
+    routineName.value = '';
+    formTitle.textContent = 'Nueva rutina';
+  }
+  renderTempExercises();
+  populateExerciseSelector();
+}
+
+function populateExerciseSelector() {
+  exerciseSelector.innerHTML = '<option value="">Seleccionar ejercicio...</option>';
+  getExercises().forEach(ex => {
+    const option = document.createElement('option');
+    option.value = ex.id;
+    option.textContent = `${ex.name} (${ex.group})`;
+    exerciseSelector.appendChild(option);
+  });
+}
+
+function renderTempExercises() {
+  routineExercisesList.innerHTML = '';
+  if (tempExercises.length === 0) {
+    routineExercisesList.innerHTML = '<p style="color:var(--muted);font-size:14px;">No hay ejercicios agregados.</p>';
+    return;
+  }
+  tempExercises.forEach((ex, idx) => {
+    const exData = getExerciseById(ex.exerciseId);
+    if (!exData) return;
+    const desc = ex.time ? `Cardio: ${ex.time}` : `${ex.sets} series · ${ex.reps} reps`;
+    const div = document.createElement('div');
+    div.className = 'routine-exercise-item';
+    div.innerHTML = `
+      <span style="flex:1;"><strong>${exData.name}</strong> · ${desc}</span>
+      <button class="action-btn-small move-up" data-idx="${idx}">▲</button>
+      <button class="action-btn-small move-down" data-idx="${idx}">▼</button>
+      <button class="remove-exercise" data-idx="${idx}">✕</button>
+    `;
+    routineExercisesList.appendChild(div);
+  });
+
+  routineExercisesList.querySelectorAll('.move-up').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const idx = Number(btn.dataset.idx);
+      if (idx > 0) {
+        const item = tempExercises.splice(idx, 1)[0];
+        tempExercises.splice(idx - 1, 0, item);
+        renderTempExercises();
+      }
+    });
+  });
+
+  routineExercisesList.querySelectorAll('.move-down').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const idx = Number(btn.dataset.idx);
+      if (idx < tempExercises.length - 1) {
+        const item = tempExercises.splice(idx, 1)[0];
+        tempExercises.splice(idx + 1, 0, item);
+        renderTempExercises();
+      }
+    });
+  });
+
+  routineExercisesList.querySelectorAll('.remove-exercise').forEach(btn => {
+    btn.addEventListener('click', () => {
+      tempExercises.splice(Number(btn.dataset.idx), 1);
+      renderTempExercises();
+    });
+  });
+}
+
+function addExerciseToRoutine() {
+  const exerciseId = Number(exerciseSelector.value);
+  if (!exerciseId) return alert('Seleccioná un ejercicio');
+
+  const exerciseData = getExerciseById(exerciseId);
+  const isCardio = exerciseData && exerciseData.group === "Cardio";
+
+  if (isCardio) {
+    const time = prompt('Duración (ej: 15 min):', '15 min');
+    if (!time) return;
+    const speed = Number(prompt('Velocidad sugerida:', 10)) || 0;
+    const incline = Number(prompt('Inclinación sugerida:', 0)) || 0;
+    tempExercises.push({ exerciseId, sets: 1, reps: 0, time, weight: '', speed, incline });
+  } else {
+    const sets = Number(prompt('Cantidad de series:', 3));
+    if (!sets || sets < 1) return alert('Ingresá un número válido de series');
+    const reps = Number(prompt('Cantidad de repeticiones:', 12));
+    if (!reps || reps < 1) return alert('Ingresá un número válido de repeticiones');
+    const weight = prompt('Peso recomendado (kg) - opcional:', '');
+    tempExercises.push({ exerciseId, sets, reps, weight: weight || '' });
+  }
+  renderTempExercises();
+}
+
+addExerciseBtn.addEventListener('click', addExerciseToRoutine);
+
+submitRoutine.addEventListener('click', () => {
+  const name = routineName.value.trim();
+  if (!name) return alert('Ingresá un nombre para la rutina');
+  if (tempExercises.length === 0) return alert('Agregá al menos un ejercicio');
+
+  const routines = getRoutines();
+  if (editingRoutineIndex >= 0 && editingRoutineIndex < routines.length) {
+    routines[editingRoutineIndex] = { ...routines[editingRoutineIndex], name, exercises: tempExercises.map(ex => ({ ...ex })) };
+  } else {
+    const newId = routines.length > 0 ? Math.max(...routines.map(r => r.id)) + 1 : 1;
+    routines.push({ id: newId, name, exercises: tempExercises.map(ex => ({ ...ex })) });
+  }
+  saveRoutines(routines);
+  renderAdminRoutines();
+  routineForm.classList.add('hidden');
+  currentRoutineId = routines[0].id;
+  saveCurrentRoutinePointer(currentRoutineId);
+  state = getDayState(currentRoutineId);
+  renderUser();
+});
+
+cancelRoutine.addEventListener('click', () => { routineForm.classList.add('hidden'); });
+addRoutineBtn.addEventListener('click', () => openRoutineForm());
+
+restInput.value = getRestSeconds();
+saveRest.addEventListener('click', () => {
+  const sec = Number(restInput.value);
+  if (sec > 0) { setRestSeconds(sec); restSeconds = sec; alert('Tiempo de descanso actualizado'); }
+});
+
+// EXPORTAR E IMPORTAR RESPALDO JSON
+btnExportar.addEventListener('click', () => {
+  const backup = {};
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i);
+    backup[key] = JSON.parse(localStorage.getItem(key));
+  }
+  const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(backup, null, 2));
+  const downloadAnchor = document.createElement('a');
+  downloadAnchor.setAttribute("href", dataStr);
+  const fecha = new Date().toISOString().slice(0, 10);
+  downloadAnchor.setAttribute("download", `migym_respaldo_${fecha}.json`);
+  document.body.appendChild(downloadAnchor);
+  downloadAnchor.click();
+  downloadAnchor.remove();
+});
+
+btnImportar.addEventListener('click', () => inputImportar.click());
+
+inputImportar.addEventListener('change', (event) => {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const data = JSON.parse(e.target.result);
+      if (confirm("¿Deseas restaurar esta copia de seguridad? Se reemplazarán tus rutinas e historial actuales.")) {
+        localStorage.clear();
+        Object.keys(data).forEach(key => {
+          localStorage.setItem(key, JSON.stringify(data[key]));
+        });
+        alert("¡Datos cargados con éxito!");
+        window.location.reload();
+      }
+    } catch (err) {
+      alert("Error al leer el archivo JSON. Verifica que sea un respaldo válido.");
+    }
+  };
+  reader.readAsText(file);
+});
+
+let showingProgress = false;
+
+progressToggleBtn.addEventListener('click', () => {
+  showingProgress = !showingProgress;
+  if (showingProgress) {
+    userView.classList.add('hidden');
+    adminView.classList.add('hidden');
+    progressView.classList.remove('hidden');
+    progressToggleBtn.textContent = '🏋️ Rutina';
+    modeToggle.style.display = 'none';
+    renderHeatmap();
+  } else {
+    progressView.classList.add('hidden');
+    userView.classList.remove('hidden');
+    progressToggleBtn.textContent = '📊 Progreso';
+    modeToggle.style.display = 'inline-block';
+    renderUser();
+  }
+});
+
+function toggleMode() {
+  if (currentMode === 'user') {
+    currentMode = 'admin';
+    userView.classList.add('hidden');
+    progressView.classList.add('hidden');
+    adminView.classList.remove('hidden');
+    modeToggle.textContent = '👤 Usuario';
+    progressToggleBtn.style.display = 'none';
+    renderAdminRoutines();
+    restInput.value = getRestSeconds();
+  } else {
+    currentMode = 'user';
+    adminView.classList.add('hidden');
+    userView.classList.remove('hidden');
+    modeToggle.textContent = '⚙️ Admin';
+    progressToggleBtn.style.display = 'inline-block';
+    state = getDayState(currentRoutineId);
+    renderUser();
+  }
+}
+
+modeToggle.addEventListener('click', toggleMode);
+
+function init() {
+  currentRoutineId = getCurrentRoutinePointer();
+  state = getDayState(currentRoutineId);
+  renderUser();
+  renderHeatmap();
+  currentMode = 'user';
+  userView.classList.remove('hidden');
+  adminView.classList.add('hidden');
+  progressView.classList.add('hidden');
+  modeToggle.textContent = '⚙️ Admin';
+}
+
+init();
+</script>
 </body>
 </html>
