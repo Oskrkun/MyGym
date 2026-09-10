@@ -21,8 +21,8 @@
 </header>
 
 <main class="app">
+  <!-- VISTA PROGRESO -->
   <div id="progressView" class="hidden">
-    <!-- Perfil de Usuario -->
     <section class="progress-panel-card">
       <h2>👤 Perfil del Atleta</h2>
       <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:10px;">
@@ -47,31 +47,29 @@
       <button id="saveProfileBtn" class="day-button" type="button" style="margin-top:12px; width:100%;">Guardar Perfil</button>
     </section>
 
-    <!-- Registro de Peso Rapido -->
     <section class="progress-panel-card">
       <h2>⚖️ Registro de Peso corporal</h2>
       <div style="display:flex; gap:10px; align-items:center; margin-top:10px;">
         <label for="weightInputVal" style="display:none;">Peso actual en kg</label>
-        <input type="number" id="weightInputVal" name="weightInputVal" step="0.1" placeholder="Ej: 75.5" style="flex:1; padding:10px; background:var(--bg); border:1px solid var(--line); color:#fff; border-radius:8px;" aria-label="Ingresar peso corporal en kg">
+        <input type="number" id="weightInputVal" name="weightInputVal" step="0.1" placeholder="Ej: 75.5" style="flex:1; padding:10px; background:var(--bg); border:1px solid var(--line); color:#fff; border-radius:8px;">
         <span>kg</span>
         <button id="addWeightBtn" class="day-button" type="button" style="background:var(--accent); color:#0c0d0f;">Añadir</button>
       </div>
     </section>
 
-    <!-- Historial y Evolucion -->
     <section class="progress-panel-card">
       <h2>📈 Evolución General (Peso)</h2>
       <div id="weightHistoryList" style="max-height:180px; overflow-y:auto; margin-top:10px; display:flex; flex-direction:column; gap:8px;"></div>
     </section>
 
-    <!-- Heatmap -->
     <section class="progress-panel-card">
       <h2>Calendario de Actividad (Heatmap)</h2>
-      <p style="color: var(--muted); font-size: 0.85rem;">Haz clic en cualquier día del mes para ver el detalle de la rutina guardada:</p>
+      <p style="color: var(--muted); font-size: 0.85rem;">Haz clic en cualquier día para ver el detalle:</p>
       <div class="heatmap-grid" id="heatmapContainer"></div>
     </section>
   </div>
 
+  <!-- VISTA USUARIO -->
   <div id="userView">
     <section class="progress-card">
       <div>
@@ -90,15 +88,9 @@
       <button class="day-button" type="button" style="background: var(--card-2); width:100%; text-align:center;" onclick="completeRoutineAndAdvance(true)">Terminar Rutina</button>
       <button class="day-button" type="button" style="background: var(--line); width:100%; text-align:center;" onclick="completeRoutineAndAdvance(false)">Dejar incompleta / Siguiente</button>
     </div>
-
-    <section id="finishCard" class="finish-card hidden">
-      <div class="finish-icon">✓</div>
-      <h2>¡Rutina completada!</h2>
-      <p>Terminaste todas las series de hoy. ¡Excelente trabajo!</p>
-      <button id="resetButton" class="secondary-button" type="button">Reiniciar rutina actual</button>
-    </section>
   </div>
 
+  <!-- VISTA ADMIN -->
   <div id="adminView" class="hidden">
     <section class="admin-section">
       <h2>💾 Copia de Seguridad</h2>
@@ -106,15 +98,14 @@
       <div style="display:flex; gap:10px; flex-wrap:wrap;">
         <button id="btnExportar" class="day-button" type="button" style="background:var(--card-2);">📥 Respaldo (JSON)</button>
         <button id="btnImportar" class="day-button" type="button" style="background:var(--accent); color:#0c0d0f;">📤 Cargar Datos</button>
-        <input type="file" id="inputImportar" name="inputImportar" accept=".json" style="display: none;" aria-label="Cargar archivo de copia de seguridad" />
+        <input type="file" id="inputImportar" name="inputImportar" accept=".json" style="display: none;" />
       </div>
     </section>
 
     <section class="admin-section">
       <h2>⏱️ Tiempo de descanso</h2>
       <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
-        <label for="restInput" style="display:none;">Segundos de descanso</label>
-        <input type="number" id="restInput" name="restSeconds" value="60" style="width:80px;background:#0c0d0f;border:1px solid var(--line);color:#fff;padding:8px;border-radius:8px;" aria-label="Segundos de descanso" />
+        <input type="number" id="restInput" name="restSeconds" value="60" style="width:80px;background:#0c0d0f;border:1px solid var(--line);color:#fff;padding:8px;border-radius:8px;" />
         <span>segundos</span>
         <button id="saveRest" class="day-button" type="button">Guardar</button>
       </div>
@@ -123,23 +114,25 @@
     <section class="admin-section">
       <h2>📅 Rutinas</h2>
       <button id="addRoutineBtn" class="day-button" type="button" style="margin-bottom:15px;">+ Crear rutina</button>
-      <div id="routineListAdmin"></div>
+      <div id="routineListAdmin" style="display:flex; flex-direction:column; gap:10px; margin-bottom:15px;"></div>
 
-      <div id="routineForm" class="admin-form hidden">
+      <div id="routineForm" class="admin-form hidden" style="background:var(--card); padding:15px; border-radius:12px; border:1px solid var(--line);">
         <h3 id="formTitle">Nueva rutina</h3>
         
-        <label for="routineName">Nombre</label>
-        <input type="text" id="routineName" name="routineName" placeholder="Ej: Día 1" />
+        <label for="routineName" style="display:block; margin-top:10px; font-size:12px; color:var(--muted);">Nombre de la rutina</label>
+        <input type="text" id="routineName" name="routineName" placeholder="Ej: Día 4 - Hombros" style="width:100%; padding:8px; background:var(--bg); border:1px solid var(--line); color:#fff; border-radius:8px; margin-bottom:10px;" />
         
-        <label for="exerciseSelector">Ejercicios</label>
-        <div style="display:flex;gap:10px;flex-wrap:wrap;">
-          <select id="exerciseSelector" name="exerciseSelector" style="flex:1;min-width:200px;"></select>
+        <label for="exerciseSelector" style="display:block; font-size:12px; color:var(--muted);">Agregar Ejercicio</label>
+        <div style="display:flex;gap:10px;flex-wrap:wrap; margin-bottom:10px;">
+          <select id="exerciseSelector" name="exerciseSelector" style="flex:1;min-width:200px; padding:8px; background:var(--bg); border:1px solid var(--line); color:#fff; border-radius:8px;"></select>
           <button id="addExerciseBtn" class="day-button" type="button" style="padding:8px 16px;">+ Agregar</button>
         </div>
-        <div id="routineExercisesList"></div>
-        <div class="admin-actions">
-          <button id="submitRoutine" class="save-btn" type="button">Guardar rutina</button>
-          <button id="cancelRoutine" class="cancel-btn" type="button">Cancelar</button>
+        
+        <div id="routineExercisesList" style="display:flex; flex-direction:column; gap:8px; margin-bottom:15px;"></div>
+        
+        <div class="admin-actions" style="display:flex; gap:10px;">
+          <button id="submitRoutine" class="day-button" type="button" style="background:var(--accent); color:#0c0d0f; flex:1;">Guardar rutina</button>
+          <button id="cancelRoutine" class="day-button" type="button" style="background:var(--line); flex:1;">Cancelar</button>
         </div>
       </div>
     </section>
@@ -150,7 +143,7 @@
   <div class="modal-box">
     <div class="modal-header">
       <h2>Elegir día</h2>
-      <button id="closeModal" class="icon-button" type="button" aria-label="Cerrar modal">×</button>
+      <button id="closeModal" class="icon-button" type="button">×</button>
     </div>
     <div id="dayOptions" class="day-options"></div>
   </div>
@@ -160,7 +153,7 @@
   <div class="modal-box">
     <div class="modal-header">
       <h2 id="historyModalTitle">Detalle del día</h2>
-      <button id="closeHistoryModal" class="icon-button" type="button" aria-label="Cerrar modal de historial">×</button>
+      <button id="closeHistoryModal" class="icon-button" type="button">×</button>
     </div>
     <div id="historyModalContent" style="margin-top: 15px; font-size: 14px; max-height: 320px; overflow-y: auto; color: var(--muted);"></div>
   </div>
@@ -179,7 +172,6 @@
   </div>
 </div>
 
-<!-- Módulos JavaScript divididos -->
 <script src="js/timer.js"></script>
 <script src="js/progress.js"></script>
 <script src="js/apps.js"></script>

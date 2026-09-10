@@ -1,6 +1,6 @@
-// Manejo de Perfil
 function getProfile() {
-  return JSON.parse(localStorage.getItem('migym_profile')) || { name: '', age: '', gender: '' };
+  try { return JSON.parse(localStorage.getItem('migym_profile')) || { name: '', age: '', gender: '' }; }
+  catch(e) { return { name: '', age: '', gender: '' }; }
 }
 
 function saveProfileData(profile) {
@@ -24,9 +24,9 @@ document.getElementById('saveProfileBtn').addEventListener('click', () => {
   alert('Perfil guardado con éxito');
 });
 
-// Manejo de Peso Corporal
 function getWeightHistory() {
-  return JSON.parse(localStorage.getItem('migym_weight_history')) || [];
+  try { return JSON.parse(localStorage.getItem('migym_weight_history')) || []; }
+  catch(e) { return []; }
 }
 
 function saveWeightHistory(list) {
@@ -77,21 +77,24 @@ function deleteWeightItem(idx) {
   renderWeightHistory();
 }
 
-// Heatmap
 function renderHeatmap() {
   const container = document.getElementById('heatmapContainer');
+  if (!container) return;
   container.innerHTML = '';
   const history = getGlobalHistory();
+  const today = new Date().getDate();
 
   for (let dayNum = 1; dayNum <= 31; dayNum++) {
     const session = history[dayNum];
     let className = 'heatmap-day';
     let text = `${dayNum}`;
     
+    if (dayNum === today) className += ' today';
+
     if (session) {
       if (session.status === 'completed') className += ' completed';
       else if (session.status === 'incomplete') className += ' incomplete';
-      text += `<span>${session.routineName.replace('Día ', 'D')}</span>`;
+      text += `<span>${(session.routineName || 'D').replace('Día ', 'D')}</span>`;
     }
 
     const div = document.createElement('div');
@@ -112,7 +115,7 @@ function showHistoryDetail(dayNum, session) {
     historyModalContent.innerHTML = `<p style="color:var(--muted); text-align:center; padding: 20px;">No hay registros de entrenamiento guardados para este día.</p>`;
   } else {
     let html = `<p><strong>Rutina:</strong> ${session.routineName} (${session.status === 'completed' ? '✅ Completada' : '⏳ Incompleta'})</p><hr style="border-color:var(--line); margin: 10px 0;">`;
-    session.exercises.forEach((ex, i) => {
+    (session.exercises || []).forEach((ex, i) => {
       html += `<div style="margin-bottom: 12px; background:var(--bg); padding:10px; border-radius:10px;"><strong>${i+1}. ${ex.name}</strong><br>`;
       if (ex.isCardio) {
         html += `<small style="color:var(--accent);">⏱️ Tiempo: ${ex.cardioTime || '0 min'}</small>`;

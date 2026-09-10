@@ -1,4 +1,4 @@
-const EXERCISES_DB = [
+const DEFAULT_EXERCISES = [
   { id: 1, name: "Pecho plano c/barra", group: "Pecho", images: ["gifs/pecho plano con barra.gif"] },
   { id: 2, name: "Pecho inclinado c/máquina", group: "Pecho", images: ["gifs/pecho inclinado con maquina.gif"] },
   { id: 3, name: "Jalón dorsal T. abierto", group: "Espalda", images: ["gifs/jalon dorsal t. abierto.gif"] },
@@ -18,28 +18,51 @@ const EXERCISES_DB = [
   { id: 17, name: "Apertura c/poleas", group: "Pecho", images: ["gifs/apertura con poleas 01.gif"] },
   { id: 18, name: "Bíceps martillo", group: "Bíceps", images: ["gifs/biceps martillo.gif"] },
   { id: 19, name: "Caminadora (Cardio)", group: "Cardio", images: ["gifs/Caminadora (Cardio).gif"] },
-  { id: 20, name: "Bicicleta fija", group: "Cardio", images: ["gifs/default.gif"] }
+  { id: 20, name: "Bicicleta fija", group: "Cardio", images: ["gifs/default.gif"] },
+  { id: 21, name: "Serrucho c/mancuerna", group: "Espalda", images: ["gifs/default.gif"] },
+  { id: 22, name: "Pullover en polea alta", group: "Espalda", images: ["gifs/pullover en polea alta 01.gif"] }
 ];
 
 const DEFAULT_ROUTINES = [
-  { id: 1, name: "Día 1", exercises: [{ exerciseId: 1, sets: 3, reps: 12, weight: "" }, { exerciseId: 2, sets: 3, reps: 12, weight: "" }] },
-  { id: 2, name: "Día 2", exercises: [{ exerciseId: 3, sets: 3, reps: 12, weight: "" }, { exerciseId: 4, sets: 3, reps: 12, weight: "" }] }
+  { id: 1, name: "Dia 1", exercises: [{ exerciseId: 19, sets: 1, reps: 0, time: "20", weight: "", speed: 6, incline: 6 }, { exerciseId: 1, sets: 4, reps: 12, weight: "10" }] },
+  { id: 2, name: "Dia 2", exercises: [{ exerciseId: 19, sets: 1, reps: 0, time: "20", weight: "", speed: 6, incline: 6 }, { exerciseId: 7, sets: 4, reps: 12, weight: "40" }] }
 ];
 
-function getExercises() { return EXERCISES_DB; }
-function getExerciseById(id) { return EXERCISES_DB.find(ex => ex.id === id); }
+const $ = id => document.getElementById(id);
+
+function getExercises() {
+  const stored = localStorage.getItem('migym_exercises');
+  if (stored) {
+    try { return JSON.parse(stored); } catch(e) {}
+  }
+  return DEFAULT_EXERCISES;
+}
+
+function getExerciseById(id) {
+  const list = getExercises();
+  return list.find(ex => String(ex.id) === String(id)) || { id, name: "Ejercicio " + id, group: "General", images: ["gifs/default.gif"] };
+}
 
 function getRoutines() {
   const stored = localStorage.getItem('migym_routines');
-  if (stored) return JSON.parse(stored);
-  localStorage.setItem('migym_routines', JSON.stringify(DEFAULT_ROUTINES));
+  if (stored) {
+    try { return JSON.parse(stored); } catch(e) {}
+  }
   return DEFAULT_ROUTINES;
 }
 
 function saveRoutines(routines) { localStorage.setItem('migym_routines', JSON.stringify(routines)); }
-function getRestSeconds() { return Number(localStorage.getItem('migym_rest_seconds')) || 60; }
+
+function getRestSeconds() { 
+  const val = localStorage.getItem('migym_rest_seconds');
+  return val !== null ? Number(val) : 60; 
+}
 function setRestSeconds(sec) { localStorage.setItem('migym_rest_seconds', String(sec)); }
-function getGlobalHistory() { return JSON.parse(localStorage.getItem('migym_global_history')) || {}; }
+
+function getGlobalHistory() { 
+  try { return JSON.parse(localStorage.getItem('migym_global_history')) || {}; } 
+  catch(e) { return {}; } 
+}
 function saveGlobalHistory(history) { localStorage.setItem('migym_global_history', JSON.stringify(history)); }
 
 function getCurrentRoutinePointer() {
@@ -52,14 +75,16 @@ function saveCurrentRoutinePointer(id) { localStorage.setItem('migym_routine_poi
 
 function getDayState(routineId) {
   const saved = localStorage.getItem(`migym_state_${routineId}`);
-  if (saved) return JSON.parse(saved);
-  const routine = getRoutines().find(r => r.id === routineId);
-  if (!routine) return null;
+  if (saved) {
+    try { return JSON.parse(saved); } catch(e) {}
+  }
+  const routine = getRoutines().find(r => String(r.id) === String(routineId));
+  if (!routine) return [];
 
   const state = routine.exercises.map(ex => ({
-    completed: Array(ex.sets).fill(false),
+    completed: Array(ex.sets || 1).fill(false),
     collapsed: true,
-    weights: Array(ex.sets).fill(''),
+    weights: Array(ex.sets || 1).fill(''),
     cardioTime: ex.time || '15 min',
     speed: ex.speed || 0,
     incline: ex.incline || 0,
@@ -72,19 +97,18 @@ function getDayState(routineId) {
 function saveDayState(routineId, state) { localStorage.setItem(`migym_state_${routineId}`, JSON.stringify(state)); }
 
 let currentRoutineId = getCurrentRoutinePointer();
-let state = {};
+let state = [];
 let restSeconds = getRestSeconds();
 let currentMode = 'user';
-let editingRoutineIndex = -1;
 let tempExercises = [];
 
-const $ = id => document.getElementById(id);
-
+// RENDER USUARIO
 function renderUser() {
   const routines = getRoutines();
-  let routine = routines.find(r => r.id === currentRoutineId) || routines[0];
+  let routine = routines.find(r => String(r.id) === String(currentRoutineId)) || routines[0];
   if (!routine) return;
 
+  currentRoutineId = routine.id;
   $('dayLabel').textContent = routine.name.toUpperCase();
   $('routineTitle').textContent = routine.name;
 
@@ -95,15 +119,18 @@ function renderUser() {
   $('exerciseList').innerHTML = '';
 
   routine.exercises.forEach((ex, idx) => {
-    const exState = state[idx];
+    const exState = state[idx] || { completed: [false], collapsed: true, weights: [''] };
     const exerciseData = getExerciseById(ex.exerciseId);
-    if (!exState || !exerciseData) return;
 
-    totalSets += ex.sets;
-    completedSets += exState.completed.filter(Boolean).length;
+    const setsCount = ex.sets || (exState.completed ? exState.completed.length : 1);
+    totalSets += setsCount;
+    completedSets += exState.completed ? exState.completed.filter(Boolean).length : 0;
 
-    const imageUrl = (exerciseData.images || ['gifs/default.gif'])[exState.imageIndex || 0];
-    const allDone = exState.completed.every(Boolean);
+    const imageUrl = (exerciseData.images && exerciseData.images.length > 0) ? 
+      (exerciseData.images[exState.imageIndex || 0].startsWith('gifs/') ? exerciseData.images[exState.imageIndex || 0] : 'gifs/' + exerciseData.images[exState.imageIndex || 0]) 
+      : 'gifs/default.gif';
+
+    const allDone = exState.completed && exState.completed.length > 0 && exState.completed.every(Boolean);
     const isCardio = exerciseData.group === "Cardio" || ex.time;
 
     const card = document.createElement('article');
@@ -113,7 +140,7 @@ function renderUser() {
       <div style="display:flex; gap:12px; margin-top:10px; padding:10px; background:var(--bg); border-radius:10px; flex-wrap:wrap;">
         <div style="flex:1; min-width:110px;">
           <label for="cardioTime_${idx}" style="font-size:11px; color:var(--muted);">Tiempo realizado</label>
-          <input type="text" id="cardioTime_${idx}" name="cardioTime_${idx}" class="weight-input cardio-time" data-exercise="${idx}" value="${exState.cardioTime || '15 min'}" style="width:100%; margin-top:4px;" />
+          <input type="text" id="cardioTime_${idx}" name="cardioTime_${idx}" class="weight-input cardio-time" data-exercise="${idx}" value="${exState.cardioTime || ex.time || '15 min'}" style="width:100%; margin-top:4px;" />
         </div>
       </div>` : '';
 
@@ -121,19 +148,19 @@ function renderUser() {
       <div class="exercise-head">
         <div class="exercise-number">${String(idx + 1).padStart(2, '0')}</div>
         <div class="exercise-title">
-          <div class="group">${exerciseData.group}</div>
+          <div class="group">${exerciseData.group || 'General'}</div>
           <h2>${exerciseData.name}</h2>
         </div>
       </div>
-      <div class="gif-container"><img src="${imageUrl}" class="exercise-gif" /></div>
+      <div class="gif-container"><img src="${imageUrl}" class="exercise-gif" alt="${exerciseData.name}" /></div>
       <div class="series-container">
         ${cardioHtml}
-        ${exState.completed.map((checked, setIndex) => `
+        ${(exState.completed || [false]).map((checked, setIndex) => `
           <div class="set-row ${checked ? 'checked' : ''}" data-exercise="${idx}" data-set="${setIndex}">
             <input type="checkbox" id="check_${idx}_${setIndex}" name="check_${idx}_${setIndex}" ${checked ? 'checked' : ''} aria-label="Serie ${setIndex + 1}">
-            <div class="set-info">
-              <strong>${isCardio ? 'Sesión' : 'Serie ' + (setIndex + 1)}</strong>
-              ${!isCardio ? `<input class="weight-input" id="weight_${idx}_${setIndex}" name="weight_${idx}_${setIndex}" data-exercise="${idx}" data-set="${setIndex}" placeholder="Peso" value="${exState.weights[setIndex] || ''}" />` : ''}
+            <div class="set-info" style="display:flex; align-items:center; justify-content:space-between; width:100%;">
+              <strong>${isCardio ? 'Sesión Completada' : 'Serie ' + (setIndex + 1)}</strong>
+              ${!isCardio ? `<input class="weight-input" id="weight_${idx}_${setIndex}" name="weight_${idx}_${setIndex}" data-exercise="${idx}" data-set="${setIndex}" placeholder="Peso (kg)" value="${(exState.weights && exState.weights[setIndex]) || ''}" style="width:90px; text-align:center;" />` : ''}
             </div>
           </div>
         `).join('')}
@@ -164,6 +191,7 @@ function renderUser() {
       if (e.target.classList.contains('cardio-time')) {
         state[exIdx].cardioTime = e.target.value;
       } else {
+        if (!state[exIdx].weights) state[exIdx].weights = [];
         state[exIdx].weights[Number(e.target.dataset.set)] = e.target.value;
       }
       saveDayState(currentRoutineId, state);
@@ -182,7 +210,7 @@ function renderUser() {
 
 function completeRoutineAndAdvance(isSuccess) {
   const routines = getRoutines();
-  const currentRoutine = routines.find(r => r.id === currentRoutineId);
+  const currentRoutine = routines.find(r => String(r.id) === String(currentRoutineId));
   const currentStateData = getDayState(currentRoutineId);
   const history = getGlobalHistory();
   const todayKey = new Date().getDate();
@@ -190,24 +218,124 @@ function completeRoutineAndAdvance(isSuccess) {
   history[todayKey] = {
     routineName: currentRoutine ? currentRoutine.name : "Rutina",
     status: isSuccess ? 'completed' : 'incomplete',
-    exercises: currentRoutine.exercises.map((ex, idx) => ({
+    exercises: currentRoutine ? currentRoutine.exercises.map((ex, idx) => ({
       name: getExerciseById(ex.exerciseId)?.name || "Ejercicio",
       isCardio: !!ex.time,
       cardioTime: currentStateData[idx]?.cardioTime || ex.time,
-      weights: currentStateData[idx] ? [...currentStateData[idx].weights] : []
-    }))
+      weights: currentStateData[idx] ? [...(currentStateData[idx].weights || [])] : []
+    })) : []
   };
   saveGlobalHistory(history);
 
-  const currentIndex = routines.findIndex(r => r.id === currentRoutineId);
+  const currentIndex = routines.findIndex(r => String(r.id) === String(currentRoutineId));
   currentRoutineId = (currentIndex !== -1 && currentIndex < routines.length - 1) ? routines[currentIndex + 1].id : routines[0].id;
   saveCurrentRoutinePointer(currentRoutineId);
   renderUser();
   renderHeatmap();
 }
 
-// Toggle Progreso
+// MODO ADMIN Y FORMULARIO DE RUTINAS
+function renderAdmin() {
+  $('restInput').value = restSeconds;
+  
+  // Renderizar select de ejercicios
+  const exercises = getExercises();
+  $('exerciseSelector').innerHTML = exercises.map(ex => `<option value="${ex.id}">${ex.name} (${ex.group})</option>`).join('');
+
+  // Renderizar lista de rutinas creadas
+  const routines = getRoutines();
+  const listContainer = $('routineListAdmin');
+  listContainer.innerHTML = '';
+
+  routines.forEach((r) => {
+    const card = document.createElement('div');
+    card.style.cssText = "background:var(--card); padding:12px; border-radius:10px; border:1px solid var(--line); display:flex; justify-content:space-between; align-items:center;";
+    card.innerHTML = `
+      <div>
+        <strong style="color:#fff; display:block;">${r.name}</strong>
+        <small style="color:var(--muted);">${r.exercises.length} Ejercicios</small>
+      </div>
+      <button type="button" class="day-button" style="background:#e63946; padding:6px 12px; font-size:12px;" onclick="deleteRoutine(${r.id})">Eliminar</button>
+    `;
+    listContainer.appendChild(card);
+  });
+}
+
+function deleteRoutine(id) {
+  let routines = getRoutines();
+  if (routines.length <= 1) return alert("Debes mantener al menos una rutina creada.");
+  routines = routines.filter(r => String(r.id) !== String(id));
+  saveRoutines(routines);
+  if (String(currentRoutineId) === String(id)) {
+    currentRoutineId = routines[0].id;
+    saveCurrentRoutinePointer(currentRoutineId);
+  }
+  renderAdmin();
+}
+
+$('saveRest').addEventListener('click', () => {
+  const val = Number($('restInput').value);
+  if (val >= 0) {
+    restSeconds = val;
+    setRestSeconds(val);
+    alert('Tiempo de descanso guardado correctamente');
+  }
+});
+
+$('addRoutineBtn').addEventListener('click', () => {
+  tempExercises = [];
+  $('routineName').value = '';
+  renderTempExercises();
+  $('routineForm').classList.remove('hidden');
+});
+
+$('addExerciseBtn').addEventListener('click', () => {
+  const exId = $('exerciseSelector').value;
+  if (!exId) return;
+  tempExercises.push({ exerciseId: exId, sets: 4, reps: 12, weight: "" });
+  renderTempExercises();
+});
+
+function renderTempExercises() {
+  const container = $('routineExercisesList');
+  container.innerHTML = tempExercises.map((item, idx) => {
+    const ex = getExerciseById(item.exerciseId);
+    return `
+      <div style="background:var(--bg); padding:8px 12px; border-radius:8px; display:flex; justify-content:space-between; align-items:center; font-size:13px;">
+        <span>${ex.name}</span>
+        <button type="button" onclick="removeTempEx(${idx})" style="background:none; border:none; color:#e63946; cursor:pointer;">✕</button>
+      </div>
+    `;
+  }).join('');
+}
+
+function removeTempEx(idx) {
+  tempExercises.splice(idx, 1);
+  renderTempExercises();
+}
+
+$('cancelRoutine').addEventListener('click', () => $('routineForm').classList.add('hidden'));
+
+$('submitRoutine').addEventListener('click', () => {
+  const name = $('routineName').value.trim();
+  if (!name) return alert('Ingresá un nombre para la rutina');
+  if (tempExercises.length === 0) return alert('Agregá al menos un ejercicio');
+
+  const routines = getRoutines();
+  const newRoutine = {
+    id: Date.now(),
+    name: name,
+    exercises: tempExercises
+  };
+  routines.push(newRoutine);
+  saveRoutines(routines);
+  $('routineForm').classList.add('hidden');
+  renderAdmin();
+});
+
+// TOGGLE VISTAS Y BOTONES
 let showingProgress = false;
+
 $('progressToggleBtn').addEventListener('click', () => {
   showingProgress = !showingProgress;
   if (showingProgress) {
@@ -223,32 +351,34 @@ $('progressToggleBtn').addEventListener('click', () => {
   } else {
     $('progressView').classList.add('hidden');
     $('userView').classList.remove('hidden');
-    $('dayButton').style.display = 'inline-block'; // REMOSTRAR CAMBIAR DÍA
+    $('dayButton').style.display = 'inline-block'; // MOSTRAR CAMBIAR DÍA
     $('progressToggleBtn').textContent = '📊 Progreso';
     $('modeToggle').style.display = 'inline-block';
     renderUser();
   }
 });
 
-// Admin Toggle
 $('modeToggle').addEventListener('click', () => {
   if (currentMode === 'user') {
     currentMode = 'admin';
     $('userView').classList.add('hidden');
     $('adminView').classList.remove('hidden');
+    $('dayButton').style.display = 'none'; // OCULTAR CAMBIAR DÍA EN ADMIN
     $('modeToggle').textContent = '👤 Usuario';
     $('progressToggleBtn').style.display = 'none';
+    renderAdmin();
   } else {
     currentMode = 'user';
     $('adminView').classList.add('hidden');
     $('userView').classList.remove('hidden');
+    $('dayButton').style.display = 'inline-block'; // MOSTRAR CAMBIAR DÍA EN USUARIO
     $('modeToggle').textContent = '⚙️ Admin';
     $('progressToggleBtn').style.display = 'inline-block';
     renderUser();
   }
 });
 
-// Exportar e Importar JSON Completo (Incluye Peso y Perfil)
+// RESPALDO JSON
 $('btnExportar').addEventListener('click', () => {
   const backup = {};
   for (let i = 0; i < localStorage.length; i++) {
@@ -273,8 +403,8 @@ $('inputImportar').addEventListener('change', (e) => {
     try {
       const data = JSON.parse(evt.target.result);
       localStorage.clear();
-      Object.keys(data).forEach(k => localStorage.setItem(k, JSON.stringify(data[k])));
-      alert("¡Datos importados con éxito!");
+      Object.keys(data).forEach(k => localStorage.setItem(k, typeof data[k] === 'string' ? data[k] : JSON.stringify(data[k])));
+      alert("¡Datos cargados con éxito!");
       window.location.reload();
     } catch (err) {
       alert("Error al importar el archivo JSON.");
@@ -283,20 +413,22 @@ $('inputImportar').addEventListener('change', (e) => {
   reader.readAsText(file);
 });
 
-// Modal Selección Día
+// MODAL CAMBIAR DÍA
 $('dayButton').addEventListener('click', () => {
-  $('dayOptions').innerHTML = getRoutines().map(r => `<button type="button" onclick="selectDay(${r.id})">${r.name}</button>`).join('');
+  $('dayOptions').innerHTML = getRoutines().map(r => `<button type="button" class="day-button" style="width:100%; margin-bottom:8px;" onclick="selectDay(${r.id})">${r.name}</button>`).join('');
   $('dayModal').classList.remove('hidden');
 });
+
 function selectDay(id) {
   currentRoutineId = id;
   saveCurrentRoutinePointer(id);
   renderUser();
   $('dayModal').classList.add('hidden');
 }
+
 $('closeModal').addEventListener('click', () => $('dayModal').classList.add('hidden'));
 
-// Inicialización
+// INICIALIZACIÓN
 function init() {
   renderUser();
 }
