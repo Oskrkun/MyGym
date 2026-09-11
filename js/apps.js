@@ -5,7 +5,7 @@
 // ==========================================
 
 // ==========================================
-// 1. REFS DOM
+// 1. REFS DOM (exclusivas de este módulo)
 // ==========================================
 
 const userView          = $('userView');
@@ -13,6 +13,10 @@ const adminView         = $('adminView');
 const progressView      = $('progressView');
 const progressToggleBtn = $('progressToggleBtn');
 const modeToggle        = $('modeToggle');
+
+// NOTA: dayButton y restInput NO se declaran acá.
+// Se obtienen on-demand dentro de updateNavigationVisibility()
+// para no depender del orden de carga de los otros módulos.
 
 
 // ==========================================
@@ -28,8 +32,11 @@ let showingProgress = false;
 // ==========================================
 
 function updateNavigationVisibility() {
+  // Refs on-demand para evitar dependencia entre módulos
+  const dayBtn = document.getElementById('dayButton');
+  const restInputEl = document.getElementById('restInput');
+
   if (showingProgress) {
-    // Vista Progreso
     userView.classList.add('hidden');
     adminView.classList.add('hidden');
     progressView.classList.remove('hidden');
@@ -40,14 +47,13 @@ function updateNavigationVisibility() {
     modeToggle.textContent = '⚙️ Admin';
     modeToggle.style.display = 'inline-block';
 
-    if (dayButton) dayButton.style.display = 'none';
+    if (dayBtn) dayBtn.style.display = 'none';
 
     if (typeof window.renderProgressView === 'function') {
       window.renderProgressView();
     }
 
   } else if (currentMode === 'admin') {
-    // Vista Admin
     userView.classList.add('hidden');
     progressView.classList.add('hidden');
     adminView.classList.remove('hidden');
@@ -58,15 +64,14 @@ function updateNavigationVisibility() {
     modeToggle.textContent = '🏋️ Rutina';
     modeToggle.style.display = 'inline-block';
 
-    if (dayButton) dayButton.style.display = 'none';
+    if (dayBtn) dayBtn.style.display = 'none';
 
     if (typeof window.renderAdminRoutines === 'function') {
       window.renderAdminRoutines();
     }
-    if (restInput) restInput.value = getRestSeconds();
+    if (restInputEl) restInputEl.value = getRestSeconds();
 
   } else {
-    // Vista Rutina
     adminView.classList.add('hidden');
     progressView.classList.add('hidden');
     userView.classList.remove('hidden');
@@ -77,7 +82,7 @@ function updateNavigationVisibility() {
     modeToggle.textContent = '⚙️ Admin';
     modeToggle.style.display = 'inline-block';
 
-    if (dayButton) dayButton.style.display = 'inline-block';
+    if (dayBtn) dayBtn.style.display = 'inline-block';
 
     if (typeof window.renderUser === 'function') {
       window.renderUser();
