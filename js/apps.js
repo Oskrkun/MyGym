@@ -4,7 +4,7 @@
 
 const EXERCISES_DB = [
   { id: 1, name: "Pecho plano c/barra", group: "Pecho", images: ["gifs/pecho plano con barra.gif"] },
-  { id: 2, name: "Pecho inclinado c/máquina", group: "Pecho", images: ["gifs/pecho inclinado con maquina.gif"] },
+  { id: 2, name: "Pecho inclinado con mancuerna", group: "Pecho", images: ["gifs/press inclinado con mancuerna.gif"] },
   { id: 3, name: "Jalón dorsal T. abierto", group: "Espalda", images: ["gifs/jalon dorsal t. abierto.gif"] },
   { id: 4, name: "Plaq espalda", group: "Espalda", images: ["gifs/maquina espalda.gif"] },
   { id: 5, name: "Camilla cuádriceps", group: "Piernas", images: ["gifs/camilla cuadriceps.gif"] },
@@ -114,7 +114,7 @@ function saveDayState(routineId, state) {
 
 /**
  * Devuelve la última sesión registrada en el historial para una rutina
- * con un nombre específico. Devuelve el array de ejercicios o null.
+ * con un nombre específico. Devuelve { date, exercises } o null.
  */
 function getLastSessionForRoutine(routineName) {
   const history = getGlobalHistory();
@@ -126,6 +126,20 @@ function getLastSessionForRoutine(routineName) {
     }
   }
   return null;
+}
+
+/**
+ * Busca el ejercicio dentro de una sesión del historial.
+ * Primero intenta por exerciseId, luego cae a match por nombre (compatibilidad).
+ */
+function findExerciseInSession(sessionExercises, exerciseId, exerciseName) {
+  if (!Array.isArray(sessionExercises)) return null;
+  // 1. Match por ID
+  const byId = sessionExercises.find(ex => ex.exerciseId === exerciseId);
+  if (byId) return byId;
+  // 2. Fallback: match por nombre
+  const byName = sessionExercises.find(ex => ex.name === exerciseName);
+  return byName || null;
 }
 
 
@@ -209,7 +223,7 @@ function renderUser() {
   state = getDayState(currentRoutineId);
   if (!state) return;
 
-  // Buscamos la última sesión hecha para esta rutina (por nombre)
+  // Buscamos la última sesión hecha para esta rutina (por nombre de rutina)
   const lastSession = getLastSessionForRoutine(routine.name);
 
   let totalSets = 0, completedSets = 0;
@@ -230,13 +244,14 @@ function renderUser() {
     const allDone = exState.completed.every(Boolean);
     const isCardio = exerciseData.group === "Cardio" || ex.time;
 
-    // Última sesión: intentamos matchear el mismo ejercicio por nombre
+    // Última sesión: buscamos el mismo ejercicio por ID (fallback por nombre)
     let lastExerciseData = null;
-    if (lastSession && lastSession.exercises[idx]) {
-      const candidate = lastSession.exercises[idx];
-      if (candidate.name === exerciseData.name) {
-        lastExerciseData = candidate;
-      }
+    if (lastSession) {
+      lastExerciseData = findExerciseInSession(
+        lastSession.exercises,
+        ex.exerciseId,
+        exerciseData.name
+      );
     }
 
     const card = document.createElement('article');
@@ -428,7 +443,8 @@ function completeRoutineAndAdvance(isSuccess) {
       const exData = getExerciseById(ex.exerciseId);
       const exState = currentStateData ? currentStateData[idx] : null;
       return {
-        name: exData ? exData.name : "Ejercicio",
+        exerciseId: ex.exerciseId,                          // NUEVO
+        name: exData ? exData.name : "Ejercicio",            // fallback de display
         isCardio: exData ? exData.group === "Cardio" || !!ex.time : false,
         cardioTime: exState ? exState.cardioTime || ex.time || '0 min' : (ex.time || '0 min'),
         weights: exState ? [...exState.weights] : [],

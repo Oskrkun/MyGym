@@ -159,86 +159,125 @@
   // ==========================================
 
   function renderWeightCard() {
-    if (weightCard) weightCard.classList.add('collapsed');
-    if (weightChevron) weightChevron.textContent = '▾';
+  if (weightCard) weightCard.classList.add('collapsed');
+  if (weightChevron) weightChevron.textContent = '▾';
 
-    const weights = getWeights();
+  const weights = getWeights();
 
-    if (weights.length === 0) {
-      weightCurrent.textContent  = '—';
-      weightLastDate.textContent = 'Sin registros';
-      if (weightGoalMessage) weightGoalMessage.style.display = 'none';
-      return;
+  if (weights.length === 0) {
+    weightCurrent.textContent  = '—';
+    weightLastDate.textContent = 'Sin registros';
+    if (weightGoalMessage) weightGoalMessage.style.display = 'none';
+    return;
+  }
+
+  const last = weights[weights.length - 1];
+  weightCurrent.textContent = `${last.kg} kg`;
+
+  const d = new Date(last.date + 'T00:00:00');
+  const dd = String(d.getDate()).padStart(2, '0');
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  weightLastDate.textContent = `Última pesada: ${dd}/${mm}/${d.getFullYear()}`;
+
+  // ============================================
+  // Comparaciones: última pesada + desde el inicio
+  // ============================================
+  if (weightGoalMessage) {
+    const profile = getProfile();
+    const goal = profile.goal;
+
+    // Helper de formateo
+    const fmt = (val) => {
+      const sign = val >= 0 ? '+' : '';
+      return `${sign}${val.toFixed(1)}`;
+    };
+    const arrow = (val) => {
+      if (val < -0.05) return '↓';
+      if (val > 0.05) return '↑';
+      return '→';
+    };
+    // Color según objetivo
+    const colorFor = (diff) => {
+      if (!goal) return 'var(--muted)';
+      if (goal === 'bajar') {
+        if (diff < -0.05) return 'var(--success)';
+        if (diff > 0.05)  return 'var(--warning)';
+        return 'var(--muted)';
+      }
+      if (goal === 'subir') {
+        if (diff > 0.05)  return 'var(--success)';
+        if (diff < -0.05) return 'var(--warning)';
+        return 'var(--muted)';
+      }
+      // mantener
+      if (Math.abs(diff) <= 1) return 'var(--success)';
+      return 'var(--warning)';
+    };
+
+    let html = '';
+
+    // 1. Comparación con la pesada anterior (si hay 2+)
+    if (weights.length >= 2) {
+      const prev = weights[weights.length - 2];
+      const diffPrev = last.kg - prev.kg;
+      const prevDate = new Date(prev.date + 'T00:00:00');
+      const prevLabel = `${String(prevDate.getDate()).padStart(2,'0')}/${String(prevDate.getMonth()+1).padStart(2,'0')}`;
+
+      html += `
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+          <span style="color:var(--muted); font-size:12px;">Desde la última pesada (${prevLabel})</span>
+          <strong style="color:${colorFor(diffPrev)}; font-size:14px;">${arrow(diffPrev)} ${fmt(diffPrev)} kg</strong>
+        </div>
+      `;
     }
 
-    const last = weights[weights.length - 1];
-    weightCurrent.textContent = `${last.kg} kg`;
+    // 2. Comparación con la primera pesada (si hay 2+)
+    if (weights.length >= 2) {
+      const first = weights[0];
+      const diffFirst = last.kg - first.kg;
+      const firstDate = new Date(first.date + 'T00:00:00');
+      const firstLabel = `${String(firstDate.getDate()).padStart(2,'0')}/${String(firstDate.getMonth()+1).padStart(2,'0')}`;
 
-    const d = new Date(last.date + 'T00:00:00');
-    const dd = String(d.getDate()).padStart(2, '0');
-    const mm = String(d.getMonth() + 1).padStart(2, '0');
-    weightLastDate.textContent = `Última pesada: ${dd}/${mm}/${d.getFullYear()}`;
+      html += `
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <span style="color:var(--muted); font-size:12px;">Desde el primer pesaje (${firstLabel})</span>
+          <strong style="color:${colorFor(diffFirst)}; font-size:14px;">${arrow(diffFirst)} ${fmt(diffFirst)} kg</strong>
+        </div>
+      `;
+    }
 
-    // Mensaje contextual según goal (solo con 2+ registros)
-    if (weightGoalMessage) {
-      const profile = getProfile();
-      const goal = profile.goal;
+    // 3. Mensaje de estado general según el objetivo (si hay objetivo cargado)
+    if (goal && weights.length >= 2) {
+      const diffFirst = last.kg - weights[0].kg;
+      let statusMsg = '';
+      let statusColor = 'var(--muted)';
 
-      if (!goal || weights.length < 2) {
-        weightGoalMessage.style.display = 'none';
-        weightGoalMessage.textContent = '';
-      } else {
-        const first = weights[0].kg;
-        const lastKg = weights[weights.length - 1].kg;
-        const diff = lastKg - first;
-        const sign = diff >= 0 ? '+' : '';
-        const absDiff = Math.abs(diff).toFixed(1);
+      if (goal === 'bajar') {
+        if (diffFirst < -0.1) { statusMsg = 'Vas bien, seguí así.'; statusColor = 'var(--success)'; }
+        else if (diffFirst > 0.1) { statusMsg = 'Ojo con el objetivo de bajar.'; statusColor = 'var(--warning)'; }
+        else { statusMsg = 'Peso estable.'; }
+      } else if (goal === 'subir') {
+        if (diffFirst > 0.1) { statusMsg = 'Vas bien, seguí así.'; statusColor = 'var(--success)'; }
+        else if (diffFirst < -0.1) { statusMsg = 'Ojo con el objetivo de subir.'; statusColor = 'var(--warning)'; }
+        else { statusMsg = 'Peso estable.'; }
+      } else if (goal === 'mantener') {
+        if (Math.abs(diffFirst) <= 1) { statusMsg = 'Estable dentro del rango.'; statusColor = 'var(--success)'; }
+        else { statusMsg = 'Fuera del rango de mantenimiento.'; statusColor = 'var(--warning)'; }
+      }
 
-        let msg = '';
-        let color = 'var(--muted)';
-
-        if (goal === 'bajar') {
-          if (diff < -0.1) {
-            msg = `Vas bien: ${sign}${diff.toFixed(1)} kg desde el inicio (${absDiff} kg menos)`;
-            color = 'var(--success)';
-          } else if (diff > 0.1) {
-            msg = `Ojo: subiste ${sign}${diff.toFixed(1)} kg desde el inicio`;
-            color = 'var(--warning)';
-          } else {
-            msg = 'Peso estable. Buen momento para ajustar dieta o actividad.';
-            color = 'var(--muted)';
-          }
-        } else if (goal === 'subir') {
-          if (diff > 0.1) {
-            msg = `Vas bien: ${sign}${diff.toFixed(1)} kg desde el inicio (${absDiff} kg más)`;
-            color = 'var(--success)';
-          } else if (diff < -0.1) {
-            msg = `Ojo: bajaste ${diff.toFixed(1)} kg desde el inicio`;
-            color = 'var(--warning)';
-          } else {
-            msg = 'Peso estable. Necesitás más calorías para subir.';
-            color = 'var(--muted)';
-          }
-        } else if (goal === 'mantener') {
-          if (Math.abs(diff) <= 1) {
-            msg = `Estable dentro del rango (${sign}${diff.toFixed(1)} kg desde el inicio)`;
-            color = 'var(--success)';
-          } else {
-            msg = `Fuera del rango: ${sign}${diff.toFixed(1)} kg desde el inicio`;
-            color = 'var(--warning)';
-          }
-        }
-
-        if (msg) {
-          weightGoalMessage.style.display = 'block';
-          weightGoalMessage.style.color = color;
-          weightGoalMessage.textContent = msg;
-        } else {
-          weightGoalMessage.style.display = 'none';
-        }
+      if (statusMsg) {
+        html += `<div style="margin-top:8px; padding-top:8px; border-top:1px solid var(--line); color:${statusColor}; font-size:12px;">${statusMsg}</div>`;
       }
     }
+
+    if (html) {
+      weightGoalMessage.style.display = 'block';
+      weightGoalMessage.innerHTML = html;
+    } else {
+      weightGoalMessage.style.display = 'none';
+    }
   }
+}
 
   function toggleWeightCard() {
     if (!weightCard) return;
