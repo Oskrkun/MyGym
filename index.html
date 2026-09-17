@@ -16,15 +16,13 @@
   <div style="display:flex;gap:8px;flex-wrap:wrap;">
     <button id="progressToggleBtn" class="day-button" type="button">📊 Progreso</button>
     <button id="modeToggle" class="day-button" type="button">⚙️ Admin</button>
-    <button id="dayButton" class="day-button" type="button">📅 Cambiar día</button>
+    <button id="dayButton" class="day-button" type="button">📅 Cambiar rutina</button>
   </div>
 </header>
 
 <main class="app">
 
-  <!-- ============================================================ -->
-  <!-- VISTA PROGRESO                                                -->
-  <!-- ============================================================ -->
+  <!-- VISTA PROGRESO -->
   <div id="progressView" class="hidden">
 
     <article id="profileCard" class="exercise-card collapsed">
@@ -122,10 +120,19 @@
         <button id="nextMonthBtn" class="day-button" type="button">Siguiente ▶</button>
       </div>
 
-      <p style="color: var(--muted); font-size: 0.85rem;">Haz clic en cualquier día del mes para ver el detalle de la rutina guardada:</p>
-      <div class="heatmap-grid" id="heatmapContainer"></div>
+		<p style="color: var(--muted); font-size: 0.85rem;">Haz clic en cualquier día del mes para ver el detalle de la rutina guardada:</p>
+		<div class="heatmap-head" id="heatmapHead">
+		  <span>Dom</span>
+		  <span>Lun</span>
+		  <span>Mar</span>
+		  <span>Mié</span>
+		  <span>Jue</span>
+		  <span>Vie</span>
+		  <span>Sáb</span>
+		</div>
+		<div class="heatmap-grid" id="heatmapContainer"></div>
 
-      <button id="todayBtn" class="day-button" type="button" style="width:100%; margin-top:12px;">📍 Ir a hoy</button>
+		<button id="todayBtn" class="day-button" type="button" style="width:100%; margin-top:12px;">📍 Ir a hoy</button>
     </section>
 
     <section class="progress-panel-card">
@@ -134,9 +141,7 @@
     </section>
   </div>
 
-  <!-- ============================================================ -->
-  <!-- VISTA USUARIO (RUTINA)                                        -->
-  <!-- ============================================================ -->
+  <!-- VISTA USUARIO (RUTINA) -->
   <div id="userView">
     <section class="progress-card">
       <div>
@@ -151,9 +156,19 @@
 
     <section id="exerciseList" class="exercise-list"></section>
 
+    <section id="extrasList" class="extras-list"></section>
+	
+	<div id="devToolsRow" style="margin-top:12px; text-align:right;">
+	  <button id="fillAllBtn" class="day-button" type="button" style="background: #2a1e3a; color: #a78bfa; border-color: #a78bfa; font-size: 11px;">⚡ Llenar todo (test)</button>
+	</div>
+
+    <div id="extrasActions" class="extras-actions hidden">
+      <button id="addExtraBtn" class="day-button" type="button" style="background: var(--violet); color:#0c0d0f; width:100%;">⚡ Agregar extra</button>
+    </div>
+
     <div class="routine-actions-footer">
-      <button class="day-button" type="button" style="background: var(--card-2); width:100%; text-align:center;" onclick="completeRoutineAndAdvance(true)">Terminar Rutina</button>
-      <button class="day-button" type="button" style="background: var(--line); width:100%; text-align:center;" onclick="completeRoutineAndAdvance(false)">Dejar incompleta / Siguiente</button>
+      <button id="finishRoutineBtn" class="day-button" type="button" style="background: var(--accent); color:#0c0d0f; width:100%; text-align:center; font-weight:800;">✓ Finalizar día</button>
+      <button id="incompleteRoutineBtn" class="day-button" type="button" style="background: var(--line); width:100%; text-align:center;">Dejar incompleta / Siguiente</button>
     </div>
 
     <section id="finishCard" class="finish-card hidden">
@@ -164,9 +179,7 @@
     </section>
   </div>
 
-  <!-- ============================================================ -->
-  <!-- VISTA ADMIN                                                   -->
-  <!-- ============================================================ -->
+  <!-- VISTA ADMIN -->
   <div id="adminView" class="hidden">
     <section class="admin-section">
       <h2>💾 Copia de Seguridad</h2>
@@ -186,6 +199,35 @@
         <span>segundos</span>
         <button id="saveRest" class="day-button" type="button">Guardar</button>
       </div>
+    </section>
+
+    <section class="admin-section">
+      <h2>💤 Días de descanso</h2>
+      <p style="color:var(--muted); font-size:0.85rem; margin-top:-5px; margin-bottom:12px;">Marcá los días que NO entrenás. Los cambios no afectan los días pasados.</p>
+      <div id="restDaysGrid" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap:10px;">
+        <label style="display:flex; align-items:center; gap:8px; padding:8px; background:var(--bg); border-radius:8px; cursor:pointer;">
+          <input type="checkbox" id="restDay_1" value="1" /> Lunes
+        </label>
+        <label style="display:flex; align-items:center; gap:8px; padding:8px; background:var(--bg); border-radius:8px; cursor:pointer;">
+          <input type="checkbox" id="restDay_2" value="2" /> Martes
+        </label>
+        <label style="display:flex; align-items:center; gap:8px; padding:8px; background:var(--bg); border-radius:8px; cursor:pointer;">
+          <input type="checkbox" id="restDay_3" value="3" /> Miércoles
+        </label>
+        <label style="display:flex; align-items:center; gap:8px; padding:8px; background:var(--bg); border-radius:8px; cursor:pointer;">
+          <input type="checkbox" id="restDay_4" value="4" /> Jueves
+        </label>
+        <label style="display:flex; align-items:center; gap:8px; padding:8px; background:var(--bg); border-radius:8px; cursor:pointer;">
+          <input type="checkbox" id="restDay_5" value="5" /> Viernes
+        </label>
+        <label style="display:flex; align-items:center; gap:8px; padding:8px; background:var(--bg); border-radius:8px; cursor:pointer;">
+          <input type="checkbox" id="restDay_6" value="6" /> Sábado
+        </label>
+        <label style="display:flex; align-items:center; gap:8px; padding:8px; background:var(--bg); border-radius:8px; cursor:pointer;">
+          <input type="checkbox" id="restDay_0" value="0" /> Domingo
+        </label>
+      </div>
+      <button id="saveRestDaysBtn" class="day-button" type="button" style="margin-top:12px;">Guardar días de descanso</button>
     </section>
 
     <section class="admin-section">
@@ -214,9 +256,7 @@
   </div>
 </main>
 
-<!-- ============================================================ -->
-<!-- MODALES                                                       -->
-<!-- ============================================================ -->
+<!-- MODALES -->
 
 <div id="dayModal" class="modal hidden">
   <div class="modal-box">
@@ -259,6 +299,28 @@
   </div>
 </div>
 
+<!-- Modal: cambiar ejercicio de la rutina -->
+<div id="replaceExerciseModal" class="modal hidden">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h2>Cambiar ejercicio</h2>
+      <button id="closeReplaceModal" class="icon-button" type="button" aria-label="Cerrar modal">×</button>
+    </div>
+    <div style="margin-top:15px; display:grid; gap:12px;">
+      <label for="replaceTypeSelector" style="font-weight:700; font-size:0.85rem;">Tipo</label>
+      <select id="replaceTypeSelector" style="background:#0c0d0f;border:1px solid var(--line);color:#fff;padding:10px;border-radius:10px;"></select>
+
+      <label for="replaceExerciseSelector" style="font-weight:700; font-size:0.85rem;">Ejercicio</label>
+      <select id="replaceExerciseSelector" style="background:#0c0d0f;border:1px solid var(--line);color:#fff;padding:10px;border-radius:10px;"></select>
+
+      <div style="display:flex; gap:10px; margin-top:5px;">
+        <button id="confirmReplaceBtn" class="save-btn" type="button" style="flex:1; padding:12px; border-radius:10px; border:none; font-weight:700;">Cambiar</button>
+        <button id="cancelReplaceBtn" class="cancel-btn" type="button" style="flex:1; padding:12px; border-radius:10px; border:none; font-weight:700; background:var(--line); color:var(--text);">Cancelar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div id="timerOverlay" class="timer-overlay hidden">
   <div class="timer-box">
     <p class="eyebrow">DESCANSO</p>
@@ -272,7 +334,6 @@
   </div>
 </div>
 
-<!-- ORDEN IMPORTANTE -->
 <script src="js/core.js"></script>
 <script src="js/routine.js"></script>
 <script src="js/admin.js"></script>

@@ -10,6 +10,9 @@
   --accent-dark: #8fc91e;
   --success: #22c55e;
   --warning: #eab308;
+  --violet: #a78bfa;
+  --violet-dark: #7c5cf0;
+  --rest-day: #1a1d22;
 }
 html { scroll-behavior: smooth; }
 body {
@@ -95,11 +98,29 @@ button { cursor: pointer; }
   padding: 20px;
   margin-bottom: 20px;
 }
-.heatmap-grid {
+
+/* ====== HEATMAP ====== */
+.heatmap-head {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
   gap: 6px;
   margin-top: 15px;
+  margin-bottom: 6px;
+}
+.heatmap-head span {
+  text-align: center;
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--muted);
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.heatmap-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 6px;
+  margin-top: 0;
 }
 .heatmap-day {
   aspect-ratio: 1 / 1;
@@ -109,44 +130,89 @@ button { cursor: pointer; }
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 10px;
-  font-size: 0.75rem;
+  gap: 2px;
   font-weight: bold;
   color: var(--muted);
   cursor: pointer;
   transition: 0.2s;
-  padding: 2px 0;
+  padding: 4px 2px;
+  position: relative;
+  overflow: hidden;
 }
-
 
 .heatmap-day:hover { border: 1px solid var(--accent); }
 .heatmap-day.completed { background-color: var(--success); color: #fff; }
 .heatmap-day.incomplete { background-color: var(--warning); color: #0c0d0f; }
+
+.heatmap-day.has-extras {
+  background-color: var(--violet);
+  color: #0c0d0f;
+}
+
+/* Día de descanso sin sesión: gris oscuro + rayita diagonal */
+.heatmap-day.rest-day {
+  background-color: var(--rest-day);
+  color: #555b64;
+  background-image: repeating-linear-gradient(
+    45deg,
+    transparent,
+    transparent 4px,
+    rgba(255,255,255,0.05) 4px,
+    rgba(255,255,255,0.05) 6px
+  );
+}
+
+/* Celdas del mes anterior / siguiente: atenuadas y no clickeables */
+.heatmap-day.heatmap-other-month {
+  background: transparent;
+  border: 1px solid var(--line);
+  opacity: 0.25;
+  cursor: default;
+  pointer-events: none;
+}
+.heatmap-day.heatmap-other-month .hm-num {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 400;
+}
+
 .heatmap-day.today { outline: 2px solid var(--accent); outline-offset: 1px; }
 
-.heatmap-day .hm-dow {
-  font-size: 12px;
-  opacity: 0.7;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  line-height: 1;
-}
 .heatmap-day .hm-num {
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 900;
-  line-height: 1;
+  line-height: 1.1;
 }
 .heatmap-day .hm-routine {
-  font-size: 12px;
-  opacity: 0.85;
+  font-size: 9px;
+  opacity: 0.9;
   line-height: 1;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
   max-width: 100%;
   padding: 0 2px;
+  margin-top: 2px;
+  text-align: center;
+  display: block;
+}
 }
 
+.heatmap-day .hm-extras {
+  font-size: 8px;
+  font-weight: 800;
+  line-height: 1;
+  margin-top: 1px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+  padding: 0 2px;
+  text-align: center;
+  display: block;
+}
+
+/* ====== LISTA DE EJERCICIOS ====== */
 .exercise-list { display: grid; gap: 12px; }
 .exercise-card {
   overflow: hidden;
@@ -219,6 +285,7 @@ button { cursor: pointer; }
   color: #0c0d0f;
 }
 
+/* ====== GIF CONTAINER ====== */
 .gif-container {
   position: relative;
   padding: 8px 16px;
@@ -254,6 +321,37 @@ button { cursor: pointer; }
 }
 .change-image-btn:hover { background: var(--accent); color: #0c0d0f; }
 
+/* Contenedor de botones sobre el GIF (cambiar imagen + cambiar ejercicio) */
+.gif-actions {
+  position: absolute;
+  right: 20px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.gif-actions .change-image-btn,
+.gif-actions .replace-exercise-btn {
+  position: static;
+  transform: none;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  font-size: 18px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: 0.2s;
+  display: grid;
+  place-items: center;
+  background: var(--card-2);
+  border: 1px solid var(--line);
+  color: var(--text);
+}
+.gif-actions .change-image-btn:hover { background: var(--accent); color: #0c0d0f; }
+.gif-actions .replace-exercise-btn:hover { background: var(--violet); color: #0c0d0f; }
+
+/* ====== SERIES ====== */
 .series-container { padding: 0 12px 6px; }
 .set-row {
   min-height: 62px;
@@ -312,6 +410,99 @@ button { cursor: pointer; }
   margin-top: 2px;
   display: block;
 }
+
+/* ====== CARDS DE EXTRA ====== */
+.extras-list { display: grid; gap: 12px; margin-top: 14px; }
+
+.extra-card {
+  border: 1px solid var(--violet);
+  background: linear-gradient(145deg, #1e1a29, #17191d);
+}
+.extra-card .group { color: var(--violet); }
+.extra-card .card-icon {
+  color: var(--violet);
+  font-size: 20px;
+}
+
+.extra-head {
+  display: grid;
+  grid-template-columns: 28px 1fr 40px;
+  gap: 12px;
+  align-items: center;
+  padding: 14px 16px;
+}
+.extra-head .exercise-title h2 { margin: 2px 0 3px; font-size: 16px; }
+.extra-head .exercise-title p { margin: 0; color: var(--muted); font-size: 12px; }
+
+.remove-extra-btn {
+  background: rgba(255, 68, 68, 0.15);
+  color: #ff8888;
+  border: 1px solid rgba(255, 68, 68, 0.3);
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: 0.2s;
+  display: grid;
+  place-items: center;
+}
+.remove-extra-btn:hover {
+  background: #ff4444;
+  color: white;
+}
+
+.extra-selectors {
+  padding: 0 16px 14px;
+}
+.extra-selectors select {
+  width: 100%;
+  background: #0c0d0f;
+  border: 1px solid var(--line);
+  color: var(--text);
+  padding: 10px;
+  border-radius: 10px;
+  font-size: 14px;
+}
+.extra-selectors select:focus { outline: 1px solid var(--violet); }
+
+.extra-set {
+  background: rgba(167, 139, 250, 0.06);
+  border-color: rgba(167, 139, 250, 0.3);
+}
+.extra-set.checked {
+  background: rgba(167, 139, 250, 0.15);
+  border-color: var(--violet);
+}
+.extra-set.checked .fake-check {
+  background: var(--violet);
+  border-color: var(--violet);
+  color: #0c0d0f;
+}
+.extra-set .set-state { color: var(--muted); }
+.extra-set.checked .set-state { color: var(--violet); }
+
+.remove-extra-set {
+  background: rgba(255, 68, 68, 0.15);
+  color: #ff8888;
+  border: 1px solid rgba(255, 68, 68, 0.3);
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: 0.2s;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  margin-left: auto;
+}
+.remove-extra-set:hover {
+  background: #ff4444;
+  color: white;
+}
+
+.extras-actions { margin-top: 12px; }
 
 /* Botón usado por Perfil, Peso y Admin */
 .collapse-button {
@@ -396,13 +587,15 @@ button { cursor: pointer; }
   border-radius: 24px;
   background: #17191d;
   box-shadow: 0 25px 80px rgba(0,0,0,.45);
+  max-height: 90vh;
+  overflow-y: auto;
 }
 .modal-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
 }
-.modal-header h2 { margin: 0; }
+.modal-header h2 { margin: 0; font-size: 18px; }
 .icon-button {
   width: 38px; height: 38px;
   border: 0;
@@ -429,6 +622,24 @@ button { cursor: pointer; }
 }
 .day-options button:hover { border-color: var(--accent); background: var(--card); }
 .day-options button .day-status { font-size: 12px; }
+
+/* Botones guardar/cancelar en modales */
+.save-btn {
+  background: var(--accent);
+  color: #0c0d0f;
+  border: none;
+  font-weight: 700;
+  cursor: pointer;
+}
+.save-btn:hover { background: var(--accent-dark); }
+.cancel-btn {
+  background: var(--line);
+  color: var(--text);
+  border: none;
+  font-weight: 700;
+  cursor: pointer;
+}
+.cancel-btn:hover { background: #3a3f47; }
 
 .timer-box { text-align: center; padding: 30px 20px 22px; }
 .timer {
@@ -581,11 +792,6 @@ button { cursor: pointer; }
   color: var(--accent);
   line-height: 1.1;
   padding: 0 4px;
-}
-
-.heatmap-day.today {
-  outline: 2px solid var(--accent);
-  outline-offset: 1px;
 }
 
 #todayBtn {

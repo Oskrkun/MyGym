@@ -1,5 +1,5 @@
 // ==========================================
-// admin.js — Panel de administración + Backup JSON
+// admin.js — Panel de administración + Backup JSON + Días de descanso
 // Depende de: core.js
 // ==========================================
 
@@ -28,6 +28,8 @@ const addRoutineBtn        = $('addRoutineBtn');
 
 const restInput = $('restInput');
 const saveRest  = $('saveRest');
+
+const saveRestDaysBtn = $('saveRestDaysBtn');
 
 const btnExportar   = $('btnExportar');
 const btnImportar   = $('btnImportar');
@@ -77,11 +79,9 @@ function renderAdminRoutines() {
         saveRoutines(currentRoutines);
         renderAdminRoutines();
 
-        // Reset pointer a la primera rutina disponible
         const newPointer = currentRoutines.length > 0 ? currentRoutines[0].id : 1;
         saveCurrentRoutinePointer(newPointer);
 
-        // Si routine.js está cargado, re-renderizamos la vista usuario
         if (typeof window.refreshRoutineView === 'function') {
           window.refreshRoutineView();
         }
@@ -114,7 +114,8 @@ function populateExerciseSelector() {
   getExercises().forEach(ex => {
     const option = document.createElement('option');
     option.value = ex.id;
-    option.textContent = `${ex.name} (${ex.group})`;
+    const grupos = (ex.groups || [ex.group]).join(', ');
+    option.textContent = `${ex.name} (${grupos})`;
     exerciseSelector.appendChild(option);
   });
 }
@@ -212,7 +213,6 @@ submitRoutine.addEventListener('click', () => {
   renderAdminRoutines();
   routineForm.classList.add('hidden');
 
-  // Reset pointer a la primera rutina disponible
   const newPointer = routines.length > 0 ? routines[0].id : 1;
   saveCurrentRoutinePointer(newPointer);
 
@@ -234,7 +234,6 @@ saveRest.addEventListener('click', () => {
   const sec = Number(restInput.value);
   if (sec > 0) {
     setRestSeconds(sec);
-    // Actualizamos la variable del módulo routine.js si está cargado
     if (typeof window.updateRestSeconds === 'function') {
       window.updateRestSeconds(sec);
     }
@@ -244,7 +243,40 @@ saveRest.addEventListener('click', () => {
 
 
 // ==========================================
-// 5. EXPORT / IMPORT JSON
+// 5. DÍAS DE DESCANSO
+// ==========================================
+
+function renderRestDays() {
+  const actuales = getRestDaysActuales();
+  [0, 1, 2, 3, 4, 5, 6].forEach(d => {
+    const cb = document.getElementById('restDay_' + d);
+    if (cb) cb.checked = actuales.includes(d);
+  });
+}
+
+saveRestDaysBtn.addEventListener('click', () => {
+  const selected = [];
+  [0, 1, 2, 3, 4, 5, 6].forEach(d => {
+    const cb = document.getElementById('restDay_' + d);
+    if (cb && cb.checked) selected.push(d);
+  });
+  saveRestDays(selected);
+  alert('Días de descanso guardados. Los cambios solo afectan a los días nuevos.');
+  if (typeof window.renderProgressView === 'function') {
+    // Si la vista progreso está visible, redibujamos el heatmap
+    const pv = document.getElementById('progressView');
+    if (pv && !pv.classList.contains('hidden')) {
+      window.renderProgressView();
+    }
+  }
+});
+
+// Render inicial
+renderRestDays();
+
+
+// ==========================================
+// 6. EXPORT / IMPORT JSON
 // ==========================================
 
 btnExportar.addEventListener('click', () => {
@@ -290,7 +322,7 @@ inputImportar.addEventListener('change', (event) => {
 
 
 // ==========================================
-// 6. API PÚBLICA
+// 7. API PÚBLICA
 // ==========================================
 
 window.renderAdminRoutines = renderAdminRoutines;

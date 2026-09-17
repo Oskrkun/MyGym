@@ -1,6 +1,6 @@
 // ==========================================
 // progress.js — Vista Progreso
-// Perfil + Peso + Heatmap + Gráfica de evolución
+// Perfil + Peso + Heatmap + Gráfica + Extras
 // Depende de: core.js
 // ==========================================
 
@@ -328,68 +328,112 @@
   }
 
   // ==========================================
-  // 9. HEATMAP
+  // 9. HEATMAP (con colores nuevos)
   // ==========================================
 
   function renderHeatmap() {
-    const container = $('heatmapContainer');
-    if (!container) return;
+  const container = $('heatmapContainer');
+  if (!container) return;
 
-    container.innerHTML = '';
-    const history = (typeof getGlobalHistory === 'function') ? getGlobalHistory() : {};
+  container.innerHTML = '';
+  const history = (typeof getGlobalHistory === 'function') ? getGlobalHistory() : {};
 
-    const monthNames = [
-      'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
-      'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
-    ];
-    const dayNames = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+  const monthNames = [
+    'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+    'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
+  ];
 
-    if (monthLabel) {
-      monthLabel.textContent = `${monthNames[viewMonth]} ${viewYear}`;
-    }
-
-    const daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
-    const todayReal = new Date();
-
-    for (let dayNum = 1; dayNum <= daysInMonth; dayNum++) {
-      const mm = String(viewMonth + 1).padStart(2, '0');
-      const dd = String(dayNum).padStart(2, '0');
-      const fullDateKey = `${viewYear}-${mm}-${dd}`;
-
-      const session = history[fullDateKey];
-      const dateObj = new Date(viewYear, viewMonth, dayNum);
-      const dayOfWeek = dayNames[dateObj.getDay()];
-
-      let className = 'heatmap-day';
-
-      const isToday = dayNum === todayReal.getDate() &&
-                      viewMonth === todayReal.getMonth() &&
-                      viewYear === todayReal.getFullYear();
-
-      if (isToday) className += ' today';
-
-      if (session) {
-        if (session.status === 'completed') className += ' completed';
-        else if (session.status === 'incomplete') className += ' incomplete';
-      }
-
-      const div = document.createElement('div');
-      div.className = className;
-
-      let innerHTML = `<span class="hm-dow">${dayOfWeek}</span>`;
-      innerHTML += `<span class="hm-num">${dayNum}</span>`;
-      if (session) {
-        innerHTML += `<span class="hm-routine">${nombreRutinaParaMostrar(session)}</span>`;
-      }
-      div.innerHTML = innerHTML;
-
-      div.addEventListener('click', () => {
-        showHistoryDetail(fullDateKey, dayNum, session);
-      });
-
-      container.appendChild(div);
-    }
+  if (monthLabel) {
+    monthLabel.textContent = `${monthNames[viewMonth]} ${viewYear}`;
   }
+
+  const todayReal = new Date();
+
+  // Fechas clave para armar la cuadrícula
+  const firstOfMonth = new Date(viewYear, viewMonth, 1);
+  const lastOfMonth = new Date(viewYear, viewMonth + 1, 0);
+  const daysInMonth = lastOfMonth.getDate();
+
+  // Columna donde empieza el día 1 (0 = domingo, 6 = sábado)
+  const startWeekday = firstOfMonth.getDay();
+
+  // Cantidad total de celdas necesarias (múltiplo de 7)
+  const totalCells = Math.ceil((startWeekday + daysInMonth) / 7) * 7;
+  const endPad = totalCells - startWeekday - daysInMonth;
+
+  // Construir cada celda: desde (día 1 - startWeekday) hasta (día último + endPad)
+  for (let i = 0; i < totalCells; i++) {
+    const offset = i - startWeekday; // 0 = día 1 del mes
+    const date = new Date(viewYear, viewMonth, 1 + offset);
+
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, '0');
+    const d = String(date.getDate()).padStart(2, '0');
+    const fullDateKey = `${y}-${m}-${d}`;
+
+    // ¿Es del mes visible?
+    const isCurrentMonth = (date.getMonth() === viewMonth && date.getFullYear() === viewYear);
+
+    // Solo buscar sesión para el mes visible (los otros meses se ven atenuados)
+    const session = isCurrentMonth ? history[fullDateKey] : null;
+    const esDescanso = isCurrentMonth && !session && typeof esDiaDeDescanso === 'function' && esDiaDeDescanso(fullDateKey);
+
+    const div = document.createElement('div');
+    div.className = 'heatmap-day';
+
+    if (!isCurrentMonth) {
+      div.className += ' heatmap-other-month';
+      div.innerHTML = `<span class="hm-num">${date.getDate()}</span>`;
+      container.appendChild(div);
+      continue;
+    }
+
+    const tieneExtras = session && Array.isArray(session.extras) && session.extras.length > 0;
+
+    if (session) {
+      if (session.status === 'completed') {
+        if (tieneExtras) div.className += ' has-extras';
+        else div.className += ' completed';
+      } else if (session.status === 'incomplete') {
+        div.className += ' incomplete';
+      }
+    } else if (esDescanso) {
+      div.className += ' rest-day';
+    }
+
+    const isToday = date.getDate() === todayReal.getDate() &&
+                    date.getMonth() === todayReal.getMonth() &&
+                    date.getFullYear() === todayReal.getFullYear();
+    if (isToday) div.className += ' today';
+
+	let routineText = '';
+	let extrasText = '';
+
+	if (session) {
+	  const baseName = typeof nombreRutinaParaMostrar === 'function'
+		? nombreRutinaParaMostrar(session)
+		: (session.routineName || '');
+	  routineText = baseName;
+	  if (tieneExtras) {
+		extrasText = 'Extras ⚡';
+	  }
+	} else if (esDescanso) {
+	  routineText = 'Descanso';
+	}
+
+	div.innerHTML = `
+	  <span class="hm-num">${date.getDate()}</span>
+	  ${routineText ? `<span class="hm-routine">${routineText}</span>` : ''}
+	  ${extrasText ? `<span class="hm-extras">${extrasText}</span>` : ''}
+	`;
+
+    div.addEventListener('click', () => {
+      showHistoryDetail(fullDateKey, date.getDate(), session);
+    });
+
+    container.appendChild(div);
+  }
+}
 
   // ==========================================
   // 10. MODAL DE DETALLE DE DÍA
@@ -400,6 +444,8 @@
 
     const weights = getWeights();
     const weightEntry = weights.find(w => w.date === fullDateKey);
+
+    const tieneExtras = session && Array.isArray(session.extras) && session.extras.length > 0;
 
     if (!session && !weightEntry) {
       historyModalContent.innerHTML = `<p style="color:var(--muted); text-align:center; padding: 20px;">No hay registros guardados para esta fecha.</p>`;
@@ -421,11 +467,13 @@
     }
 
     if (session) {
-      const routineLabel = session.routineName || `Rutina ${session.routineId || ''}`;
+      const routineLabel = typeof nombreRutinaParaMostrar === 'function'
+        ? nombreRutinaParaMostrar(session)
+        : (session.routineName || '');
       html += `<p><strong>Rutina:</strong> ${routineLabel} (${session.status === 'completed' ? '✅ Completada' : '⏳ Incompleta'})</p>`;
       html += `<hr style="border-color:var(--line); margin: 10px 0;">`;
 
-      session.exercises.forEach((ex, i) => {
+      (session.exercises || []).forEach((ex, i) => {
         html += `<div style="margin-bottom: 12px; background:var(--bg); padding:10px; border-radius:10px;"><strong>${i + 1}. ${ex.name}</strong><br>`;
 
         if (ex.isCardio) {
@@ -447,6 +495,22 @@
         }
         html += `</div>`;
       });
+
+      // Sección de extras
+      if (tieneExtras) {
+        html += `<div style="margin-top:16px; padding-top:10px; border-top:1px solid var(--violet);"><strong style="color:var(--violet); font-size:14px;">⚡ Extras</strong></div>`;
+
+        session.extras.forEach((ex, i) => {
+          html += `<div style="margin-top:10px; margin-bottom: 12px; background:var(--bg); padding:10px; border-radius:10px; border-left:3px solid var(--violet);"><strong>${ex.name}</strong><br>`;
+          (ex.sets || []).forEach((s, si) => {
+            const w = s.weight && String(s.weight).trim() !== '' ? `${s.weight}kg` : '—';
+            const r = s.reps || '—';
+            const check = s.completed ? '✓' : '○';
+            html += `<small style="color:var(--text); display:block; margin-top:3px;">S${si + 1}: <strong>${w}</strong> × ${r} reps ${check}</small>`;
+          });
+          html += `</div>`;
+        });
+      }
     }
 
     historyModalContent.innerHTML = html;

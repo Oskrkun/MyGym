@@ -14,10 +14,6 @@ const progressView      = $('progressView');
 const progressToggleBtn = $('progressToggleBtn');
 const modeToggle        = $('modeToggle');
 
-// NOTA: dayButton y restInput NO se declaran acá.
-// Se obtienen on-demand dentro de updateNavigationVisibility()
-// para no depender del orden de carga de los otros módulos.
-
 
 // ==========================================
 // 2. VARIABLES DE NAVEGACIÓN
@@ -32,7 +28,6 @@ let showingProgress = false;
 // ==========================================
 
 function updateNavigationVisibility() {
-  // Refs on-demand para evitar dependencia entre módulos
   const dayBtn = document.getElementById('dayButton');
   const restInputEl = document.getElementById('restInput');
 
