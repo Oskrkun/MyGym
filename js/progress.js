@@ -328,112 +328,98 @@
   }
 
   // ==========================================
-  // 9. HEATMAP (con colores nuevos)
+  // 9. HEATMAP (rediseñado: solo número + ícono)
   // ==========================================
 
   function renderHeatmap() {
-  const container = $('heatmapContainer');
-  if (!container) return;
+    const container = $('heatmapContainer');
+    if (!container) return;
 
-  container.innerHTML = '';
-  const history = (typeof getGlobalHistory === 'function') ? getGlobalHistory() : {};
+    container.innerHTML = '';
+    const history = (typeof getGlobalHistory === 'function') ? getGlobalHistory() : {};
 
-  const monthNames = [
-    'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
-    'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
-  ];
+    const monthNames = [
+      'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+      'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
+    ];
 
-  if (monthLabel) {
-    monthLabel.textContent = `${monthNames[viewMonth]} ${viewYear}`;
-  }
-
-  const todayReal = new Date();
-
-  // Fechas clave para armar la cuadrícula
-  const firstOfMonth = new Date(viewYear, viewMonth, 1);
-  const lastOfMonth = new Date(viewYear, viewMonth + 1, 0);
-  const daysInMonth = lastOfMonth.getDate();
-
-  // Columna donde empieza el día 1 (0 = domingo, 6 = sábado)
-  const startWeekday = firstOfMonth.getDay();
-
-  // Cantidad total de celdas necesarias (múltiplo de 7)
-  const totalCells = Math.ceil((startWeekday + daysInMonth) / 7) * 7;
-  const endPad = totalCells - startWeekday - daysInMonth;
-
-  // Construir cada celda: desde (día 1 - startWeekday) hasta (día último + endPad)
-  for (let i = 0; i < totalCells; i++) {
-    const offset = i - startWeekday; // 0 = día 1 del mes
-    const date = new Date(viewYear, viewMonth, 1 + offset);
-
-    const y = date.getFullYear();
-    const m = String(date.getMonth() + 1).padStart(2, '0');
-    const d = String(date.getDate()).padStart(2, '0');
-    const fullDateKey = `${y}-${m}-${d}`;
-
-    // ¿Es del mes visible?
-    const isCurrentMonth = (date.getMonth() === viewMonth && date.getFullYear() === viewYear);
-
-    // Solo buscar sesión para el mes visible (los otros meses se ven atenuados)
-    const session = isCurrentMonth ? history[fullDateKey] : null;
-    const esDescanso = isCurrentMonth && !session && typeof esDiaDeDescanso === 'function' && esDiaDeDescanso(fullDateKey);
-
-    const div = document.createElement('div');
-    div.className = 'heatmap-day';
-
-    if (!isCurrentMonth) {
-      div.className += ' heatmap-other-month';
-      div.innerHTML = `<span class="hm-num">${date.getDate()}</span>`;
-      container.appendChild(div);
-      continue;
+    if (monthLabel) {
+      monthLabel.textContent = `${monthNames[viewMonth]} ${viewYear}`;
     }
 
-    const tieneExtras = session && Array.isArray(session.extras) && session.extras.length > 0;
+    const todayReal = new Date();
 
-    if (session) {
-      if (session.status === 'completed') {
-        if (tieneExtras) div.className += ' has-extras';
-        else div.className += ' completed';
-      } else if (session.status === 'incomplete') {
-        div.className += ' incomplete';
+    // Fechas clave para armar la cuadrícula
+    const firstOfMonth = new Date(viewYear, viewMonth, 1);
+    const lastOfMonth = new Date(viewYear, viewMonth + 1, 0);
+    const daysInMonth = lastOfMonth.getDate();
+
+    // Columna donde empieza el día 1 (0 = domingo, 6 = sábado)
+    const startWeekday = firstOfMonth.getDay();
+
+    // Cantidad total de celdas necesarias (múltiplo de 7)
+    const totalCells = Math.ceil((startWeekday + daysInMonth) / 7) * 7;
+
+    for (let i = 0; i < totalCells; i++) {
+      const offset = i - startWeekday;
+      const date = new Date(viewYear, viewMonth, 1 + offset);
+
+      const y = date.getFullYear();
+      const m = String(date.getMonth() + 1).padStart(2, '0');
+      const d = String(date.getDate()).padStart(2, '0');
+      const fullDateKey = `${y}-${m}-${d}`;
+
+      const isCurrentMonth = (date.getMonth() === viewMonth && date.getFullYear() === viewYear);
+
+      const session = isCurrentMonth ? history[fullDateKey] : null;
+      const esDescanso = isCurrentMonth && !session && typeof esDiaDeDescanso === 'function' && esDiaDeDescanso(fullDateKey);
+
+      const div = document.createElement('div');
+      div.className = 'heatmap-day';
+
+      // Celdas de otros meses: atenuadas, no clickeables
+      if (!isCurrentMonth) {
+        div.className += ' heatmap-other-month';
+        div.innerHTML = `<span class="hm-num">${date.getDate()}</span>`;
+        container.appendChild(div);
+        continue;
       }
-    } else if (esDescanso) {
-      div.className += ' rest-day';
+
+      const tieneExtras = session && Array.isArray(session.extras) && session.extras.length > 0;
+
+      if (session) {
+        if (session.status === 'completed') {
+          if (tieneExtras) div.className += ' has-extras';
+          else div.className += ' completed';
+        } else if (session.status === 'incomplete') {
+          div.className += ' incomplete';
+        }
+      } else if (esDescanso) {
+        div.className += ' rest-day';
+      }
+
+      const isToday = date.getDate() === todayReal.getDate() &&
+                      date.getMonth() === todayReal.getMonth() &&
+                      date.getFullYear() === todayReal.getFullYear();
+      if (isToday) div.className += ' today';
+
+      // Ícono: ⚡ si tiene extras, 💤 si es descanso
+      let iconText = '';
+      if (tieneExtras) iconText = '⚡';
+      else if (esDescanso) iconText = '💤';
+
+      div.innerHTML = `
+        <span class="hm-num">${date.getDate()}</span>
+        ${iconText ? `<span class="hm-icon">${iconText}</span>` : ''}
+      `;
+
+      div.addEventListener('click', () => {
+        showHistoryDetail(fullDateKey, date.getDate(), session);
+      });
+
+      container.appendChild(div);
     }
-
-    const isToday = date.getDate() === todayReal.getDate() &&
-                    date.getMonth() === todayReal.getMonth() &&
-                    date.getFullYear() === todayReal.getFullYear();
-    if (isToday) div.className += ' today';
-
-	let routineText = '';
-	let extrasText = '';
-
-	if (session) {
-	  const baseName = typeof nombreRutinaParaMostrar === 'function'
-		? nombreRutinaParaMostrar(session)
-		: (session.routineName || '');
-	  routineText = baseName;
-	  if (tieneExtras) {
-		extrasText = 'Extras ⚡';
-	  }
-	} else if (esDescanso) {
-	  routineText = 'Descanso';
-	}
-
-	div.innerHTML = `
-	  <span class="hm-num">${date.getDate()}</span>
-	  ${routineText ? `<span class="hm-routine">${routineText}</span>` : ''}
-	  ${extrasText ? `<span class="hm-extras">${extrasText}</span>` : ''}
-	`;
-
-    div.addEventListener('click', () => {
-      showHistoryDetail(fullDateKey, date.getDate(), session);
-    });
-
-    container.appendChild(div);
   }
-}
 
   // ==========================================
   // 10. MODAL DE DETALLE DE DÍA
