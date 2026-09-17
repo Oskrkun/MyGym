@@ -34,12 +34,12 @@ const EXERCISES_DB = [
 ];
 
 const DEFAULT_ROUTINES = [
-  { id: 1, name: "Día 1", exercises: [{ exerciseId: 1, sets: 3, reps: 12, weight: "" }, { exerciseId: 2, sets: 3, reps: 12, weight: "" }] },
-  { id: 2, name: "Día 2", exercises: [{ exerciseId: 3, sets: 3, reps: 12, weight: "" }, { exerciseId: 4, sets: 3, reps: 12, weight: "" }] },
-  { id: 3, name: "Día 3", exercises: [{ exerciseId: 5, sets: 3, reps: 12, weight: "" }, { exerciseId: 6, sets: 3, reps: 12, weight: "" }] },
-  { id: 4, name: "Día 4", exercises: [{ exerciseId: 9, sets: 3, reps: 12, weight: "" }, { exerciseId: 10, sets: 3, reps: 12, weight: "" }] },
-  { id: 5, name: "Día 5", exercises: [{ exerciseId: 12, sets: 3, reps: 12, weight: "" }, { exerciseId: 14, sets: 3, reps: 12, weight: "" }] },
-  { id: 6, name: "Día 6", exercises: [{ exerciseId: 19, sets: 1, reps: 0, time: "20 min", weight: "", speed: 8, incline: 2 }] }
+  { id: 1, name: "Rutina 1", exercises: [{ exerciseId: 1, sets: 3, reps: 12, weight: "" }, { exerciseId: 2, sets: 3, reps: 12, weight: "" }] },
+  { id: 2, name: "Rutina 2", exercises: [{ exerciseId: 3, sets: 3, reps: 12, weight: "" }, { exerciseId: 4, sets: 3, reps: 12, weight: "" }] },
+  { id: 3, name: "Rutina 3", exercises: [{ exerciseId: 5, sets: 3, reps: 12, weight: "" }, { exerciseId: 6, sets: 3, reps: 12, weight: "" }] },
+  { id: 4, name: "Rutina 4", exercises: [{ exerciseId: 9, sets: 3, reps: 12, weight: "" }, { exerciseId: 10, sets: 3, reps: 12, weight: "" }] },
+  { id: 5, name: "Rutina 5", exercises: [{ exerciseId: 12, sets: 3, reps: 12, weight: "" }, { exerciseId: 14, sets: 3, reps: 12, weight: "" }] },
+  { id: 6, name: "Rutina 6", exercises: [{ exerciseId: 19, sets: 1, reps: 0, time: "20 min", weight: "", speed: 8, incline: 2 }] }
 ];
 
 const DEFAULT_REST_SECONDS = 60;
@@ -51,6 +51,15 @@ const DEFAULT_REST_SECONDS = 60;
 
 const $ = id => document.getElementById(id);
 
+
+function nombreRutinaParaMostrar(session) {
+  if (session.routineId) {
+    const routines = getRoutines();
+    const r = routines.find(x => x.id === session.routineId);
+    if (r) return r.name;
+  }
+  return session.routineName || 'Rutina';
+}
 
 // ==========================================
 // 3. PERSISTENCIA (LOCALSTORAGE)
@@ -130,15 +139,20 @@ function saveDayState(routineId, state) {
 // ==========================================
 
 /**
- * Devuelve la última sesión registrada en el historial para una rutina
- * con un nombre específico. Devuelve { date, exercises } o null.
+ * Devuelve la última sesión registrada para una rutina.
+ * Primero busca por routineId. Si no la encuentra, cae a match por nombre
+ * (para compatibilidad con historial viejo sin routineId).
  */
-function getLastSessionForRoutine(routineName) {
+function getLastSessionForRoutine(routineId, routineName) {
   const history = getGlobalHistory();
   const keys = Object.keys(history).sort().reverse();
   for (const key of keys) {
     const session = history[key];
-    if (session && session.routineName === routineName) {
+    if (!session) continue;
+    if (session.routineId === routineId) {
+      return { date: key, exercises: session.exercises || [] };
+    }
+    if (session.routineId === undefined && session.routineName === routineName) {
       return { date: key, exercises: session.exercises || [] };
     }
   }

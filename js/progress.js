@@ -1,7 +1,7 @@
 // ==========================================
 // progress.js — Vista Progreso
 // Perfil + Peso + Heatmap + Gráfica de evolución
-// Depende de: apps.js (debe cargarse primero)
+// Depende de: core.js
 // ==========================================
 
 (function () {
@@ -60,7 +60,7 @@
   // ==========================================
 
   let viewYear  = new Date().getFullYear();
-  let viewMonth = new Date().getMonth(); // 0–11
+  let viewMonth = new Date().getMonth();
 
   // ==========================================
   // 3. UTILIDADES
@@ -159,125 +159,116 @@
   // ==========================================
 
   function renderWeightCard() {
-  if (weightCard) weightCard.classList.add('collapsed');
-  if (weightChevron) weightChevron.textContent = '▾';
+    if (weightCard) weightCard.classList.add('collapsed');
+    if (weightChevron) weightChevron.textContent = '▾';
 
-  const weights = getWeights();
+    const weights = getWeights();
 
-  if (weights.length === 0) {
-    weightCurrent.textContent  = '—';
-    weightLastDate.textContent = 'Sin registros';
-    if (weightGoalMessage) weightGoalMessage.style.display = 'none';
-    return;
-  }
-
-  const last = weights[weights.length - 1];
-  weightCurrent.textContent = `${last.kg} kg`;
-
-  const d = new Date(last.date + 'T00:00:00');
-  const dd = String(d.getDate()).padStart(2, '0');
-  const mm = String(d.getMonth() + 1).padStart(2, '0');
-  weightLastDate.textContent = `Última pesada: ${dd}/${mm}/${d.getFullYear()}`;
-
-  // ============================================
-  // Comparaciones: última pesada + desde el inicio
-  // ============================================
-  if (weightGoalMessage) {
-    const profile = getProfile();
-    const goal = profile.goal;
-
-    // Helper de formateo
-    const fmt = (val) => {
-      const sign = val >= 0 ? '+' : '';
-      return `${sign}${val.toFixed(1)}`;
-    };
-    const arrow = (val) => {
-      if (val < -0.05) return '↓';
-      if (val > 0.05) return '↑';
-      return '→';
-    };
-    // Color según objetivo
-    const colorFor = (diff) => {
-      if (!goal) return 'var(--muted)';
-      if (goal === 'bajar') {
-        if (diff < -0.05) return 'var(--success)';
-        if (diff > 0.05)  return 'var(--warning)';
-        return 'var(--muted)';
-      }
-      if (goal === 'subir') {
-        if (diff > 0.05)  return 'var(--success)';
-        if (diff < -0.05) return 'var(--warning)';
-        return 'var(--muted)';
-      }
-      // mantener
-      if (Math.abs(diff) <= 1) return 'var(--success)';
-      return 'var(--warning)';
-    };
-
-    let html = '';
-
-    // 1. Comparación con la pesada anterior (si hay 2+)
-    if (weights.length >= 2) {
-      const prev = weights[weights.length - 2];
-      const diffPrev = last.kg - prev.kg;
-      const prevDate = new Date(prev.date + 'T00:00:00');
-      const prevLabel = `${String(prevDate.getDate()).padStart(2,'0')}/${String(prevDate.getMonth()+1).padStart(2,'0')}`;
-
-      html += `
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
-          <span style="color:var(--muted); font-size:12px;">Desde la última pesada (${prevLabel})</span>
-          <strong style="color:${colorFor(diffPrev)}; font-size:14px;">${arrow(diffPrev)} ${fmt(diffPrev)} kg</strong>
-        </div>
-      `;
+    if (weights.length === 0) {
+      weightCurrent.textContent  = '—';
+      weightLastDate.textContent = 'Sin registros';
+      if (weightGoalMessage) weightGoalMessage.style.display = 'none';
+      return;
     }
 
-    // 2. Comparación con la primera pesada (si hay 2+)
-    if (weights.length >= 2) {
-      const first = weights[0];
-      const diffFirst = last.kg - first.kg;
-      const firstDate = new Date(first.date + 'T00:00:00');
-      const firstLabel = `${String(firstDate.getDate()).padStart(2,'0')}/${String(firstDate.getMonth()+1).padStart(2,'0')}`;
+    const last = weights[weights.length - 1];
+    weightCurrent.textContent = `${last.kg} kg`;
 
-      html += `
-        <div style="display:flex; justify-content:space-between; align-items:center;">
-          <span style="color:var(--muted); font-size:12px;">Desde el primer pesaje (${firstLabel})</span>
-          <strong style="color:${colorFor(diffFirst)}; font-size:14px;">${arrow(diffFirst)} ${fmt(diffFirst)} kg</strong>
-        </div>
-      `;
-    }
+    const d = new Date(last.date + 'T00:00:00');
+    const dd = String(d.getDate()).padStart(2, '0');
+    const mm = String(d.getMonth() + 1).padStart(2, '0');
+    weightLastDate.textContent = `Última pesada: ${dd}/${mm}/${d.getFullYear()}`;
 
-    // 3. Mensaje de estado general según el objetivo (si hay objetivo cargado)
-    if (goal && weights.length >= 2) {
-      const diffFirst = last.kg - weights[0].kg;
-      let statusMsg = '';
-      let statusColor = 'var(--muted)';
+    if (weightGoalMessage) {
+      const profile = getProfile();
+      const goal = profile.goal;
 
-      if (goal === 'bajar') {
-        if (diffFirst < -0.1) { statusMsg = 'Vas bien, seguí así.'; statusColor = 'var(--success)'; }
-        else if (diffFirst > 0.1) { statusMsg = 'Ojo con el objetivo de bajar.'; statusColor = 'var(--warning)'; }
-        else { statusMsg = 'Peso estable.'; }
-      } else if (goal === 'subir') {
-        if (diffFirst > 0.1) { statusMsg = 'Vas bien, seguí así.'; statusColor = 'var(--success)'; }
-        else if (diffFirst < -0.1) { statusMsg = 'Ojo con el objetivo de subir.'; statusColor = 'var(--warning)'; }
-        else { statusMsg = 'Peso estable.'; }
-      } else if (goal === 'mantener') {
-        if (Math.abs(diffFirst) <= 1) { statusMsg = 'Estable dentro del rango.'; statusColor = 'var(--success)'; }
-        else { statusMsg = 'Fuera del rango de mantenimiento.'; statusColor = 'var(--warning)'; }
+      const fmt = (val) => {
+        const sign = val >= 0 ? '+' : '';
+        return `${sign}${val.toFixed(1)}`;
+      };
+      const arrow = (val) => {
+        if (val < -0.05) return '↓';
+        if (val > 0.05) return '↑';
+        return '→';
+      };
+      const colorFor = (diff) => {
+        if (!goal) return 'var(--muted)';
+        if (goal === 'bajar') {
+          if (diff < -0.05) return 'var(--success)';
+          if (diff > 0.05)  return 'var(--warning)';
+          return 'var(--muted)';
+        }
+        if (goal === 'subir') {
+          if (diff > 0.05)  return 'var(--success)';
+          if (diff < -0.05) return 'var(--warning)';
+          return 'var(--muted)';
+        }
+        if (Math.abs(diff) <= 1) return 'var(--success)';
+        return 'var(--warning)';
+      };
+
+      let html = '';
+
+      if (weights.length >= 2) {
+        const prev = weights[weights.length - 2];
+        const diffPrev = last.kg - prev.kg;
+        const prevDate = new Date(prev.date + 'T00:00:00');
+        const prevLabel = `${String(prevDate.getDate()).padStart(2,'0')}/${String(prevDate.getMonth()+1).padStart(2,'0')}`;
+
+        html += `
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+            <span style="color:var(--muted); font-size:12px;">Desde la última pesada (${prevLabel})</span>
+            <strong style="color:${colorFor(diffPrev)}; font-size:14px;">${arrow(diffPrev)} ${fmt(diffPrev)} kg</strong>
+          </div>
+        `;
       }
 
-      if (statusMsg) {
-        html += `<div style="margin-top:8px; padding-top:8px; border-top:1px solid var(--line); color:${statusColor}; font-size:12px;">${statusMsg}</div>`;
-      }
-    }
+      if (weights.length >= 2) {
+        const first = weights[0];
+        const diffFirst = last.kg - first.kg;
+        const firstDate = new Date(first.date + 'T00:00:00');
+        const firstLabel = `${String(firstDate.getDate()).padStart(2,'0')}/${String(firstDate.getMonth()+1).padStart(2,'0')}`;
 
-    if (html) {
-      weightGoalMessage.style.display = 'block';
-      weightGoalMessage.innerHTML = html;
-    } else {
-      weightGoalMessage.style.display = 'none';
+        html += `
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <span style="color:var(--muted); font-size:12px;">Desde el primer pesaje (${firstLabel})</span>
+            <strong style="color:${colorFor(diffFirst)}; font-size:14px;">${arrow(diffFirst)} ${fmt(diffFirst)} kg</strong>
+          </div>
+        `;
+      }
+
+      if (goal && weights.length >= 2) {
+        const diffFirst = last.kg - weights[0].kg;
+        let statusMsg = '';
+        let statusColor = 'var(--muted)';
+
+        if (goal === 'bajar') {
+          if (diffFirst < -0.1) { statusMsg = 'Vas bien, seguí así.'; statusColor = 'var(--success)'; }
+          else if (diffFirst > 0.1) { statusMsg = 'Ojo con el objetivo de bajar.'; statusColor = 'var(--warning)'; }
+          else { statusMsg = 'Peso estable.'; }
+        } else if (goal === 'subir') {
+          if (diffFirst > 0.1) { statusMsg = 'Vas bien, seguí así.'; statusColor = 'var(--success)'; }
+          else if (diffFirst < -0.1) { statusMsg = 'Ojo con el objetivo de subir.'; statusColor = 'var(--warning)'; }
+          else { statusMsg = 'Peso estable.'; }
+        } else if (goal === 'mantener') {
+          if (Math.abs(diffFirst) <= 1) { statusMsg = 'Estable dentro del rango.'; statusColor = 'var(--success)'; }
+          else { statusMsg = 'Fuera del rango de mantenimiento.'; statusColor = 'var(--warning)'; }
+        }
+
+        if (statusMsg) {
+          html += `<div style="margin-top:8px; padding-top:8px; border-top:1px solid var(--line); color:${statusColor}; font-size:12px;">${statusMsg}</div>`;
+        }
+      }
+
+      if (html) {
+        weightGoalMessage.style.display = 'block';
+        weightGoalMessage.innerHTML = html;
+      } else {
+        weightGoalMessage.style.display = 'none';
+      }
     }
   }
-}
 
   function toggleWeightCard() {
     if (!weightCard) return;
@@ -351,6 +342,7 @@
       'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
       'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
     ];
+    const dayNames = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
 
     if (monthLabel) {
       monthLabel.textContent = `${monthNames[viewMonth]} ${viewYear}`;
@@ -365,6 +357,8 @@
       const fullDateKey = `${viewYear}-${mm}-${dd}`;
 
       const session = history[fullDateKey];
+      const dateObj = new Date(viewYear, viewMonth, dayNum);
+      const dayOfWeek = dayNames[dateObj.getDay()];
 
       let className = 'heatmap-day';
 
@@ -374,17 +368,20 @@
 
       if (isToday) className += ' today';
 
-      let text = `${dayNum}`;
-
       if (session) {
         if (session.status === 'completed') className += ' completed';
         else if (session.status === 'incomplete') className += ' incomplete';
-        text += `<span>${session.routineName.replace('Día ', 'D')}</span>`;
       }
 
       const div = document.createElement('div');
       div.className = className;
-      div.innerHTML = text;
+
+      let innerHTML = `<span class="hm-dow">${dayOfWeek}</span>`;
+      innerHTML += `<span class="hm-num">${dayNum}</span>`;
+      if (session) {
+        innerHTML += `<span class="hm-routine">${nombreRutinaParaMostrar(session)}</span>`;
+      }
+      div.innerHTML = innerHTML;
 
       div.addEventListener('click', () => {
         showHistoryDetail(fullDateKey, dayNum, session);
@@ -424,7 +421,8 @@
     }
 
     if (session) {
-      html += `<p><strong>Rutina:</strong> ${session.routineName} (${session.status === 'completed' ? '✅ Completada' : '⏳ Incompleta'})</p>`;
+      const routineLabel = session.routineName || `Rutina ${session.routineId || ''}`;
+      html += `<p><strong>Rutina:</strong> ${routineLabel} (${session.status === 'completed' ? '✅ Completada' : '⏳ Incompleta'})</p>`;
       html += `<hr style="border-color:var(--line); margin: 10px 0;">`;
 
       session.exercises.forEach((ex, i) => {

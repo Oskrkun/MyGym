@@ -64,7 +64,7 @@ function renderUser() {
   state = getDayState(currentRoutineId);
   if (!state) return;
 
-  const lastSession = getLastSessionForRoutine(routine.name);
+  const lastSession = getLastSessionForRoutine(routine.id, routine.name);
 
   let totalSets = 0, completedSets = 0;
   exerciseList.innerHTML = '';
@@ -275,6 +275,7 @@ function completeRoutineAndAdvance(isSuccess) {
   const todayKey = `${yyyy}-${mm}-${dd}`;
 
   history[todayKey] = {
+    routineId: currentRoutine.id,
     routineName: currentRoutine.name,
     status: isSuccess ? 'completed' : 'incomplete',
     exercises: (currentRoutine.exercises || []).map((ex, idx) => {
@@ -306,7 +307,7 @@ function completeRoutineAndAdvance(isSuccess) {
     });
     currentRoutineId = routines[0].id;
     saveCurrentRoutinePointer(currentRoutineId);
-    alert("🎉 ¡Has completado todo el ciclo de rutinas! El sistema se ha reiniciado automáticamente al Día 1 para un nuevo ciclo. Tus datos quedaron guardados en el historial.");
+    alert("🎉 ¡Has completado todo el ciclo de rutinas! El sistema se ha reiniciado automáticamente a la Rutina 1 para un nuevo ciclo. Tus datos quedaron guardados en el historial.");
   }
 
   state = getDayState(currentRoutineId);
@@ -447,14 +448,12 @@ dayModal.addEventListener('click', (e) => { if (e.target === dayModal) dayModal.
 window.renderUser = renderUser;
 window.completeRoutineAndAdvance = completeRoutineAndAdvance;
 
-// Permite a otros módulos refrescar la vista Rutina
 window.refreshRoutineView = function () {
   currentRoutineId = getCurrentRoutinePointer();
   state = getDayState(currentRoutineId);
   renderUser();
 };
 
-// Permite a admin.js actualizar restSeconds sin recargar
 window.updateRestSeconds = function (sec) {
   restSeconds = sec;
 };

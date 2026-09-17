@@ -98,27 +98,54 @@ button { cursor: pointer; }
 .heatmap-grid {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
-  gap: 8px;
+  gap: 6px;
   margin-top: 15px;
 }
 .heatmap-day {
-  aspect-ratio: 1;
+  aspect-ratio: 1 / 1;
   background-color: var(--line);
   border-radius: 6px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  gap: 10px;
   font-size: 0.75rem;
   font-weight: bold;
   color: var(--muted);
   cursor: pointer;
   transition: 0.2s;
+  padding: 2px 0;
 }
+
+
 .heatmap-day:hover { border: 1px solid var(--accent); }
 .heatmap-day.completed { background-color: var(--success); color: #fff; }
 .heatmap-day.incomplete { background-color: var(--warning); color: #0c0d0f; }
-.heatmap-day span { font-size: 9px; opacity: 0.8; }
+.heatmap-day.today { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+.heatmap-day .hm-dow {
+  font-size: 12px;
+  opacity: 0.7;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  line-height: 1;
+}
+.heatmap-day .hm-num {
+  font-size: 13px;
+  font-weight: 900;
+  line-height: 1;
+}
+.heatmap-day .hm-routine {
+  font-size: 12px;
+  opacity: 0.85;
+  line-height: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+  padding: 0 2px;
+}
 
 .exercise-list { display: grid; gap: 12px; }
 .exercise-card {

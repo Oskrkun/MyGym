@@ -1,0 +1,187 @@
+{
+  "migym_profile": {
+    "name": "Oscar Charlo",
+    "nickname": "Oskrkun",
+    "sex": "M",
+    "heightCm": 172,
+    "birthYear": 1988,
+    "goal": "bajar"
+  },
+  "migym_rest_seconds": 40,
+  "migym_routine_pointer": 1,
+  "migym_weights": [
+    { "date": "2026-09-07", "kg": 92.4, "note": "pesaje a la noche antes de comer" },
+    { "date": "2026-09-08", "kg": 92.1, "note": "pesaje a la noche antes de comer" },
+    { "date": "2026-09-09", "kg": 91.9, "note": "después de entrenar y antes de comer a la noche" },
+    { "date": "2026-09-11", "kg": 93.1, "note": "" },
+    { "date": "2026-09-12", "kg": 93.8, "note": "Sin entrenar y comido" }
+  ],
+  "migym_routines": [
+    {
+      "id": 1,
+      "name": "Rutina 1",
+      "exercises": [
+        { "exerciseId": 19, "sets": 1, "reps": 0, "time": "20", "weight": "", "speed": 6, "incline": 6 },
+        { "exerciseId": 1, "sets": 4, "reps": 12, "weight": "10" },
+        { "exerciseId": 2, "sets": 4, "reps": 12, "weight": "5" },
+        { "exerciseId": 3, "sets": 4, "reps": 12, "weight": "4" },
+        { "exerciseId": 4, "sets": 4, "reps": 12, "weight": "10" },
+        { "exerciseId": 5, "sets": 4, "reps": 12, "weight": "10" },
+        { "exerciseId": 6, "sets": 4, "reps": 12, "weight": "10" }
+      ]
+    },
+    {
+      "id": 2,
+      "name": "Rutina 2",
+      "exercises": [
+        { "exerciseId": 19, "sets": 1, "reps": 0, "time": "20", "weight": "", "speed": 6, "incline": 6 },
+        { "exerciseId": 7, "sets": 4, "reps": 12, "weight": "40" },
+        { "exerciseId": 9, "sets": 4, "reps": 12, "weight": "5" },
+        { "exerciseId": 10, "sets": 4, "reps": 12, "weight": "5" },
+        { "exerciseId": 11, "sets": 4, "reps": 12, "weight": "5" },
+        { "exerciseId": 12, "sets": 4, "reps": 12, "weight": "5" },
+        { "exerciseId": 18, "sets": 4, "reps": 12, "weight": "5" }
+      ]
+    },
+    {
+      "id": 3,
+      "name": "Rutina 3",
+      "exercises": [
+        { "exerciseId": 19, "sets": 1, "reps": 0, "time": "20", "weight": "", "speed": 6, "incline": 6 },
+        { "exerciseId": 13, "sets": 4, "reps": 12, "weight": "40" },
+        { "exerciseId": 14, "sets": 4, "reps": 12, "weight": "10" },
+        { "exerciseId": 22, "sets": 4, "reps": 12, "weight": "10" },
+        { "exerciseId": 17, "sets": 4, "reps": 12, "weight": "10" },
+        { "exerciseId": 21, "sets": 4, "reps": 12, "weight": "5" },
+        { "exerciseId": 18, "sets": 4, "reps": 12, "weight": "5" }
+      ]
+    }
+  ],
+  "migym_state_1": [
+    { "completed": [false], "collapsed": true, "weights": [""], "cardioTime": "20", "speed": 6, "incline": 6, "imageIndex": 0 },
+    { "completed": [false,false,false,false], "collapsed": true, "weights": ["","","",""], "cardioTime": "15 min", "speed": 0, "incline": 0, "imageIndex": 0 },
+    { "completed": [false,false,false,false], "collapsed": true, "weights": ["","","",""], "cardioTime": "15 min", "speed": 0, "incline": 0, "imageIndex": 0 },
+    { "completed": [false,false,false,false], "collapsed": true, "weights": ["","","",""], "cardioTime": "15 min", "speed": 0, "incline": 0, "imageIndex": 0 },
+    { "completed": [false,false,false,false], "collapsed": true, "weights": ["","","",""], "cardioTime": "15 min", "speed": 0, "incline": 0, "imageIndex": 0 },
+    { "completed": [false,false,false,false], "collapsed": true, "weights": ["","","",""], "cardioTime": "15 min", "speed": 0, "incline": 0, "imageIndex": 0 },
+    { "completed": [false,false,false,false], "collapsed": true, "weights": ["","","",""], "cardioTime": "15 min", "speed": 0, "incline": 0, "imageIndex": 0 }
+  ],
+  "migym_state_2": [
+    { "completed": [false], "collapsed": true, "weights": [""], "cardioTime": "20", "speed": 6, "incline": 6, "imageIndex": 0 },
+    { "completed": [false,false,false,false], "collapsed": true, "weights": ["","","",""], "cardioTime": "15 min", "speed": 0, "incline": 0, "imageIndex": 0 },
+    { "completed": [false,false,false,false], "collapsed": true, "weights": ["","","",""], "cardioTime": "15 min", "speed": 0, "incline": 0, "imageIndex": 0 },
+    { "completed": [false,false,false,false], "collapsed": true, "weights": ["","","",""], "cardioTime": "15 min", "speed": 0, "incline": 0, "imageIndex": 0 },
+    { "completed": [false,false,false,false], "collapsed": true, "weights": ["","","",""], "cardioTime": "15 min", "speed": 0, "incline": 0, "imageIndex": 0 },
+    { "completed": [false,false,false,false], "collapsed": true, "weights": ["","","",""], "cardioTime": "15 min", "speed": 0, "incline": 0, "imageIndex": 0 },
+    { "completed": [false,false,false,false], "collapsed": true, "weights": ["","","",""], "cardioTime": "15 min", "speed": 0, "incline": 0, "imageIndex": 0 }
+  ],
+  "migym_state_3": [
+    { "completed": [false], "collapsed": true, "weights": [""], "cardioTime": "20", "speed": 6, "incline": 6, "imageIndex": 0 },
+    { "completed": [false,false,false,false], "collapsed": true, "weights": ["","","",""], "cardioTime": "15 min", "speed": 0, "incline": 0, "imageIndex": 0 },
+    { "completed": [false,false,false,false], "collapsed": true, "weights": ["","","",""], "cardioTime": "15 min", "speed": 0, "incline": 0, "imageIndex": 0 },
+    { "completed": [false,false,false,false], "collapsed": true, "weights": ["","","",""], "cardioTime": "15 min", "speed": 0, "incline": 0, "imageIndex": 0 },
+    { "completed": [false,false,false,false], "collapsed": true, "weights": ["","","",""], "cardioTime": "15 min", "speed": 0, "incline": 0, "imageIndex": 0 },
+    { "completed": [false,false,false,false], "collapsed": true, "weights": ["","","",""], "cardioTime": "15 min", "speed": 0, "incline": 0, "imageIndex": 0 },
+    { "completed": [false,false,false,false], "collapsed": true, "weights": ["","","",""], "cardioTime": "15 min", "speed": 0, "incline": 0, "imageIndex": 0 }
+  ],
+  "migym_global_history": {
+    "2026-09-07": {
+      "routineId": 1,
+      "routineName": "Rutina 1",
+      "status": "completed",
+      "exercises": [
+        { "exerciseId": 19, "name": "Caminadora (Cardio)", "isCardio": true, "cardioTime": "20", "weights": [""], "speed": 6, "incline": 6, "completed": [true] },
+        { "exerciseId": 1, "name": "Pecho plano c/barra", "isCardio": false, "cardioTime": "15 min", "weights": ["10","10","12","12"], "speed": 0, "incline": 0, "completed": [true,true,true,true] },
+        { "exerciseId": 2, "name": "Pecho inclinado con mancuerna", "isCardio": false, "cardioTime": "15 min", "weights": ["5","5","5","5"], "speed": 0, "incline": 0, "completed": [true,true,true,true] },
+        { "exerciseId": 3, "name": "Jalón dorsal T. abierto", "isCardio": false, "cardioTime": "15 min", "weights": ["4","4","4","4"], "speed": 0, "incline": 0, "completed": [true,true,true,true] },
+        { "exerciseId": 4, "name": "Plaq espalda", "isCardio": false, "cardioTime": "15 min", "weights": ["10","10","10","10"], "speed": 0, "incline": 0, "completed": [true,true,true,true] },
+        { "exerciseId": 5, "name": "Camilla cuádriceps", "isCardio": false, "cardioTime": "15 min", "weights": ["30","30","32","32"], "speed": 0, "incline": 0, "completed": [true,true,true,true] },
+        { "exerciseId": 6, "name": "Camilla isquio", "isCardio": false, "cardioTime": "15 min", "weights": ["25","25","27","27"], "speed": 0, "incline": 0, "completed": [true,true,true,true] }
+      ]
+    },
+    "2026-09-08": {
+      "routineId": 2,
+      "routineName": "Rutina 2",
+      "status": "completed",
+      "exercises": [
+        { "exerciseId": 19, "name": "Caminadora (Cardio)", "isCardio": true, "cardioTime": "20", "weights": [""], "speed": 6, "incline": 6, "completed": [true] },
+        { "exerciseId": 7, "name": "Prensa + gemelos", "isCardio": false, "cardioTime": "15 min", "weights": ["40","40","45","45"], "speed": 0, "incline": 0, "completed": [true,true,true,true] },
+        { "exerciseId": 9, "name": "Posterior hombros", "isCardio": false, "cardioTime": "15 min", "weights": ["5","5","5","6"], "speed": 0, "incline": 0, "completed": [true,true,true,true] },
+        { "exerciseId": 10, "name": "Tríceps P. alta barra", "isCardio": false, "cardioTime": "15 min", "weights": ["5","5","5","5"], "speed": 0, "incline": 0, "completed": [true,true,true,true] },
+        { "exerciseId": 11, "name": "Tríceps patada burro", "isCardio": false, "cardioTime": "15 min", "weights": ["5","5","5","5"], "speed": 0, "incline": 0, "completed": [true,true,true,true] },
+        { "exerciseId": 12, "name": "Bíceps P. bajo c/barra", "isCardio": false, "cardioTime": "15 min", "weights": ["5","5","5","5"], "speed": 0, "incline": 0, "completed": [true,true,true,true] },
+        { "exerciseId": 18, "name": "Bíceps martillo", "isCardio": false, "cardioTime": "15 min", "weights": ["3","3","8","8"], "speed": 0, "incline": 0, "completed": [true,true,true,true] }
+      ]
+    },
+    "2026-09-09": {
+      "routineId": 3,
+      "routineName": "Rutina 3",
+      "status": "completed",
+      "exercises": [
+        { "exerciseId": 19, "name": "Caminadora (Cardio)", "isCardio": true, "cardioTime": "21", "weights": [""], "speed": 6, "incline": 6, "completed": [true] },
+        { "exerciseId": 13, "name": "Hack frontal", "isCardio": false, "cardioTime": "15 min", "weights": ["80","80","80","80"], "speed": 0, "incline": 0, "completed": [true,true,true,true] },
+        { "exerciseId": 14, "name": "Hip thrust", "isCardio": false, "cardioTime": "15 min", "weights": ["35","35","35","35"], "speed": 0, "incline": 0, "completed": [true,true,true,true] },
+        { "exerciseId": 22, "name": "Pullover en polea alta", "isCardio": false, "cardioTime": "15 min", "weights": ["15","15","15","15"], "speed": 0, "incline": 0, "completed": [true,true,true,true] },
+        { "exerciseId": 17, "name": "Apertura c/poleas", "isCardio": false, "cardioTime": "15 min", "weights": ["15","15","15","15"], "speed": 0, "incline": 0, "completed": [true,true,true,true] },
+        { "exerciseId": 21, "name": "Serrucho c/mancuerna", "isCardio": false, "cardioTime": "15 min", "weights": ["3","3","3","3"], "speed": 0, "incline": 0, "completed": [true,true,true,true] },
+        { "exerciseId": 18, "name": "Bíceps martillo", "isCardio": false, "cardioTime": "15 min", "weights": ["3","3","8","8"], "speed": 0, "incline": 0, "completed": [true,true,true,true] }
+      ]
+    },
+    "2026-09-10": {
+      "routineId": 1,
+      "routineName": "Rutina 1",
+      "status": "incomplete",
+      "exercises": [
+        { "exerciseId": 19, "name": "Caminadora (Cardio)", "isCardio": true, "cardioTime": "20", "weights": [""], "speed": 6, "incline": 6, "completed": [true] },
+        { "exerciseId": 1, "name": "Pecho plano c/barra", "isCardio": false, "cardioTime": "15 min", "weights": ["20","24","26","26"], "speed": 0, "incline": 0, "completed": [true,true,true,true] },
+        { "exerciseId": 2, "name": "Pecho inclinado con mancuerna", "isCardio": false, "cardioTime": "15 min", "weights": ["8","8","10","10"], "speed": 0, "incline": 0, "completed": [true,true,true,true] },
+        { "exerciseId": 3, "name": "Jalón dorsal T. abierto", "isCardio": false, "cardioTime": "15 min", "weights": ["35","35","35","35"], "speed": 0, "incline": 0, "completed": [true,true,true,true] },
+        { "exerciseId": 4, "name": "Plaq espalda", "isCardio": false, "cardioTime": "15 min", "weights": ["16","16","16","16"], "speed": 0, "incline": 0, "completed": [true,true,true,true] },
+        { "exerciseId": 5, "name": "Camilla cuádriceps", "isCardio": false, "cardioTime": "15 min", "weights": ["","","",""], "speed": 0, "incline": 0, "completed": [false,false,false,false] },
+        { "exerciseId": 6, "name": "Camilla isquio", "isCardio": false, "cardioTime": "15 min", "weights": ["","","",""], "speed": 0, "incline": 0, "completed": [false,false,false,false] }
+      ]
+    },
+    "2026-09-14": {
+      "routineId": 2,
+      "routineName": "Rutina 2",
+      "status": "incomplete",
+      "exercises": [
+        { "exerciseId": 19, "name": "Caminadora (Cardio)", "isCardio": true, "cardioTime": "20", "weights": [""], "speed": 6, "incline": 6, "completed": [true] },
+        { "exerciseId": 7, "name": "Prensa + gemelos", "isCardio": false, "cardioTime": "15 min", "weights": ["","","",""], "speed": 0, "incline": 0, "completed": [false,false,false,false] },
+        { "exerciseId": 9, "name": "Posterior hombros", "isCardio": false, "cardioTime": "15 min", "weights": ["","","",""], "speed": 0, "incline": 0, "completed": [false,false,false,false] },
+        { "exerciseId": 10, "name": "Tríceps P. alta barra", "isCardio": false, "cardioTime": "15 min", "weights": ["","","",""], "speed": 0, "incline": 0, "completed": [false,false,false,false] },
+        { "exerciseId": 11, "name": "Tríceps patada burro", "isCardio": false, "cardioTime": "15 min", "weights": ["","","",""], "speed": 0, "incline": 0, "completed": [false,false,false,false] },
+        { "exerciseId": 12, "name": "Bíceps P. bajo c/barra", "isCardio": false, "cardioTime": "15 min", "weights": ["","","",""], "speed": 0, "incline": 0, "completed": [false,false,false,false] },
+        { "exerciseId": 18, "name": "Bíceps martillo", "isCardio": false, "cardioTime": "15 min", "weights": ["","","",""], "speed": 0, "incline": 0, "completed": [false,false,false,false] }
+      ]
+    },
+    "2026-09-15": {
+      "routineId": 2,
+      "routineName": "Rutina 2",
+      "status": "incomplete",
+      "exercises": [
+        { "exerciseId": 19, "name": "Caminadora (Cardio)", "isCardio": true, "cardioTime": "20", "weights": [""], "speed": 6, "incline": 6, "completed": [true] },
+        { "exerciseId": 7, "name": "Prensa + gemelos", "isCardio": false, "cardioTime": "15 min", "weights": ["","","40","40"], "speed": 0, "incline": 0, "completed": [true,true,true,true] },
+        { "exerciseId": 9, "name": "Posterior hombros", "isCardio": false, "cardioTime": "15 min", "weights": ["25","15","20","20"], "speed": 0, "incline": 0, "completed": [true,true,true,true] },
+        { "exerciseId": 10, "name": "Tríceps P. alta barra", "isCardio": false, "cardioTime": "15 min", "weights": ["20","20","20","20"], "speed": 0, "incline": 0, "completed": [true,true,true,true] },
+        { "exerciseId": 11, "name": "Tríceps patada burro", "isCardio": false, "cardioTime": "15 min", "weights": ["10","5","8","8"], "speed": 0, "incline": 0, "completed": [true,true,true,true] },
+        { "exerciseId": 12, "name": "Bíceps P. bajo c/barra", "isCardio": false, "cardioTime": "15 min", "weights": ["","","",""], "speed": 0, "incline": 0, "completed": [false,false,false,false] },
+        { "exerciseId": 18, "name": "Bíceps martillo", "isCardio": false, "cardioTime": "15 min", "weights": ["","","",""], "speed": 0, "incline": 0, "completed": [false,false,false,false] }
+      ]
+    },
+    "2026-09-16": {
+      "routineId": 3,
+      "routineName": "Rutina 3",
+      "status": "completed",
+      "exercises": [
+        { "exerciseId": 19, "name": "Caminadora (Cardio)", "isCardio": true, "cardioTime": "21", "weights": [""], "speed": 6, "incline": 6, "completed": [true] },
+        { "exerciseId": 13, "name": "Hack frontal", "isCardio": false, "cardioTime": "15 min", "weights": ["80","80","80","80"], "speed": 0, "incline": 0, "completed": [true,true,true,true] },
+        { "exerciseId": 14, "name": "Hip thrust", "isCardio": false, "cardioTime": "15 min", "weights": ["35","35","35","35"], "speed": 0, "incline": 0, "completed": [true,true,true,true] },
+        { "exerciseId": 22, "name": "Pullover en polea alta", "isCardio": false, "cardioTime": "15 min", "weights": ["15","15","15","15"], "speed": 0, "incline": 0, "completed": [true,true,true,true] },
+        { "exerciseId": 17, "name": "Apertura c/poleas", "isCardio": false, "cardioTime": "15 min", "weights": ["15","15","15","15"], "speed": 0, "incline": 0, "completed": [true,true,true,true] },
+        { "exerciseId": 21, "name": "Serrucho c/mancuerna", "isCardio": false, "cardioTime": "15 min", "weights": ["3","3","3","3"], "speed": 0, "incline": 0, "completed": [true,true,true,true] },
+        { "exerciseId": 18, "name": "Bíceps martillo", "isCardio": false, "cardioTime": "15 min", "weights": ["3","3","8","8"], "speed": 0, "incline": 0, "completed": [true,true,true,true] }
+      ]
+    }
+  }
+}
