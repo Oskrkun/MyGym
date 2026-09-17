@@ -112,7 +112,7 @@
     </article>
 
     <section class="progress-panel-card" style="margin-top:12px;">
-      <h2>Calendario de Actividad (Heatmap)</h2>
+      <h2>Calendario de Actividad</h2>
 
       <div class="month-navigator">
         <button id="prevMonthBtn" class="day-button" type="button">◀ Anterior</button>
@@ -131,6 +131,13 @@
 		  <span>Sáb</span>
 		</div>
 		<div class="heatmap-grid" id="heatmapContainer"></div>
+		
+		<div class="heatmap-legend">
+			<div class="legend-item"><span class="legend-swatch legend-rest"></span>Descanso</div>
+			<div class="legend-item"><span class="legend-swatch legend-incomplete"></span>Incompleta</div>
+			<div class="legend-item"><span class="legend-swatch legend-completed"></span>Completa</div>
+			<div class="legend-item"><span class="legend-swatch legend-extras"></span>Con extras</div>
+		</div>
 
 		<button id="todayBtn" class="day-button" type="button" style="width:100%; margin-top:12px;">📍 Ir a hoy</button>
     </section>
