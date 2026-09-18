@@ -545,8 +545,6 @@
             });
             html += `</div></details>`;
           }
-      });
-
       // Sección de extras
       if (tieneExtras) {
         html += `<div style="margin-top:16px; padding-top:10px; border-top:1px solid var(--violet);"><strong style="color:var(--violet); font-size:14px;">⚡ Extras</strong></div>`;
