@@ -19,6 +19,7 @@ const routineListAdmin     = $('routineListAdmin');
 const routineForm          = $('routineForm');
 const formTitle            = $('formTitle');
 const routineName          = $('routineName');
+const routineExerciseType  = $('routineExerciseType');
 const exerciseSelector     = $('exerciseSelector');
 const addExerciseBtn       = $('addExerciseBtn');
 const routineExercisesList = $('routineExercisesList');
@@ -106,12 +107,33 @@ function openRoutineForm(idx = -1) {
     formTitle.textContent = 'Nueva rutina';
   }
   renderTempExercises();
-  populateExerciseSelector();
+  populateExerciseSelector('Todos');
+  if (routineExerciseType) routineExerciseType.value = 'Todos';
 }
 
-function populateExerciseSelector() {
+function populateExerciseSelector(tipo) {
+  // Rellenar el dropdown de tipos (solo si está vacío)
+  if (routineExerciseType && routineExerciseType.options.length === 0) {
+    routineExerciseType.innerHTML = '';
+    getTiposDeEjercicio().forEach(t => {
+      const opt = document.createElement('option');
+      opt.value = t;
+      opt.textContent = t;
+      routineExerciseType.appendChild(opt);
+    });
+    routineExerciseType.value = 'Todos';
+  }
+
+  const tipoFiltro = tipo || (routineExerciseType ? routineExerciseType.value : 'Todos') || 'Todos';
   exerciseSelector.innerHTML = '<option value="">Seleccionar ejercicio...</option>';
-  getExercises().forEach(ex => {
+  const all = getExercises();
+  const filtered = tipoFiltro === 'Todos'
+    ? all
+    : all.filter(ex => {
+        const groups = ex.groups || (ex.group ? [ex.group] : []);
+        return groups.includes(tipoFiltro);
+      });
+  filtered.forEach(ex => {
     const option = document.createElement('option');
     option.value = ex.id;
     const grupos = (ex.groups || [ex.group]).join(', ');
@@ -224,6 +246,12 @@ submitRoutine.addEventListener('click', () => {
 cancelRoutine.addEventListener('click', () => { routineForm.classList.add('hidden'); });
 addRoutineBtn.addEventListener('click', () => openRoutineForm());
 
+// Listener: cambio de tipo en el formulario de rutina
+if (routineExerciseType) {
+  routineExerciseType.addEventListener('change', () => {
+    populateExerciseSelector(routineExerciseType.value);
+  });
+}
 
 // ==========================================
 // 4. TIEMPO DE DESCANSO

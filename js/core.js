@@ -33,7 +33,7 @@ const EXERCISES_DB = [
   { id: 23, name: "Dominada Abierta", groups: ["Espalda", "Bíceps"], images: ["gifs/DominadaAbierta.gif"] },
   { id: 24, name: "Abdominal inclinado", groups: ["Core"], images: ["gifs/abdominalInclinado.gif"] },
   { id: 25, name: "Peso Muerto Rumano", groups: ["Isquiotibiales", "Glúteos", "Espalda"], images: ["gifs/pesoMuertoRumano.gif"] },
-  { id: 26, name: "Plancha", groups: ["Core"], images: ["gifs/Plancha.gif"] },
+  { id: 26, name: "Plancha", groups: ["Core"], images: ["gifs/Plancha.gif"], isTime: true },
   { id: 27, name: "Flexiones", groups: ["Pecho", "Tríceps", "Hombros"], images: ["gifs/flexionespecho.gif"] }
 ];
 
@@ -47,6 +47,7 @@ const DEFAULT_ROUTINES = [
 ];
 
 const DEFAULT_REST_SECONDS = 60;
+const DEFAULT_REPS = 10;
 
 
 // ==========================================
@@ -73,10 +74,6 @@ function getTiposDeEjercicio() {
   return ['Todos', ...Array.from(tipos).sort()];
 }
 
-/**
- * Devuelve el array de grupos musculares de un ejercicio.
- * Compatibilidad: si el ejercicio tiene `group` (string), lo devuelve en un array.
- */
 function getGruposDeEjercicio(exercise) {
   if (!exercise) return [];
   if (Array.isArray(exercise.groups)) return exercise.groups;
@@ -85,9 +82,8 @@ function getGruposDeEjercicio(exercise) {
 }
 
 /**
- * Devuelve el peso de la última serie registrada para un exerciseId,
- * buscando en todas las sesiones del historial (rutina + extras),
- * de la más reciente a la más antigua.
+ * Devuelve el peso de la última serie registrada para un exerciseId.
+ * Busca en todas las sesiones del historial (rutina + extras).
  */
 function getPesoDeUltimaSesion(exerciseId) {
   const history = getGlobalHistory();
@@ -96,7 +92,6 @@ function getPesoDeUltimaSesion(exerciseId) {
   for (const key of keys) {
     const session = history[key];
 
-    // Buscar en ejercicios de rutina
     const exs = session.exercises || [];
     for (const ex of exs) {
       if (ex.exerciseId === exerciseId && Array.isArray(ex.weights)) {
@@ -109,7 +104,6 @@ function getPesoDeUltimaSesion(exerciseId) {
       }
     }
 
-    // Buscar en extras
     const extras = session.extras || [];
     for (const ex of extras) {
       if (ex.exerciseId === exerciseId && Array.isArray(ex.sets)) {
@@ -117,6 +111,102 @@ function getPesoDeUltimaSesion(exerciseId) {
           const w = ex.sets[i] && ex.sets[i].weight;
           if (w !== undefined && w !== null && String(w).trim() !== '') {
             return w;
+          }
+        }
+      }
+    }
+  }
+
+  return null;
+}
+
+/**
+ * Devuelve el último peso válido (no vacío) de un ejercicio dentro de una sesión,
+ * buscando desde la última serie hacia la primera.
+ * Sirve como fallback cuando una serie específica no tiene peso cargado.
+ */
+function getUltimoPesoValidoEnSesion(session, exerciseId, exerciseName) {
+  if (!session) return null;
+  const ex = findExerciseInSession(session.exercises || [], exerciseId, exerciseName);
+  if (!ex || !Array.isArray(ex.weights)) return null;
+  for (let i = ex.weights.length - 1; i >= 0; i--) {
+    const w = ex.weights[i];
+    if (w !== undefined && w !== null && String(w).trim() !== '') return String(w);
+  }
+  return null;
+}
+
+/**
+ * Busca el último peso válido para un ejercicio en TODAS las sesiones
+ * anteriores de la misma rutina. Devuelve null si no encuentra nada.
+ */
+function getUltimoPesoValidoEnRutina(routineId, routineName, exerciseId, exerciseName) {
+  const history = getGlobalHistory();
+  const keys = Object.keys(history).sort().reverse();
+  for (const key of keys) {
+    const session = history[key];
+    if (!session) continue;
+    if (session.routineId !== routineId && session.routineName !== routineName) continue;
+    const ex = findExerciseInSession(session.exercises || [], exerciseId, exerciseName);
+    if (!ex || !Array.isArray(ex.weights)) continue;
+    for (let i = ex.weights.length - 1; i >= 0; i--) {
+      const w = ex.weights[i];
+      if (w !== undefined && w !== null && String(w).trim() !== '') {
+        return String(w);
+      }
+    }
+  }
+  return null;
+}
+
+/**
+ * Devuelve la última reps válida (no vacía) de un ejercicio dentro de una sesión.
+ * Sirve como fallback cuando una serie específica no tiene reps cargadas.
+ */
+function getUltimasRepsValidasEnSesion(session, exerciseId, exerciseName) {
+  if (!session) return null;
+  const ex = findExerciseInSession(session.exercises || [], exerciseId, exerciseName);
+  if (!ex || !Array.isArray(ex.reps)) return null;
+  for (let i = ex.reps.length - 1; i >= 0; i--) {
+    const r = ex.reps[i];
+    if (r !== undefined && r !== null && String(r).trim() !== '') return String(r);
+  }
+  return null;
+}
+
+
+/**
+ * Devuelve las reps de la última serie registrada para un exerciseId.
+ * Busca en todas las sesiones del historial (rutina + extras).
+ */
+function getRepsDeUltimaSesion(exerciseId) {
+  const history = getGlobalHistory();
+  const keys = Object.keys(history).sort().reverse();
+
+  for (const key of keys) {
+    const session = history[key];
+
+    // 1. Buscar en ejercicios de rutina (campo reps[])
+    const exs = session.exercises || [];
+    for (const ex of exs) {
+      if (ex.exerciseId === exerciseId && Array.isArray(ex.reps)) {
+        for (let i = ex.reps.length - 1; i >= 0; i--) {
+          const r = ex.reps[i];
+          if (r !== undefined && r !== null && String(r).trim() !== '') {
+            return r;
+          }
+        }
+      }
+    }
+
+    // 2. Buscar en extras (campo sets[].reps)
+    const extras = session.extras || [];
+    for (const ex of extras) {
+      if (ex.exerciseId === exerciseId && Array.isArray(ex.sets)) {
+        for (let i = ex.sets.length - 1; i >= 0; i--) {
+          const r = ex.sets[i] && ex.sets[i].reps;
+          if (r !== undefined && r !== null && String(r).trim() !== '') {
+            return r;
           }
         }
       }
@@ -175,18 +265,9 @@ function saveCurrentRoutinePointer(id) {
 
 
 // ==========================================
-// 4. ESTADO DEL DÍA — Estructura { exercises, extras }
+// 4. ESTADO DEL DÍA — { exercises, extras }
 // ==========================================
 
-/**
- * Devuelve el estado del día con la estructura:
- * {
- *   exercises: [ ... 7 ejercicios ... ],
- *   extras: [ ... extras ... ]
- * }
- *
- * Migra automáticamente del formato viejo (array plano) al nuevo (objeto).
- */
 function getDayState(routineId) {
   const key = `migym_state_${routineId}`;
   const saved = localStorage.getItem(key);
@@ -202,29 +283,49 @@ function getDayState(routineId) {
     // Formato nuevo: objeto con .exercises
     if (parsed && !Array.isArray(parsed) && Array.isArray(parsed.exercises)) {
       if (!Array.isArray(parsed.extras)) parsed.extras = [];
-      parsed.exercises.forEach(ex => {
+
+      // Garantizar campos obligatorios en cada ejercicio
+      const routines = getRoutines();
+      const routine = routines.find(r => r.id === routineId);
+
+      parsed.exercises.forEach((ex, idx) => {
         if (!('replacedFrom' in ex)) ex.replacedFrom = null;
+        if (!Array.isArray(ex.reps)) {
+          // Si no tenía reps, inicializar con las de la rutina
+          const routineEx = routine ? routine.exercises[idx] : null;
+          const defaultReps = routineEx && routineEx.reps ? routineEx.reps : DEFAULT_REPS;
+          ex.reps = Array(ex.weights ? ex.weights.length : 0).fill(String(defaultReps));
+        }
       });
+
       return parsed;
     }
 
     // Formato viejo: array plano. Migramos.
     if (Array.isArray(parsed)) {
+      const routines = getRoutines();
+      const routine = routines.find(r => r.id === routineId);
+
       const migrated = {
-        exercises: parsed.map(ex => ({
-          completed: ex.completed || [],
-          collapsed: ex.collapsed !== undefined ? ex.collapsed : true,
-          weights: ex.weights || [],
-          cardioTime: ex.cardioTime || '15 min',
-          speed: ex.speed || 0,
-          incline: ex.incline || 0,
-          imageIndex: ex.imageIndex || 0,
-          replacedFrom: ex.replacedFrom !== undefined ? ex.replacedFrom : null,
-          currentExerciseId: ex.currentExerciseId
-        })),
+        exercises: parsed.map((ex, idx) => {
+          const routineEx = routine ? routine.exercises[idx] : null;
+          const defaultReps = routineEx && routineEx.reps ? routineEx.reps : DEFAULT_REPS;
+          const weightsArr = ex.weights || [];
+          return {
+            completed: ex.completed || [],
+            collapsed: ex.collapsed !== undefined ? ex.collapsed : true,
+            weights: weightsArr,
+            reps: Array(weightsArr.length).fill(String(defaultReps)),
+            cardioTime: ex.cardioTime || '15 min',
+            speed: ex.speed || 0,
+            incline: ex.incline || 0,
+            imageIndex: ex.imageIndex || 0,
+            replacedFrom: ex.replacedFrom !== undefined ? ex.replacedFrom : null,
+            currentExerciseId: ex.currentExerciseId
+          };
+        }),
         extras: []
       };
-      // Guardar en formato nuevo
       localStorage.setItem(key, JSON.stringify(migrated));
       return migrated;
     }
@@ -239,6 +340,7 @@ function getDayState(routineId) {
     completed: Array(ex.sets).fill(false),
     collapsed: true,
     weights: Array(ex.sets).fill(''),
+    reps: Array(ex.sets).fill(String(ex.reps || DEFAULT_REPS)),
     cardioTime: ex.time || '15 min',
     speed: ex.speed || 0,
     incline: ex.incline || 0,
@@ -346,4 +448,50 @@ function esDiaDeDescanso(fechaYYYYMMDD) {
   if (days.length === 0) return false;
   const d = new Date(fechaYYYYMMDD + 'T00:00:00').getDay();
   return days.includes(d);
+}
+
+// ==========================================
+// 7. HELPERS DE EJERCICIOS POR TIEMPO
+// ==========================================
+
+/**
+ * Devuelve true si un ejercicio se mide por tiempo (ej: Plancha).
+ */
+function esEjercicioPorTiempo(exerciseData) {
+  return !!(exerciseData && exerciseData.isTime);
+}
+
+/**
+ * Devuelve el tiempo de la última serie registrada para un exerciseId.
+ * Busca en todas las sesiones del historial (rutina + extras).
+ */
+function getTiempoDeUltimaSesion(exerciseId) {
+  const history = getGlobalHistory();
+  const keys = Object.keys(history).sort().reverse();
+
+  for (const key of keys) {
+    const session = history[key];
+
+    const extras = session.extras || [];
+    for (const ex of extras) {
+      if (ex.exerciseId === exerciseId && Array.isArray(ex.sets)) {
+        for (let i = ex.sets.length - 1; i >= 0; i--) {
+          const t = ex.sets[i] && ex.sets[i].reps;
+          if (t !== undefined && t !== null && String(t).trim() !== '') return String(t);
+        }
+      }
+    }
+
+    const exs = session.exercises || [];
+    for (const ex of exs) {
+      if (ex.exerciseId === exerciseId && Array.isArray(ex.reps)) {
+        for (let i = ex.reps.length - 1; i >= 0; i--) {
+          const t = ex.reps[i];
+          if (t !== undefined && t !== null && String(t).trim() !== '') return String(t);
+        }
+      }
+    }
+  }
+
+  return null;
 }

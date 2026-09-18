@@ -99,6 +99,65 @@ button { cursor: pointer; }
   margin-bottom: 20px;
 }
 
+/* ====== INPUTS DE SERIE (peso + reps) ====== */
+.set-inputs {
+  display: flex;
+  gap: 6px;
+  margin-top: 4px;
+  align-items: center;
+}
+.set-inputs .weight-input {
+  width: 60px;
+  padding: 4px 6px;
+  font-size: 12px;
+  text-align: center;
+}
+.set-inputs .set-times {
+  color: var(--muted);
+  font-size: 12px;
+  padding: 0 2px;
+}
+
+/* Botón eliminar serie */
+.remove-set-btn {
+  background: rgba(255, 68, 68, 0.12);
+  color: #ff8888;
+  border: 1px solid rgba(255, 68, 68, 0.25);
+  width: 26px;
+  height: 26px;
+  border-radius: 6px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: 0.2s;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+.remove-set-btn:hover {
+  background: #ff4444;
+  color: white;
+}
+
+/* Botón agregar serie al final de un ejercicio */
+.add-set-btn {
+  width: 100%;
+  padding: 8px;
+  margin-top: 4px;
+  border: 1px dashed var(--line);
+  border-radius: 10px;
+  background: transparent;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: 0.2s;
+}
+.add-set-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: rgba(184, 255, 53, 0.04);
+}
+
 /* ====== HEATMAP ====== */
 .heatmap-head {
   display: grid;
@@ -871,4 +930,14 @@ button { cursor: pointer; }
 }
 #todayBtn:hover {
   background: var(--line);
+}
+
+/* Input de tiempo para ejercicios tipo Plancha */
+.set-inputs .set-time-input {
+  width: 55px;
+  text-align: center;
+}
+.extra-time {
+  width: 55px;
+  text-align: center;
 }

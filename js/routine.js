@@ -31,7 +31,6 @@ const progressPercent = $('progressPercent');
 const finishCard      = $('finishCard');
 const resetButton     = $('resetButton');
 const finishRoutineBtn     = $('finishRoutineBtn');
-const incompleteRoutineBtn = $('incompleteRoutineBtn');
 
 const dayButton  = $('dayButton');
 const dayModal   = $('dayModal');
@@ -89,24 +88,101 @@ function populateExerciseSelectorByType(selectEl, tipo, excludeId) {
 
 
 // ==========================================
-// 4. HELPERS DE REPS
+// 4. HELPERS DE FALLBACK
 // ==========================================
 
-function getRepsDeUltimaSesion(exerciseId) {
-  const history = getGlobalHistory();
-  const keys = Object.keys(history).sort().reverse();
-  for (const key of keys) {
-    const session = history[key];
-    for (const ex of (session.extras || [])) {
-      if (ex.exerciseId === exerciseId && Array.isArray(ex.sets)) {
-        for (let i = ex.sets.length - 1; i >= 0; i--) {
-          const r = ex.sets[i] && ex.sets[i].reps;
-          if (r !== undefined && r !== null && String(r).trim() !== '') return r;
-        }
+/**
+ * Para un ejercicio dentro de una sesión, devuelve el peso a usar en una serie dada:
+ * 1. El peso de la MISMA serie en la sesión anterior (si existe).
+ * 2. El último peso válido (no vacío) de esa sesión anterior.
+ * 3. '' si no hay nada.
+ */
+function resolverPesoSerie(exState, currentExerciseId, exerciseName, setIndex, lastSession, lastExerciseData, routineId, routineName) {
+  const currentWeight = exState.weights[setIndex] || '';
+  if (currentWeight && String(currentWeight).trim() !== '') return currentWeight;
+
+  // 1. Misma serie de la última sesión
+  if (lastExerciseData && Array.isArray(lastExerciseData.weights)) {
+    const wPrev = lastExerciseData.weights[setIndex];
+    if (wPrev !== undefined && wPrev !== null && String(wPrev).trim() !== '') {
+      return String(wPrev);
+    }
+  }
+
+  // 2. Último peso válido de la última sesión
+  if (lastSession) {
+    const fallback = getUltimoPesoValidoEnSesion(lastSession, currentExerciseId, exerciseName);
+    if (fallback) return fallback;
+  }
+
+  // 3. Último peso válido en cualquier sesión anterior de esta rutina
+  if (routineId !== undefined && routineName) {
+    const fallbackViejo = getUltimoPesoValidoEnRutina(routineId, routineName, currentExerciseId, exerciseName);
+    if (fallbackViejo) return fallbackViejo;
+  }
+
+  return '';
+}
+
+/**
+ * Para un ejercicio por tiempo: devuelve el valor del input de tiempo.
+ * Se guarda en el campo "reps" (histórico).
+ */
+function resolverTiempoSerie(exState, currentExerciseId, exerciseName, setIndex, lastSession, lastExerciseData, routineId, routineName) {
+  const current = exState.reps[setIndex] || '';
+  if (current && String(current).trim() !== '') return current;
+
+  // 1. Misma serie de la última sesión
+  if (lastExerciseData && Array.isArray(lastExerciseData.reps)) {
+    const tPrev = lastExerciseData.reps[setIndex];
+    if (tPrev !== undefined && tPrev !== null && String(tPrev).trim() !== '') {
+      return String(tPrev);
+    }
+  }
+
+  // 2. Último tiempo válido de la última sesión
+  if (lastSession) {
+    const fallback = getUltimasRepsValidasEnSesion(lastSession, currentExerciseId, exerciseName);
+    if (fallback) return fallback;
+  }
+
+  // 3. Último tiempo válido en cualquier sesión anterior de esta rutina
+  if (routineId !== undefined && routineName) {
+    const history = getGlobalHistory();
+    const keys = Object.keys(history).sort().reverse();
+    for (const key of keys) {
+      const session = history[key];
+      if (!session) continue;
+      if (session.routineId !== routineId && session.routineName !== routineName) continue;
+      const ex = findExerciseInSession(session.exercises || [], currentExerciseId, exerciseName);
+      if (!ex || !Array.isArray(ex.reps)) continue;
+      for (let i = ex.reps.length - 1; i >= 0; i--) {
+        const r = ex.reps[i];
+        if (r !== undefined && r !== null && String(r).trim() !== '') return String(r);
       }
     }
   }
-  return null;
+
+  return '60'; // default: 60 segundos
+}
+
+function resolverRepsSerie(exState, ex, setIndex, lastSession, lastExerciseData, currentExerciseId, exerciseName) {
+  const currentReps = exState.reps[setIndex] || '';
+  if (currentReps && String(currentReps).trim() !== '') return currentReps;
+
+  if (lastExerciseData && Array.isArray(lastExerciseData.reps)) {
+    const rPrev = lastExerciseData.reps[setIndex];
+    if (rPrev !== undefined && rPrev !== null && String(rPrev).trim() !== '') {
+      return String(rPrev);
+    }
+  }
+
+  if (lastSession) {
+    const fallback = getUltimasRepsValidasEnSesion(lastSession, currentExerciseId, exerciseName);
+    if (fallback) return fallback;
+  }
+
+  return String(ex.reps || DEFAULT_REPS);
 }
 
 
@@ -125,7 +201,7 @@ function asignarEjercicioAExtra(extraIdx, exerciseId) {
   state.extras[extraIdx].name = exData.name;
   state.extras[extraIdx].sets = [{
     weight: lastWeight !== null ? String(lastWeight) : '',
-    reps: lastReps !== null ? String(lastReps) : '10',
+    reps: lastReps !== null ? String(lastReps) : String(DEFAULT_REPS),
     completed: false
   }];
 
@@ -174,14 +250,14 @@ function renderUser() {
     const exerciseData = getExerciseById(currentExerciseId);
     if (!exerciseData) return;
 
-    totalSets += ex.sets;
+    totalSets += exState.completed.length;
     completedSets += exState.completed.filter(Boolean).length;
 
     const images = exerciseData.images || ['gifs/default.gif'];
     const currentImageIndex = exState.imageIndex || 0;
     const imageUrl = images[currentImageIndex] || 'gifs/default.gif';
     const allDone = exState.completed.every(Boolean);
-    const isCardio = exerciseData.group === "Cardio" || ex.time;
+    const isCardio = (exerciseData.groups || []).includes('Cardio') || ex.time;
 
     let lastExerciseData = null;
     if (lastSession) {
@@ -197,7 +273,10 @@ function renderUser() {
     card.dataset.exerciseIndex = idx;
 
     const showImageBtn = images.length > 1;
-    const subtitleText = isCardio ? `Duración: ${exState.cardioTime || ex.time || '15 min'}` : `${ex.sets} series · ${ex.reps} repeticiones`;
+    const numSets = exState.completed.length;
+    const subtitleText = isCardio
+      ? `Duración: ${exState.cardioTime || ex.time || '15 min'}`
+      : `${numSets} serie${numSets !== 1 ? 's' : ''} · ${ex.reps} repeticiones base`;
 
     let cardioHtml = '';
     if (isCardio) {
@@ -244,11 +323,50 @@ function renderUser() {
       <div class="series-container">
         ${cardioHtml}
         ${exState.completed.map((checked, setIndex) => {
+          const isTimeExercise = esEjercicioPorTiempo(exerciseData);
+
+          if (isTimeExercise) {
+            const displayedTime = resolverTiempoSerie(
+              exState, currentExerciseId, exerciseData.name, setIndex, lastSession, lastExerciseData,
+              routine.id, routine.name
+            );
+            const displayedWeightTime = resolverPesoSerie(
+              exState, currentExerciseId, exerciseData.name, setIndex, lastSession, lastExerciseData,
+              routine.id, routine.name
+            );
+
+            return `
+            <div class="set-row ${checked ? 'checked' : ''}" data-exercise="${idx}" data-set="${setIndex}">
+              <input type="checkbox" id="check_${idx}_${setIndex}" name="check_${idx}_${setIndex}" data-exercise="${idx}" data-set="${setIndex}" ${checked ? 'checked' : ''} aria-label="Marcar serie ${setIndex + 1}">
+              <span class="fake-check">✓</span>
+              <div class="set-info">
+                <strong>Serie ${setIndex + 1}</strong>
+                <div class="set-inputs">
+                  <input class="weight-input set-time-input" id="time_${idx}_${setIndex}" data-exercise="${idx}" data-set="${setIndex}" placeholder="seg" value="${displayedTime}" />
+                  <span class="set-times">seg</span>
+                  <input class="weight-input set-weight-input" id="weight_${idx}_${setIndex}" data-exercise="${idx}" data-set="${setIndex}" placeholder="kg" value="${displayedWeightTime}" />
+                  <span class="set-times">kg</span>
+                </div>
+              </div>
+              <button type="button" class="remove-set-btn" data-exercise="${idx}" data-set="${setIndex}" aria-label="Eliminar serie">✕</button>
+              <span class="set-state">${checked ? 'COMPLETADA' : 'PENDIENTE'}</span>
+            </div>
+            `;
+          }
+
+          // Ejercicio normal (peso + reps)
+          const displayedWeight = resolverPesoSerie(
+            exState, currentExerciseId, exerciseData.name, setIndex, lastSession, lastExerciseData,
+            routine.id, routine.name
+          );
+          const displayedReps = resolverRepsSerie(
+            exState, ex, setIndex, lastSession, lastExerciseData, currentExerciseId, exerciseData.name
+          );
+
           const lastWeight = lastExerciseData && lastExerciseData.weights
             ? lastExerciseData.weights[setIndex]
             : null;
           const currentWeight = exState.weights[setIndex] || '';
-          const displayedWeight = currentWeight || lastWeight || '';
           const showHint = !isCardio && lastWeight && String(lastWeight).trim() !== '' && String(lastWeight) !== currentWeight;
 
           return `
@@ -257,16 +375,22 @@ function renderUser() {
             <span class="fake-check">✓</span>
             <div class="set-info">
               <strong>${isCardio ? 'Completar sesión' : 'Serie ' + (setIndex + 1)}</strong>
-              <small>${isCardio ? 'Tiempo objetivo: ' + (ex.time || '15 min') : ex.reps + ' repeticiones'}</small>
               ${!isCardio ? `
-                <input class="weight-input" id="weight_${idx}_${setIndex}" name="weight_${idx}_${setIndex}" data-exercise="${idx}" data-set="${setIndex}" placeholder="Peso (kg)" value="${displayedWeight}" aria-label="Peso para serie ${setIndex + 1}" />
+                <div class="set-inputs">
+                  <input class="weight-input set-weight-input" id="weight_${idx}_${setIndex}" data-exercise="${idx}" data-set="${setIndex}" placeholder="kg" value="${displayedWeight}" />
+                  <span class="set-times">×</span>
+                  <input class="weight-input set-reps-input" id="reps_${idx}_${setIndex}" data-exercise="${idx}" data-set="${setIndex}" placeholder="reps" value="${displayedReps}" />
+                </div>
                 ${showHint ? `<span class="last-weight-hint">Última vez: ${lastWeight} kg</span>` : ''}
-              ` : ''}
+              ` : `<small>Tiempo objetivo: ${ex.time || '15 min'}</small>`}
             </div>
+            <button type="button" class="remove-set-btn" data-exercise="${idx}" data-set="${setIndex}" aria-label="Eliminar serie">✕</button>
             <span class="set-state">${checked ? 'COMPLETADA' : 'PENDIENTE'}</span>
           </div>
           `;
         }).join('')}
+
+        ${!isCardio ? `<button type="button" class="add-set-btn" data-exercise="${idx}">+ Agregar serie</button>` : ''}
       </div>
     `;
 
@@ -279,20 +403,26 @@ function renderUser() {
   progressPercent.textContent = percent + '%';
   finishCard.classList.toggle('hidden', percent !== 100);
 
-  if (percent === 100) {
+  // Mostrar/ocultar extras: solo si está al 100%
+  if (percent === 100 && totalSets > 0) {
     extrasActions.classList.remove('hidden');
-    if (incompleteRoutineBtn) incompleteRoutineBtn.classList.add('hidden');
-    if (finishRoutineBtn) finishRoutineBtn.textContent = '✓ Finalizar día';
   } else {
     extrasActions.classList.add('hidden');
-    if (incompleteRoutineBtn) incompleteRoutineBtn.classList.remove('hidden');
-    if (finishRoutineBtn) finishRoutineBtn.textContent = `Finalizar y guardar (${percent}%)`;
   }
 
-  // Listeners de series
+  // El botón de terminar siempre está visible y el texto cambia según el progreso
+  if (finishRoutineBtn) {
+    if (percent === 100 && totalSets > 0) {
+      finishRoutineBtn.textContent = '✓ Finalizar rutina';
+    } else {
+      finishRoutineBtn.textContent = `Terminar rutina (${percent}%)`;
+    }
+  }
+
+  // Listeners de checkbox de series
   exerciseList.querySelectorAll('.set-row').forEach(row => {
     row.addEventListener('click', (e) => {
-      if (e.target.classList.contains('weight-input')) return;
+      if (e.target.closest('input, button')) return;
 
       const exIdx = Number(row.dataset.exercise);
       const setIdx = Number(row.dataset.set);
@@ -301,15 +431,13 @@ function renderUser() {
       state.exercises[exIdx].completed[setIdx] = !currentState;
 
       if (!currentState) {
-        const routines = getRoutines();
-        const routine = routines.find(r => r.id === currentRoutineId);
-        const ex = routine.exercises[exIdx];
-        const allDone = state.exercises[exIdx].completed.every(Boolean);
+        const exState = state.exercises[exIdx];
+        const allDone = exState.completed.every(Boolean);
         const lastExercise = exIdx === routine.exercises.length - 1;
-        const lastSet = setIdx === ex.sets - 1;
+        const lastSet = setIdx === exState.completed.length - 1;
 
         if (allDone) {
-          state.exercises[exIdx].collapsed = true;
+          exState.collapsed = true;
           if (!lastExercise && state.exercises[exIdx + 1]) {
             state.exercises[exIdx + 1].collapsed = false;
           }
@@ -328,6 +456,7 @@ function renderUser() {
     });
   });
 
+  // Inputs de peso, reps y tiempo
   exerciseList.querySelectorAll('.weight-input').forEach(input => {
     input.addEventListener('input', (e) => {
       const exIdx = Number(e.target.dataset.exercise);
@@ -337,7 +466,13 @@ function renderUser() {
         state.exercises[exIdx].speed = e.target.value;
       } else if (e.target.classList.contains('cardio-incline')) {
         state.exercises[exIdx].incline = e.target.value;
-      } else {
+      } else if (e.target.classList.contains('set-time-input')) {
+        const setIdx = Number(e.target.dataset.set);
+        state.exercises[exIdx].reps[setIdx] = e.target.value;
+      } else if (e.target.classList.contains('set-reps-input')) {
+        const setIdx = Number(e.target.dataset.set);
+        state.exercises[exIdx].reps[setIdx] = e.target.value;
+      } else if (e.target.classList.contains('set-weight-input')) {
         const setIdx = Number(e.target.dataset.set);
         state.exercises[exIdx].weights[setIdx] = e.target.value;
       }
@@ -346,6 +481,49 @@ function renderUser() {
     input.addEventListener('click', (e) => e.stopPropagation());
   });
 
+  // Botón eliminar serie
+  exerciseList.querySelectorAll('.remove-set-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const exIdx = Number(btn.dataset.exercise);
+      const setIdx = Number(btn.dataset.set);
+      const exState = state.exercises[exIdx];
+
+      if (exState.completed.length === 1) {
+        alert('Un ejercicio debe tener al menos una serie.');
+        return;
+      }
+
+      exState.completed.splice(setIdx, 1);
+      exState.weights.splice(setIdx, 1);
+      exState.reps.splice(setIdx, 1);
+
+      saveDayState(currentRoutineId, state);
+      renderUser();
+    });
+  });
+
+  // Botón agregar serie
+  exerciseList.querySelectorAll('.add-set-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const exIdx = Number(btn.dataset.exercise);
+      const exState = state.exercises[exIdx];
+      const lastIdx = exState.completed.length - 1;
+
+      const lastWeight = lastIdx >= 0 ? exState.weights[lastIdx] : '';
+      const lastReps = lastIdx >= 0 ? exState.reps[lastIdx] : String(routine.exercises[exIdx].reps || DEFAULT_REPS);
+
+      exState.completed.push(false);
+      exState.weights.push(lastWeight || '');
+      exState.reps.push(lastReps || String(DEFAULT_REPS));
+
+      saveDayState(currentRoutineId, state);
+      renderUser();
+    });
+  });
+
+  // Cambiar imagen
   exerciseList.querySelectorAll('.change-image-btn').forEach(btn => {
     btn.addEventListener('click', (e) => {
       e.stopPropagation();
@@ -361,6 +539,7 @@ function renderUser() {
     });
   });
 
+  // Cambiar ejercicio
   exerciseList.querySelectorAll('.replace-exercise-btn').forEach(btn => {
     btn.addEventListener('click', (e) => {
       e.stopPropagation();
@@ -369,6 +548,7 @@ function renderUser() {
     });
   });
 
+  // Colapsar/expandir
   exerciseList.querySelectorAll('.exercise-head').forEach(head => {
     head.addEventListener('click', (e) => {
       if (e.target.closest('input, select, textarea, button')) return;
@@ -438,21 +618,43 @@ function renderExtras() {
       `;
     }
 
-    const setsHtml = extra.sets.map((s, sIdx) => `
+    const isTimeExtra = exerciseData && esEjercicioPorTiempo(exerciseData);
+
+    const setsHtml = extra.sets.map((s, sIdx) => {
+      if (isTimeExtra) {
+        return `
+        <div class="set-row extra-set ${s.completed ? 'checked' : ''}" data-extra="${extraIdx}" data-set="${sIdx}">
+          <input type="checkbox" id="extraCheck_${extraIdx}_${sIdx}" data-extra="${extraIdx}" data-set="${sIdx}" ${s.completed ? 'checked' : ''}>
+          <span class="fake-check">✓</span>
+          <div class="set-info">
+            <strong>Serie ${sIdx + 1}</strong>
+            <div class="set-inputs">
+              <input class="weight-input extra-time" data-extra="${extraIdx}" data-set="${sIdx}" placeholder="seg" value="${s.reps || ''}" />
+              <span class="set-times">seg</span>
+              <input class="weight-input extra-weight" data-extra="${extraIdx}" data-set="${sIdx}" placeholder="kg" value="${s.weight || ''}" />
+              <span class="set-times">kg</span>
+            </div>
+          </div>
+          <button type="button" class="remove-extra-set" data-extra="${extraIdx}" data-set="${sIdx}" aria-label="Eliminar serie">✕</button>
+        </div>
+        `;
+      }
+      return `
       <div class="set-row extra-set ${s.completed ? 'checked' : ''}" data-extra="${extraIdx}" data-set="${sIdx}">
         <input type="checkbox" id="extraCheck_${extraIdx}_${sIdx}" data-extra="${extraIdx}" data-set="${sIdx}" ${s.completed ? 'checked' : ''}>
         <span class="fake-check">✓</span>
         <div class="set-info">
           <strong>Serie ${sIdx + 1}</strong>
-          <div style="display:flex; gap:8px; margin-top:4px; align-items:center;">
-            <input class="weight-input extra-weight" data-extra="${extraIdx}" data-set="${sIdx}" placeholder="kg" value="${s.weight || ''}" style="width:70px;" />
-            <span style="color:var(--muted); font-size:12px;">×</span>
-            <input class="weight-input extra-reps" data-extra="${extraIdx}" data-set="${sIdx}" placeholder="reps" value="${s.reps || ''}" style="width:60px;" />
-            <button type="button" class="remove-extra-set" data-extra="${extraIdx}" data-set="${sIdx}" aria-label="Eliminar serie">✕</button>
+          <div class="set-inputs">
+            <input class="weight-input extra-weight" data-extra="${extraIdx}" data-set="${sIdx}" placeholder="kg" value="${s.weight || ''}" />
+            <span class="set-times">×</span>
+            <input class="weight-input extra-reps" data-extra="${extraIdx}" data-set="${sIdx}" placeholder="reps" value="${s.reps || ''}" />
           </div>
         </div>
+        <button type="button" class="remove-extra-set" data-extra="${extraIdx}" data-set="${sIdx}" aria-label="Eliminar serie">✕</button>
       </div>
-    `).join('');
+      `;
+    }).join('');
 
     card.innerHTML = `
       ${headHtml}
@@ -476,7 +678,7 @@ function renderExtras() {
     }
   });
 
-  // Listener: eliminar extra completo
+  // Eliminar extra completo
   extrasList.querySelectorAll('.remove-extra-btn').forEach(btn => {
     btn.addEventListener('click', (e) => {
       e.stopPropagation();
@@ -488,14 +690,13 @@ function renderExtras() {
     });
   });
 
-  // Listener: cambio de tipo (filtra ejercicios)
+  // Cambio de tipo
   extrasList.querySelectorAll('.extra-type-select').forEach(sel => {
     sel.addEventListener('change', () => {
       const extraIdx = Number(sel.dataset.extra);
       const exSel = extrasList.querySelector(`.extra-ex-select[data-extra="${extraIdx}"]`);
       populateExerciseSelectorByType(exSel, sel.value);
 
-      // Si solo hay un ejercicio para ese tipo, asignarlo directo
       if (exSel.options.length === 1) {
         const exId = Number(exSel.value);
         if (exId) asignarEjercicioAExtra(extraIdx, exId);
@@ -503,7 +704,7 @@ function renderExtras() {
     });
   });
 
-  // Listener: cambio de ejercicio
+  // Cambio de ejercicio
   extrasList.querySelectorAll('.extra-ex-select').forEach(sel => {
     sel.addEventListener('change', () => {
       const extraIdx = Number(sel.dataset.extra);
@@ -513,19 +714,23 @@ function renderExtras() {
     });
   });
 
-  // Listener: agregar serie al extra
+  // Agregar serie
   extrasList.querySelectorAll('.add-extra-set-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       const extraIdx = Number(btn.dataset.extra);
       const extra = state.extras[extraIdx];
-      const last = extra.sets[extra.sets.length - 1] || { weight: '', reps: '10' };
-      extra.sets.push({ weight: last.weight || '', reps: last.reps || '10', completed: false });
+      const last = extra.sets[extra.sets.length - 1] || { weight: '', reps: String(DEFAULT_REPS) };
+      extra.sets.push({
+        weight: last.weight || '',
+        reps: last.reps || String(DEFAULT_REPS),
+        completed: false
+      });
       saveDayState(currentRoutineId, state);
       renderUser();
     });
   });
 
-  // Listener: eliminar una serie
+  // Eliminar serie
   extrasList.querySelectorAll('.remove-extra-set').forEach(btn => {
     btn.addEventListener('click', (e) => {
       e.stopPropagation();
@@ -541,10 +746,10 @@ function renderExtras() {
     });
   });
 
-  // Listener: checkbox de serie del extra
+  // Checkbox del extra
   extrasList.querySelectorAll('.set-row.extra-set').forEach(row => {
     row.addEventListener('click', (e) => {
-      if (e.target.tagName === 'INPUT' || e.target.tagName === 'BUTTON') return;
+      if (e.target.closest('input, button')) return;
       const extraIdx = Number(row.dataset.extra);
       const setIdx = Number(row.dataset.set);
       state.extras[extraIdx].sets[setIdx].completed = !state.extras[extraIdx].sets[setIdx].completed;
@@ -553,13 +758,15 @@ function renderExtras() {
     });
   });
 
-  // Listener: editar peso/reps del extra
-  extrasList.querySelectorAll('.extra-weight, .extra-reps').forEach(input => {
+  // Editar peso/reps/tiempo del extra
+  extrasList.querySelectorAll('.extra-weight, .extra-reps, .extra-time').forEach(input => {
     input.addEventListener('input', (e) => {
       const extraIdx = Number(e.target.dataset.extra);
       const setIdx = Number(e.target.dataset.set);
       if (e.target.classList.contains('extra-weight')) {
         state.extras[extraIdx].sets[setIdx].weight = e.target.value;
+      } else if (e.target.classList.contains('extra-time')) {
+        state.extras[extraIdx].sets[setIdx].reps = e.target.value;
       } else {
         state.extras[extraIdx].sets[setIdx].reps = e.target.value;
       }
@@ -668,26 +875,50 @@ function completeRoutineAndAdvance(isSuccess) {
     ? (currentStateData.extras || []).filter(e => e.exerciseId && e.sets.length > 0)
     : [];
 
+  // Última sesión de esta rutina para fallback de autocompletado
+  const lastSession = getLastSessionForRoutine(currentRoutine.id, currentRoutine.name);
+
   history[todayKey] = {
     routineId: currentRoutine.id,
     routineName: currentRoutine.name,
     status: isSuccess ? 'completed' : 'incomplete',
-    exercises: (currentRoutine.exercises || []).map((ex, idx) => {
-      const exState = currentStateData ? currentStateData.exercises[idx] : null;
-      const currentExerciseId = exState && exState.currentExerciseId !== undefined
+    exercises: currentStateData.exercises.map((exState, idx) => {
+      const ex = currentRoutine.exercises[idx] || {};
+      const currentExerciseId = exState.currentExerciseId !== undefined
         ? exState.currentExerciseId
         : ex.exerciseId;
       const exData = getExerciseById(currentExerciseId);
+      const isCardio = (exData && (exData.groups || []).includes('Cardio')) || !!ex.time;
+
+      const lastEx = lastSession && exData
+        ? findExerciseInSession(lastSession.exercises, currentExerciseId, exData.name)
+        : null;
+
+      // Guardar SOLO lo que está en el estado (lo que el usuario cargó o el autocompletado)
+      // Pero solo si la serie está marcada como completada.
+      const finalWeights = exState.weights.map((w, sIdx) => {
+        const isCompleted = exState.completed[sIdx];
+        if (!isCompleted) return '';
+        return w || '';
+      });
+
+      const finalReps = exState.reps.map((r, sIdx) => {
+        const isCompleted = exState.completed[sIdx];
+        if (!isCompleted) return '';
+        return r || '';
+      });
+
       return {
         exerciseId: currentExerciseId,
-        replacedFrom: exState ? (exState.replacedFrom || null) : null,
+        replacedFrom: exState.replacedFrom || null,
         name: exData ? exData.name : "Ejercicio",
-        isCardio: exData ? exData.group === "Cardio" || !!ex.time : false,
-        cardioTime: exState ? exState.cardioTime || ex.time || '0 min' : (ex.time || '0 min'),
-        weights: exState ? [...exState.weights] : [],
-        speed: exState ? exState.speed : 0,
-        incline: exState ? exState.incline : 0,
-        completed: exState ? [...exState.completed] : []
+        isCardio,
+        cardioTime: exState.cardioTime || ex.time || '0 min',
+        weights: finalWeights,
+        reps: finalReps,
+        speed: exState.speed || 0,
+        incline: exState.incline || 0,
+        completed: [...exState.completed]
       };
     }),
     extras: savedExtras.map(e => ({
@@ -718,8 +949,10 @@ function completeRoutineAndAdvance(isSuccess) {
   renderUser();
 }
 
-finishRoutineBtn.addEventListener('click', () => completeRoutineAndAdvance(true));
-incompleteRoutineBtn.addEventListener('click', () => completeRoutineAndAdvance(false));
+finishRoutineBtn.addEventListener('click', () => {
+  const allDone = state.exercises.every(ex => ex.completed.every(Boolean));
+  completeRoutineAndAdvance(allDone);
+});
 
 
 // ==========================================
@@ -860,9 +1093,34 @@ dayModal.addEventListener('click', (e) => { if (e.target === dayModal) dayModal.
 
 document.getElementById('fillAllBtn')?.addEventListener('click', () => {
   if (!state || !state.exercises) return;
-  state.exercises.forEach(ex => {
-    ex.completed = ex.completed.map(() => true);
+
+  const routines = getRoutines();
+  const routine = routines.find(r => r.id === currentRoutineId);
+  const lastSession = routine ? getLastSessionForRoutine(routine.id, routine.name) : null;
+
+  state.exercises.forEach((exState, idx) => {
+    const ex = routine ? routine.exercises[idx] : null;
+    if (!ex) return;
+
+    const currentExerciseId = exState.currentExerciseId !== undefined
+      ? exState.currentExerciseId
+      : ex.exerciseId;
+    const exData = getExerciseById(currentExerciseId);
+    const lastEx = lastSession && exData
+      ? findExerciseInSession(lastSession.exercises, currentExerciseId, exData.name)
+      : null;
+
+    exState.weights = exState.weights.map((w, sIdx) =>
+      resolverPesoSerie(exState, currentExerciseId, exData ? exData.name : '', sIdx, lastSession, lastEx, routine.id, routine.name)
+    );
+
+    exState.reps = exState.reps.map((r, sIdx) =>
+      resolverRepsSerie(exState, ex, sIdx, lastSession, lastEx, currentExerciseId, exData ? exData.name : '')
+    );
+
+    exState.completed = exState.completed.map(() => true);
   });
+
   saveDayState(currentRoutineId, state);
   renderUser();
 });

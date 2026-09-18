@@ -281,7 +281,11 @@
   // ==========================================
 
   function openWeightModal() {
-    const today = new Date().toISOString().slice(0, 10);
+    const now = new Date();
+    const yyyy = now.getFullYear();
+    const mm = String(now.getMonth() + 1).padStart(2, '0');
+    const dd = String(now.getDate()).padStart(2, '0');
+    const today = `${yyyy}-${mm}-${dd}`;
     weightDateInput.value = today;
     weightKgInput.value   = '';
     weightNoteInput.value = '';
@@ -459,7 +463,7 @@
       html += `<p><strong>Rutina:</strong> ${routineLabel} (${session.status === 'completed' ? '✅ Completada' : '⏳ Incompleta'})</p>`;
       html += `<hr style="border-color:var(--line); margin: 10px 0;">`;
 
-      (session.exercises || []).forEach((ex, i) => {
+            (session.exercises || []).forEach((ex, i) => {
         html += `<div style="margin-bottom: 12px; background:var(--bg); padding:10px; border-radius:10px;"><strong>${i + 1}. ${ex.name}</strong><br>`;
 
         if (ex.isCardio) {
@@ -469,14 +473,37 @@
             html += `<br><small style="color:var(--muted);">Velocidad: ${ex.speed || 0} | Inclinación: ${ex.incline || 0}</small>`;
           }
         } else {
-          if (ex.weights && ex.weights.length > 0) {
-            const seriesDetail = ex.weights.map((w, s) => {
-              const pesoText = w && String(w).trim() !== '' ? `${w}kg` : '0kg';
-              return `S${s + 1}: <strong>${pesoText}</strong>`;
-            }).join(' | ');
-            html += `<small style="color:var(--text); display:block; margin-top:3px;">💪 Pesos: ${seriesDetail}</small>`;
+          const exerciseData = (typeof getExerciseById === 'function') ? getExerciseById(ex.exerciseId) : null;
+          const isTimeExercise = (typeof esEjercicioPorTiempo === 'function') ? esEjercicioPorTiempo(exerciseData) : false;
+
+          if (isTimeExercise) {
+            const weights = ex.weights || [];
+            const times = ex.reps || [];
+            if (weights.length > 0 || times.length > 0) {
+              const seriesDetail = times.map((t, s) => {
+                const timeText = t && String(t).trim() !== '' ? `${t} seg` : '—';
+                const pesoText = weights[s] && String(weights[s]).trim() !== '' && String(weights[s]) !== '0'
+                  ? `${weights[s]}kg`
+                  : 'sin peso';
+                return `S${s + 1}: <strong>${timeText}</strong> (${pesoText})`;
+              }).join(' | ');
+              html += `<small style="color:var(--text); display:block; margin-top:3px;">⏱️ Tiempo: ${seriesDetail}</small>`;
+            } else {
+              html += `<small style="color:var(--muted);">Sin registros de tiempo</small>`;
+            }
           } else {
-            html += `<small style="color:var(--muted);">Sin registros de peso (0kg)</small>`;
+            const weights = ex.weights || [];
+            const reps = ex.reps || [];
+            if (weights.length > 0) {
+              const seriesDetail = weights.map((w, s) => {
+                const pesoText = w && String(w).trim() !== '' ? `${w}kg` : '—';
+                const repsText = (reps && reps[s] !== undefined && String(reps[s]).trim() !== '') ? reps[s] : '—';
+                return `S${s + 1}: <strong>${pesoText}</strong> × ${repsText}`;
+              }).join(' | ');
+              html += `<small style="color:var(--text); display:block; margin-top:3px;">💪 Pesos: ${seriesDetail}</small>`;
+            } else {
+              html += `<small style="color:var(--muted);">Sin registros de peso</small>`;
+            }
           }
         }
         html += `</div>`;
@@ -488,11 +515,24 @@
 
         session.extras.forEach((ex, i) => {
           html += `<div style="margin-top:10px; margin-bottom: 12px; background:var(--bg); padding:10px; border-radius:10px; border-left:3px solid var(--violet);"><strong>${ex.name}</strong><br>`;
+
+          const extraExData = (typeof getExerciseById === 'function') ? getExerciseById(ex.exerciseId) : null;
+          const isTimeExtra = (typeof esEjercicioPorTiempo === 'function') ? esEjercicioPorTiempo(extraExData) : false;
+
           (ex.sets || []).forEach((s, si) => {
-            const w = s.weight && String(s.weight).trim() !== '' ? `${s.weight}kg` : '—';
-            const r = s.reps || '—';
             const check = s.completed ? '✓' : '○';
-            html += `<small style="color:var(--text); display:block; margin-top:3px;">S${si + 1}: <strong>${w}</strong> × ${r} reps ${check}</small>`;
+
+            if (isTimeExtra) {
+              const timeText = s.reps && String(s.reps).trim() !== '' ? `${s.reps} seg` : '—';
+              const pesoText = s.weight && String(s.weight).trim() !== '' && String(s.weight) !== '0'
+                ? `${s.weight}kg`
+                : 'sin peso';
+              html += `<small style="color:var(--text); display:block; margin-top:3px;">S${si + 1}: <strong>${timeText}</strong> (${pesoText}) ${check}</small>`;
+            } else {
+              const w = s.weight && String(s.weight).trim() !== '' ? `${s.weight}kg` : '—';
+              const r = s.reps || '—';
+              html += `<small style="color:var(--text); display:block; margin-top:3px;">S${si + 1}: <strong>${w}</strong> × ${r} reps ${check}</small>`;
+            }
           });
           html += `</div>`;
         });

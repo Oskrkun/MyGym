@@ -174,8 +174,7 @@
     </div>
 
     <div class="routine-actions-footer">
-      <button id="finishRoutineBtn" class="day-button" type="button" style="background: var(--accent); color:#0c0d0f; width:100%; text-align:center; font-weight:800;">✓ Finalizar día</button>
-      <button id="incompleteRoutineBtn" class="day-button" type="button" style="background: var(--line); width:100%; text-align:center;">Dejar incompleta / Siguiente</button>
+      <button id="finishRoutineBtn" class="day-button" type="button" style="background: var(--accent); color:#0c0d0f; width:100%; text-align:center; font-weight:800;">Terminar rutina</button>
     </div>
 
     <section id="finishCard" class="finish-card hidden">
@@ -248,7 +247,10 @@
         <label for="routineName">Nombre</label>
         <input type="text" id="routineName" name="routineName" placeholder="Ej: Rutina 1" />
 
-        <label for="exerciseSelector">Ejercicios</label>
+                <label for="routineExerciseType">Tipo</label>
+        <select id="routineExerciseType" name="routineExerciseType" style="width:100%;"></select>
+
+        <label for="exerciseSelector">Ejercicio</label>
         <div style="display:flex;gap:10px;flex-wrap:wrap;">
           <select id="exerciseSelector" name="exerciseSelector" style="flex:1;min-width:200px;"></select>
           <button id="addExerciseBtn" class="day-button" type="button" style="padding:8px 16px;">+ Agregar</button>
