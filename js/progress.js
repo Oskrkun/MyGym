@@ -332,7 +332,7 @@
   }
 
   // ==========================================
-  // 9. HEATMAP (rediseñado: solo número + ícono)
+  // 9. HEATMAP
   // ==========================================
 
   function renderHeatmap() {
@@ -352,16 +352,10 @@
     }
 
     const todayReal = new Date();
-
-    // Fechas clave para armar la cuadrícula
     const firstOfMonth = new Date(viewYear, viewMonth, 1);
     const lastOfMonth = new Date(viewYear, viewMonth + 1, 0);
     const daysInMonth = lastOfMonth.getDate();
-
-    // Columna donde empieza el día 1 (0 = domingo, 6 = sábado)
     const startWeekday = firstOfMonth.getDay();
-
-    // Cantidad total de celdas necesarias (múltiplo de 7)
     const totalCells = Math.ceil((startWeekday + daysInMonth) / 7) * 7;
 
     for (let i = 0; i < totalCells; i++) {
@@ -381,7 +375,6 @@
       const div = document.createElement('div');
       div.className = 'heatmap-day';
 
-      // Celdas de otros meses: atenuadas, no clickeables
       if (!isCurrentMonth) {
         div.className += ' heatmap-other-month';
         div.innerHTML = `<span class="hm-num">${date.getDate()}</span>`;
@@ -407,7 +400,6 @@
                       date.getFullYear() === todayReal.getFullYear();
       if (isToday) div.className += ' today';
 
-      // Ícono: ⚡ si tiene extras, 💤 si es descanso
       let iconText = '';
       if (tieneExtras) iconText = '⚡';
       else if (esDescanso) iconText = '💤';
@@ -445,6 +437,7 @@
 
     let html = '';
 
+    // Bloque de peso
     if (weightEntry) {
       const kgText = `${weightEntry.kg} kg`;
       html += `
@@ -456,6 +449,7 @@
       `;
     }
 
+    // Bloque de sesión
     if (session) {
       const routineLabel = typeof nombreRutinaParaMostrar === 'function'
         ? nombreRutinaParaMostrar(session)
@@ -463,88 +457,89 @@
       html += `<p><strong>Rutina:</strong> ${routineLabel} (${session.status === 'completed' ? '✅ Completada' : '⏳ Incompleta'})</p>`;
       html += `<hr style="border-color:var(--line); margin: 10px 0;">`;
 
-                 // Separar ejercicios hechos de pendientes
-          const exercises = session.exercises || [];
-          const doneExercises = [];
-          const pendingExercises = [];
+      // Separar ejercicios hechos de pendientes
+      const exercises = session.exercises || [];
+      const doneExercises = [];
+      const pendingExercises = [];
 
-          exercises.forEach((ex, i) => {
-            const completedCount = (ex.completed || []).filter(Boolean).length;
-            if (completedCount > 0) {
-              doneExercises.push({ ex, i, completedCount });
-            } else {
-              pendingExercises.push({ ex, i });
-            }
-          });
+      exercises.forEach((ex, i) => {
+        const completedCount = (ex.completed || []).filter(Boolean).length;
+        if (completedCount > 0) {
+          doneExercises.push({ ex, i, completedCount });
+        } else {
+          pendingExercises.push({ ex, i });
+        }
+      });
 
-          const totalExercises = exercises.length;
-          const doneCount = doneExercises.length;
+      const totalExercises = exercises.length;
+      const doneCount = doneExercises.length;
 
-          // Resumen arriba
-          html += `<p style="color:var(--muted); font-size:12px; margin: 6px 0 12px;">${doneCount} de ${totalExercises} ejercicios completados</p>`;
+      // Resumen
+      html += `<p style="color:var(--muted); font-size:12px; margin: 6px 0 12px;">${doneCount} de ${totalExercises} ejercicios completados</p>`;
 
-          // Caso especial: no completaste ninguno
-          if (doneCount === 0) {
-            html += `<p style="color:var(--muted); text-align:center; padding: 12px;">No completaste ningún ejercicio esta sesión.</p>`;
+      // Si no completaste nada
+      if (doneCount === 0) {
+        html += `<p style="color:var(--muted); text-align:center; padding: 12px;">No completaste ningún ejercicio esta sesión.</p>`;
+      }
+
+      // Ejercicios hechos
+      doneExercises.forEach(({ ex, i, completedCount }) => {
+        const totalSets = (ex.completed || []).length;
+        const partialLabel = completedCount < totalSets ? ` (${completedCount}/${totalSets})` : '';
+        html += `<div style="margin-bottom: 12px; background:var(--bg); padding:10px; border-radius:10px;"><strong>${i + 1}. ${ex.name}${partialLabel}</strong><br>`;
+
+        if (ex.isCardio) {
+          const timeVal = ex.cardioTime && ex.cardioTime.trim() !== '' ? ex.cardioTime : '0 min';
+          html += `<small style="color:var(--accent);">⏱️ Tiempo: ${timeVal}</small>`;
+          if (ex.speed || ex.incline) {
+            html += `<br><small style="color:var(--muted);">Velocidad: ${ex.speed || 0} | Inclinación: ${ex.incline || 0}</small>`;
           }
+        } else {
+          const exerciseData = (typeof getExerciseById === 'function') ? getExerciseById(ex.exerciseId) : null;
+          const isTimeExercise = (typeof esEjercicioPorTiempo === 'function') ? esEjercicioPorTiempo(exerciseData) : false;
 
-          // Ejercicios hechos
-          doneExercises.forEach(({ ex, i, completedCount }) => {
-            const totalSets = (ex.completed || []).length;
-            const partialLabel = completedCount < totalSets ? ` (${completedCount}/${totalSets})` : '';
-            html += `<div style="margin-bottom: 12px; background:var(--bg); padding:10px; border-radius:10px;"><strong>${i + 1}. ${ex.name}${partialLabel}</strong><br>`;
-
-            if (ex.isCardio) {
-              const timeVal = ex.cardioTime && ex.cardioTime.trim() !== '' ? ex.cardioTime : '0 min';
-              html += `<small style="color:var(--accent);">⏱️ Tiempo: ${timeVal}</small>`;
-              if (ex.speed || ex.incline) {
-                html += `<br><small style="color:var(--muted);">Velocidad: ${ex.speed || 0} | Inclinación: ${ex.incline || 0}</small>`;
-              }
-            } else {
-              const exerciseData = (typeof getExerciseById === 'function') ? getExerciseById(ex.exerciseId) : null;
-              const isTimeExercise = (typeof esEjercicioPorTiempo === 'function') ? esEjercicioPorTiempo(exerciseData) : false;
-
-              if (isTimeExercise) {
-                const weights = ex.weights || [];
-                const times = ex.reps || [];
-                const completed = ex.completed || [];
-                const seriesParts = [];
-                times.forEach((t, s) => {
-                  if (!completed[s]) return;
-                  const timeText = t && String(t).trim() !== '' ? `${t} seg` : '—';
-                  const pesoText = weights[s] && String(weights[s]).trim() !== '' && String(weights[s]) !== '0'
-                    ? `${weights[s]}kg`
-                    : 'sin peso';
-                  seriesParts.push(`S${s + 1}: <strong>${timeText}</strong> (${pesoText})`);
-                });
-                html += `<small style="color:var(--text); display:block; margin-top:3px;">⏱️ ${seriesParts.join(' | ')}</small>`;
-              } else {
-                const weights = ex.weights || [];
-                const reps = ex.reps || [];
-                const completed = ex.completed || [];
-                const seriesParts = [];
-                weights.forEach((w, s) => {
-                  if (!completed[s]) return;
-                  const pesoText = w && String(w).trim() !== '' ? `${w}kg` : '—';
-                  const repsText = (reps && reps[s] !== undefined && String(reps[s]).trim() !== '') ? reps[s] : '—';
-                  seriesParts.push(`S${s + 1}: <strong>${pesoText}</strong> × ${repsText}`);
-                });
-                html += `<small style="color:var(--text); display:block; margin-top:3px;">💪 ${seriesParts.join(' | ')}</small>`;
-              }
-            }
-            html += `</div>`;
-          });
-
-          // Ejercicios pendientes (colapsables)
-          if (pendingExercises.length > 0) {
-            html += `<details style="margin-top:8px; background:var(--bg); padding:10px 12px; border-radius:10px; border:1px solid var(--line);">`;
-            html += `<summary style="cursor:pointer; color:var(--muted); font-size:12px; font-weight:700; outline:none;">Ver ${pendingExercises.length} ejercicio${pendingExercises.length !== 1 ? 's' : ''} pendiente${pendingExercises.length !== 1 ? 's' : ''}</summary>`;
-            html += `<div style="margin-top:8px; padding-left:4px;">`;
-            pendingExercises.forEach(({ ex, i }) => {
-              html += `<div style="margin-bottom:4px; color:var(--muted); font-size:12px;">${i + 1}. ${ex.name}</div>`;
+          if (isTimeExercise) {
+            const wArr = ex.weights || [];
+            const tArr = ex.reps || [];
+            const cArr = ex.completed || [];
+            const seriesParts = [];
+            tArr.forEach((t, s) => {
+              if (!cArr[s]) return;
+              const timeText = t && String(t).trim() !== '' ? `${t} seg` : '—';
+              const pesoText = wArr[s] && String(wArr[s]).trim() !== '' && String(wArr[s]) !== '0'
+                ? `${wArr[s]}kg`
+                : 'sin peso';
+              seriesParts.push(`S${s + 1}: <strong>${timeText}</strong> (${pesoText})`);
             });
-            html += `</div></details>`;
+            html += `<small style="color:var(--text); display:block; margin-top:3px;">⏱️ ${seriesParts.join(' | ')}</small>`;
+          } else {
+            const wArr = ex.weights || [];
+            const rArr = ex.reps || [];
+            const cArr = ex.completed || [];
+            const seriesParts = [];
+            wArr.forEach((w, s) => {
+              if (!cArr[s]) return;
+              const pesoText = w && String(w).trim() !== '' ? `${w}kg` : '—';
+              const repsText = (rArr && rArr[s] !== undefined && String(rArr[s]).trim() !== '') ? rArr[s] : '—';
+              seriesParts.push(`S${s + 1}: <strong>${pesoText}</strong> × ${repsText}`);
+            });
+            html += `<small style="color:var(--text); display:block; margin-top:3px;">💪 ${seriesParts.join(' | ')}</small>`;
           }
+        }
+        html += `</div>`;
+      });
+
+      // Ejercicios pendientes (colapsables)
+      if (pendingExercises.length > 0) {
+        html += `<details style="margin-top:8px; background:var(--bg); padding:10px 12px; border-radius:10px; border:1px solid var(--line);">`;
+        html += `<summary style="cursor:pointer; color:var(--muted); font-size:12px; font-weight:700; outline:none;">Ver ${pendingExercises.length} ejercicio${pendingExercises.length !== 1 ? 's' : ''} pendiente${pendingExercises.length !== 1 ? 's' : ''}</summary>`;
+        html += `<div style="margin-top:8px; padding-left:4px;">`;
+        pendingExercises.forEach(({ ex, i }) => {
+          html += `<div style="margin-bottom:4px; color:var(--muted); font-size:12px;">${i + 1}. ${ex.name}</div>`;
+        });
+        html += `</div></details>`;
+      }
+
       // Sección de extras
       if (tieneExtras) {
         html += `<div style="margin-top:16px; padding-top:10px; border-top:1px solid var(--violet);"><strong style="color:var(--violet); font-size:14px;">⚡ Extras</strong></div>`;
