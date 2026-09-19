@@ -316,7 +316,13 @@ btnExportar.addEventListener('click', () => {
   const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(backup, null, 2));
   const downloadAnchor = document.createElement('a');
   downloadAnchor.setAttribute("href", dataStr);
-  const fecha = new Date().toISOString().slice(0, 10);
+  // 👇 fecha local en vez de UTC
+  const d = new Date();
+  const fecha = [
+    d.getFullYear(),
+    String(d.getMonth() + 1).padStart(2, '0'),
+    String(d.getDate()).padStart(2, '0')
+  ].join('-');
   downloadAnchor.setAttribute("download", `migym_respaldo_${fecha}.json`);
   document.body.appendChild(downloadAnchor);
   downloadAnchor.click();

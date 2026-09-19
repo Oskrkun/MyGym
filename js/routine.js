@@ -58,6 +58,13 @@ const cancelReplaceBtn        = $('cancelReplaceBtn');
 
 function populateTypeSelector(selectEl, selected) {
   selectEl.innerHTML = '';
+  // 👇 opción placeholder
+  const placeholder = document.createElement('option');
+  placeholder.value = '';
+  placeholder.textContent = 'Elegir tipo...';
+  placeholder.disabled = true;
+  selectEl.appendChild(placeholder);
+
   getTiposDeEjercicio().forEach(tipo => {
     const opt = document.createElement('option');
     opt.value = tipo;
@@ -65,10 +72,20 @@ function populateTypeSelector(selectEl, selected) {
     if (selected && tipo === selected) opt.selected = true;
     selectEl.appendChild(opt);
   });
+
+  // Si no hay selección, dejamos el placeholder seleccionado
+  if (!selected) selectEl.value = '';
 }
 
 function populateExerciseSelectorByType(selectEl, tipo, excludeId) {
   selectEl.innerHTML = '';
+  // 👇 opción placeholder
+  const placeholder = document.createElement('option');
+  placeholder.value = '';
+  placeholder.textContent = 'Elegir ejercicio...';
+  placeholder.disabled = true;
+  selectEl.appendChild(placeholder);
+
   const all = getExercises();
   const filtered = tipo === 'Todos'
     ? all
@@ -84,6 +101,9 @@ function populateExerciseSelectorByType(selectEl, tipo, excludeId) {
     opt.textContent = `${ex.name} (${grupos})`;
     selectEl.appendChild(opt);
   });
+
+  // Dejamos el placeholder seleccionado por defecto
+  selectEl.value = '';
 }
 
 
@@ -660,7 +680,7 @@ function renderExtras() {
       ${headHtml}
       ${selectorsHtml}
       ${gifHtml}
-      ${extra.sets.length > 0 ? `
+      ${exerciseData ? `
         <div class="series-container">
           ${setsHtml}
           <button type="button" class="collapse-button add-extra-set-btn" data-extra="${extraIdx}" style="margin-top:6px;">+ Agregar serie</button>
@@ -673,8 +693,11 @@ function renderExtras() {
     if (!exerciseData) {
       const typeSel = card.querySelector('.extra-type-select');
       const exSel = card.querySelector('.extra-ex-select');
-      populateTypeSelector(typeSel, 'Todos');
+      // Ambos arrancan vacíos, el usuario debe elegir explícitamente
+      populateTypeSelector(typeSel, '');
       populateExerciseSelectorByType(exSel, 'Todos');
+      // El selector de ejercicio queda deshabilitado hasta elegir un tipo
+      exSel.disabled = true;
     }
   });
 
@@ -695,12 +718,14 @@ function renderExtras() {
     sel.addEventListener('change', () => {
       const extraIdx = Number(sel.dataset.extra);
       const exSel = extrasList.querySelector(`.extra-ex-select[data-extra="${extraIdx}"]`);
-      populateExerciseSelectorByType(exSel, sel.value);
-
-      if (exSel.options.length === 1) {
-        const exId = Number(exSel.value);
-        if (exId) asignarEjercicioAExtra(extraIdx, exId);
+      if (!sel.value) {
+        // No eligió tipo todavía
+        exSel.disabled = true;
+        exSel.innerHTML = '<option value="">Elegir ejercicio...</option>';
+        return;
       }
+      populateExerciseSelectorByType(exSel, sel.value);
+      exSel.disabled = false;
     });
   });
 
