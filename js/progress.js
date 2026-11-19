@@ -216,6 +216,11 @@
         if (val > 0.05) return '↑';
         return '→';
       };
+      const actionLabel = (val) => {
+        if (val < -0.05) return 'Bajaste - Perdiste';
+        if (val > 0.05) return 'Subiste - Ganaste';
+        return 'Sin cambios';
+      };
       const colorFor = (diff) => {
         if (!goal) return 'var(--muted)';
         if (goal === 'bajar') {
@@ -241,9 +246,9 @@
         const prevLabel = `${String(prevDate.getDate()).padStart(2,'0')}/${String(prevDate.getMonth()+1).padStart(2,'0')}`;
 
         html += `
-          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; gap:8px; margin-bottom:6px;">
             <span style="color:var(--muted); font-size:12px;">Desde la última pesada (${prevLabel})</span>
-            <strong style="color:${colorFor(diffPrev)}; font-size:14px;">${arrow(diffPrev)} ${fmt(diffPrev)} kg</strong>
+            <strong style="color:${colorFor(diffPrev)}; font-size:13px; text-align:right;">${arrow(diffPrev)} ${actionLabel(diffPrev)} ${fmt(diffPrev)} kg</strong>
           </div>
         `;
       }
@@ -255,9 +260,9 @@
         const firstLabel = `${String(firstDate.getDate()).padStart(2,'0')}/${String(firstDate.getMonth()+1).padStart(2,'0')}`;
 
         html += `
-          <div style="display:flex; justify-content:space-between; align-items:center;">
+          <div style="display:flex; justify-content:space-between; align-items:center; gap:8px;">
             <span style="color:var(--muted); font-size:12px;">Desde el primer pesaje (${firstLabel})</span>
-            <strong style="color:${colorFor(diffFirst)}; font-size:14px;">${arrow(diffFirst)} ${fmt(diffFirst)} kg</strong>
+            <strong style="color:${colorFor(diffFirst)}; font-size:13px; text-align:right;">${arrow(diffFirst)} ${actionLabel(diffFirst)} ${fmt(diffFirst)} kg</strong>
           </div>
         `;
       }
