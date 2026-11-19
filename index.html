@@ -146,12 +146,32 @@
       <h2>Evolución de Peso</h2>
       <div id="weightChartContainer" style="margin-top:12px;"></div>
     </section>
-    
-    <section class="progress-panel-card">
-      <h2>Evolución</h2>
-      <div id="evolutionFrequencyContainer" style="margin-top:12px;"></div>
-      <div id="evolutionExercisesContainer" style="margin-top:14px;"></div>
-    </section>
+
+    <article id="evolutionCard" class="exercise-card collapsed" style="margin-top:12px;">
+      <div class="exercise-head" id="evolutionHead">
+        <div class="card-icon">📈</div>
+        <div class="exercise-number"></div>
+        <div class="exercise-title">
+          <div class="group">EVOLUCIÓN</div>
+          <h2>Progreso por ejercicio</h2>
+          <p id="evolutionSummarySubtitle">Tocá para ver tu evolución</p>
+        </div>
+        <div id="evolutionChevron" class="exercise-chevron">▾</div>
+      </div>
+
+      <div class="series-container" id="evolutionBody" style="padding-top:10px;">
+        <div id="evolutionFrequencyContainer"></div>
+
+        <div style="margin-top:12px; display:flex; align-items:center; justify-content:space-between; gap:8px; flex-wrap:wrap;">
+          <label for="evolutionGroupFilter" style="font-size:12px; font-weight:700; color:var(--muted);">Grupo principal:</label>
+          <select id="evolutionGroupFilter" class="weight-input" style="flex:1; min-width:150px; padding:8px 10px; font-size:13px;">
+            <option value="Todos">Todos</option>
+          </select>
+        </div>
+
+        <div id="evolutionExercisesContainer" style="margin-top:12px;"></div>
+      </div>
+    </article>
   </div>
 
   <!-- VISTA USUARIO (RUTINA) -->

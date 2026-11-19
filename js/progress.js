@@ -13,51 +13,56 @@
   // 1. REFERENCIAS DOM
   // ==========================================
 
-  const progressView              = $('progressView');
+  const progressView                = $('progressView');
 
   // Perfil
-  const profileCard               = $('profileCard');
-  const profileHead               = $('profileHead');
-  const profileChevron            = $('profileChevron');
-  const profileDisplayName        = $('profileDisplayName');
-  const profileDisplayNick        = $('profileDisplayNick');
-  const profileNameInput          = $('profileName');
-  const profileNickInput          = $('profileNick');
-  const profileSexInput           = $('profileSex');
-  const profileHeightInput        = $('profileHeight');
-  const profileBirthYearInput     = $('profileBirthYear');
-  const profileGoalInput          = $('profileGoal');
-  const saveProfileBtn            = $('saveProfileBtn');
+  const profileCard                 = $('profileCard');
+  const profileHead                 = $('profileHead');
+  const profileChevron              = $('profileChevron');
+  const profileDisplayName          = $('profileDisplayName');
+  const profileDisplayNick          = $('profileDisplayNick');
+  const profileNameInput            = $('profileName');
+  const profileNickInput            = $('profileNick');
+  const profileSexInput             = $('profileSex');
+  const profileHeightInput          = $('profileHeight');
+  const profileBirthYearInput       = $('profileBirthYear');
+  const profileGoalInput            = $('profileGoal');
+  const saveProfileBtn              = $('saveProfileBtn');
 
   // Peso
-  const weightCard                = $('weightCard');
-  const weightHead                = $('weightHead');
-  const weightChevron             = $('weightChevron');
-  const weightCurrent             = $('weightCurrent');
-  const weightLastDate            = $('weightLastDate');
-  const weightGoalMessage         = $('weightGoalMessage');
-  const registerWeightBtn         = $('registerWeightBtn');
-  const weightModal               = $('weightModal');
-  const closeWeightModal          = $('closeWeightModal');
-  const weightDateInput           = $('weightDate');
-  const weightKgInput             = $('weightKg');
-  const weightNoteInput           = $('weightNote');
-  const saveWeightBtn             = $('saveWeightBtn');
-  const weightChartContainer      = $('weightChartContainer');
+  const weightCard                  = $('weightCard');
+  const weightHead                  = $('weightHead');
+  const weightChevron               = $('weightChevron');
+  const weightCurrent               = $('weightCurrent');
+  const weightLastDate              = $('weightLastDate');
+  const weightGoalMessage           = $('weightGoalMessage');
+  const registerWeightBtn           = $('registerWeightBtn');
+  const weightModal                 = $('weightModal');
+  const closeWeightModal            = $('closeWeightModal');
+  const weightDateInput             = $('weightDate');
+  const weightKgInput               = $('weightKg');
+  const weightNoteInput             = $('weightNote');
+  const saveWeightBtn               = $('saveWeightBtn');
+  const weightChartContainer        = $('weightChartContainer');
 
   // Evolución
+  const evolutionCard               = $('evolutionCard');
+  const evolutionHead               = $('evolutionHead');
+  const evolutionChevron            = $('evolutionChevron');
+  const evolutionSummarySubtitle    = $('evolutionSummarySubtitle');
+  const evolutionGroupFilter        = $('evolutionGroupFilter');
   const evolutionFrequencyContainer = $('evolutionFrequencyContainer');
   const evolutionExercisesContainer = $('evolutionExercisesContainer');
 
   // Historial / Heatmap
-  const historyModal              = $('historyModal');
-  const historyModalTitle         = $('historyModalTitle');
-  const historyModalContent       = $('historyModalContent');
-  const closeHistoryModal         = $('closeHistoryModal');
-  const monthLabel                = $('monthLabel');
-  const prevMonthBtn              = $('prevMonthBtn');
-  const nextMonthBtn              = $('nextMonthBtn');
-  const todayBtn                  = $('todayBtn');
+  const historyModal                = $('historyModal');
+  const historyModalTitle           = $('historyModalTitle');
+  const historyModalContent         = $('historyModalContent');
+  const closeHistoryModal           = $('closeHistoryModal');
+  const monthLabel                  = $('monthLabel');
+  const prevMonthBtn                = $('prevMonthBtn');
+  const nextMonthBtn                = $('nextMonthBtn');
+  const todayBtn                    = $('todayBtn');
 
   // ==========================================
   // 2. ESTADO LOCAL
@@ -229,8 +234,8 @@
         return '→';
       };
       const actionLabel = (val) => {
-        if (val < -0.05) return 'Bajaste';
-        if (val > 0.05) return 'Subiste';
+        if (val < -0.05) return 'Perdiste';
+        if (val > 0.05) return 'Ganaste';
         return 'Sin cambios';
       };
       const colorFor = (diff) => {
@@ -380,7 +385,7 @@
     if (!Array.isArray(routines) || routines.length === 0) return null;
     const history = (typeof getGlobalHistory === 'function') ? getGlobalHistory() : {};
     const orderedEntries = Object.entries(history)
-      .filter(([k, s]) => s && s.routineId && routines.some(r => r.id === s.routineId))
+      .filter(([, s]) => s && s.routineId && routines.some(r => r.id === s.routineId))
       .sort((a, b) => a[0].localeCompare(b[0]));
 
     if (orderedEntries.length > 0) {
@@ -1017,17 +1022,28 @@
   }
 
   // ==========================================
-  // 13. SECCIÓN EVOLUCIÓN (FRECUENCIA + EJERCICIOS)
+  // 13. SECCIÓN EVOLUCIÓN (CONTRAÍBLE + GRUPO + EJERCICIOS)
   // ==========================================
+
+  function toggleEvolutionCard() {
+    if (!evolutionCard) return;
+    const collapsed = evolutionCard.classList.toggle('collapsed');
+    if (evolutionChevron) evolutionChevron.textContent = collapsed ? '▾' : '▴';
+  }
 
   function extraerResumenEjercicioEnSesion(ex, dateKey) {
     if (!ex || !ex.exerciseId) return null;
 
     const exData = (typeof getExerciseById === 'function') ? getExerciseById(ex.exerciseId) : null;
     const name = (exData && exData.name) || ex.name || 'Ejercicio';
+    const groups = (exData && Array.isArray(exData.groups) && exData.groups.length > 0)
+      ? exData.groups
+      : (exData && exData.group ? [exData.group] : ['Otros']);
+    const mainGroup = groups[0];
+
     const isCardio = !!(
       ex.isCardio ||
-      (exData && Array.isArray(exData.groups) && exData.groups.includes('Cardio'))
+      groups.includes('Cardio')
     );
 
     if (isCardio) {
@@ -1042,11 +1058,13 @@
       return {
         exerciseId: ex.exerciseId,
         name,
+        mainGroup,
         kind: 'cardio',
         date: dateKey,
         minutes: minutes && minutes > 0 ? minutes : null,
         speed: speed && speed > 0 ? speed : null,
-        setsCount: anyCompleted ? 1 : 0
+        setsCount: anyCompleted ? 1 : 0,
+        maxReps: null
       };
     }
 
@@ -1056,6 +1074,7 @@
     const len = Math.max(completedArr.length, weightsArr.length, repsArr.length);
 
     let maxWeight = null;
+    let maxReps = null;
     let completedSets = 0;
 
     for (let i = 0; i < len; i++) {
@@ -1065,9 +1084,12 @@
 
       const wNum = parsearNumero(weightsArr[i]);
       if (wNum !== null && wNum > 0) {
-        if (maxWeight === null || wNum > maxWeight) {
-          maxWeight = wNum;
-        }
+        if (maxWeight === null || wNum > maxWeight) maxWeight = wNum;
+      }
+
+      const rNum = parsearNumero(repsArr[i]);
+      if (rNum !== null && rNum > 0) {
+        if (maxReps === null || rNum > maxReps) maxReps = rNum;
       }
     }
 
@@ -1080,9 +1102,11 @@
     return {
       exerciseId: ex.exerciseId,
       name,
+      mainGroup,
       kind: isTimeExercise ? 'time' : 'strength',
       date: dateKey,
       maxWeight,
+      maxReps,
       setsCount: completedSets
     };
   }
@@ -1090,13 +1114,17 @@
   function renderEvolutionSection() {
     if (!evolutionFrequencyContainer || !evolutionExercisesContainer) return;
 
+    if (evolutionCard) evolutionCard.classList.add('collapsed');
+    if (evolutionChevron) evolutionChevron.textContent = '▾';
+
     const history = (typeof getGlobalHistory === 'function') ? getGlobalHistory() : {};
     const validDates = Object.entries(history)
-      .filter(([k, s]) => s && (s.status === 'completed' || (Array.isArray(s.exercises) && s.exercises.some(e => (e.completed || []).some(Boolean)))))
+      .filter(([, s]) => s && (s.status === 'completed' || (Array.isArray(s.exercises) && s.exercises.some(e => (e.completed || []).some(Boolean)))))
       .map(([k]) => k)
       .sort();
 
     if (validDates.length === 0) {
+      if (evolutionSummarySubtitle) evolutionSummarySubtitle.textContent = 'Sin datos suficientes todavía';
       evolutionFrequencyContainer.innerHTML = '<p style="color:var(--muted); font-size:13px; margin:0;">Todavía no hay sesiones registradas para calcular frecuencia.</p>';
       evolutionExercisesContainer.innerHTML = '<p style="color:var(--muted); font-size:13px; margin:0;">Faltan datos para métricas de ejercicios.</p>';
       return;
@@ -1129,7 +1157,6 @@
       </div>
     `;
 
-    // Agrupar registros por ejercicio
     const byExercise = new Map();
     const sortedEntries = Object.entries(history).sort((a, b) => a[0].localeCompare(b[0]));
 
@@ -1153,124 +1180,235 @@
       });
     }
 
-    if (byExercise.size === 0) {
-      evolutionExercisesContainer.innerHTML = '<p style="color:var(--muted); font-size:13px; margin:0;">Faltan datos para métricas de ejercicios.</p>';
-      return;
+    if (evolutionSummarySubtitle) {
+      evolutionSummarySubtitle.textContent = `${validDates.length} días entrenados · ${byExercise.size} ejercicio${byExercise.size !== 1 ? 's' : ''}`;
     }
 
-    const cardsHtml = [];
+    // Poblar selector de grupo principal
+    const availableGroups = new Set();
+    byExercise.forEach(entries => {
+      if (entries[0] && entries[0].mainGroup) availableGroups.add(entries[0].mainGroup);
+    });
 
-    byExercise.forEach((entries) => {
-      if (entries.length < 2) {
-        cardsHtml.push(`
-          <div class="evolution-item">
-            <div class="evolution-item-top">
-              <strong>${entries[0].name}</strong>
-              <span class="evo-badge evo-pending">Faltan datos para métricas</span>
-            </div>
-            <p class="evo-detail">Registrado 1 vez (${entries[0].date}). Completalo en otra sesión para comparar.</p>
-          </div>
-        `);
-        return;
-      }
+    const previousFilter = evolutionGroupFilter ? evolutionGroupFilter.value : 'Todos';
+    if (evolutionGroupFilter) {
+      const sortedGroups = ['Todos', ...Array.from(availableGroups).sort()];
+      evolutionGroupFilter.innerHTML = sortedGroups
+        .map(g => `<option value="${g}">${g}</option>`)
+        .join('');
+      evolutionGroupFilter.value = sortedGroups.includes(previousFilter) ? previousFilter : 'Todos';
+    }
 
-      const first = entries[0];
-      const latest = entries[entries.length - 1];
+    function renderFilteredExercises() {
+      const selectedGroup = evolutionGroupFilter ? evolutionGroupFilter.value : 'Todos';
+      const comparableCards = [];
+      const pendingCards = [];
 
-      if (latest.kind === 'cardio') {
-        if (first.minutes && latest.minutes) {
-          const diffMin = Number((latest.minutes - first.minutes).toFixed(1));
-          let badgeClass = 'evo-same';
-          let badgeText = 'Seguís igual';
-          let sentence = `Empezaste con ${first.minutes} min y ahora hacés ${latest.minutes} min (seguís igual que cuando empezaste).`;
+      byExercise.forEach((entries) => {
+        const first = entries[0];
+        const latest = entries[entries.length - 1];
+        if (selectedGroup !== 'Todos' && first.mainGroup !== selectedGroup) return;
 
-          if (diffMin > 0) {
-            badgeClass = 'evo-improved';
-            badgeText = 'Mejoraste';
-            sentence = `Empezaste con ${first.minutes} min y ahora hacés ${latest.minutes} min (+${diffMin} min más que cuando empezaste).`;
-          } else if (diffMin < 0) {
-            badgeClass = 'evo-same';
-            badgeText = 'Por debajo del inicio';
-            sentence = `Empezaste con ${first.minutes} min y ahora hacés ${latest.minutes} min (${diffMin} min respecto al inicio).`;
-          }
-
-          cardsHtml.push(`
+        if (entries.length < 2) {
+          pendingCards.push(`
             <div class="evolution-item">
               <div class="evolution-item-top">
-                <strong>${latest.name}</strong>
-                <span class="evo-badge ${badgeClass}">${badgeText}</span>
-              </div>
-              <p class="evo-detail">${sentence}</p>
-            </div>
-          `);
-        } else {
-          cardsHtml.push(`
-            <div class="evolution-item">
-              <div class="evolution-item-top">
-                <strong>${latest.name}</strong>
+                <strong>${first.name} <span class="evo-group-tag">${first.mainGroup}</span></strong>
                 <span class="evo-badge evo-pending">Faltan datos para métricas</span>
               </div>
-              <p class="evo-detail">Faltan tiempos válidos para comparar el inicio con hoy.</p>
+              <p class="evo-detail">Registrado 1 vez (${first.date}). Completalo en otra sesión para comparar.</p>
             </div>
           `);
+          return;
         }
-        return;
-      }
 
-      // Fuerza o tiempo con peso
-      const hasWeights = first.maxWeight !== null && latest.maxWeight !== null;
-      if (hasWeights) {
-        const diffKg = Number((latest.maxWeight - first.maxWeight).toFixed(1));
+        if (latest.kind === 'cardio') {
+          if (first.minutes && latest.minutes) {
+            const diffMin = Number((latest.minutes - first.minutes).toFixed(1));
+            const diffSpeed = (first.speed && latest.speed)
+              ? Number((latest.speed - first.speed).toFixed(1))
+              : 0;
+
+            let badgeClass = 'evo-same';
+            let badgeText = 'Seguís igual';
+            const lines = [];
+
+            if (diffMin > 0 && diffSpeed > 0) {
+              badgeClass = 'evo-improved';
+              badgeText = 'Mejoraste';
+              lines.push(`Hacés ${diffMin} min + que al principio (de ${first.minutes} a ${latest.minutes} min).`);
+              lines.push(`Además subiste ${diffSpeed} de velocidad también (de ${first.speed} a ${latest.speed}).`);
+            } else if (diffMin > 0) {
+              badgeClass = 'evo-improved';
+              badgeText = 'Mejoraste';
+              lines.push(`Empezaste con ${first.minutes} min y ahora hacés ${latest.minutes} min (${diffMin} min + que al principio).`);
+            } else if (diffMin < 0) {
+              badgeText = 'Por debajo del inicio';
+              lines.push(`Empezaste con ${first.minutes} min y ahora hacés ${latest.minutes} min (${Math.abs(diffMin)} min menos que al principio).`);
+            } else if (diffSpeed > 0) {
+              badgeClass = 'evo-improved';
+              badgeText = 'Mejoraste';
+              lines.push(`Mantenés ${latest.minutes} min y subiste ${diffSpeed} + de velocidad que al principio.`);
+            } else {
+              lines.push(`Empezaste con ${first.minutes} min y seguís en ${latest.minutes} min.`);
+            }
+
+            comparableCards.push(`
+              <div class="evolution-item">
+                <div class="evolution-item-top">
+                  <strong>${latest.name} <span class="evo-group-tag">${latest.mainGroup}</span></strong>
+                  <span class="evo-badge ${badgeClass}">${badgeText}</span>
+                </div>
+                <div class="evo-detail">${lines.map(l => `<div>${l}</div>`).join('')}</div>
+              </div>
+            `);
+          } else {
+            pendingCards.push(`
+              <div class="evolution-item">
+                <div class="evolution-item-top">
+                  <strong>${latest.name} <span class="evo-group-tag">${latest.mainGroup}</span></strong>
+                  <span class="evo-badge evo-pending">Faltan datos para métricas</span>
+                </div>
+                <p class="evo-detail">Faltan tiempos válidos para comparar el inicio con hoy.</p>
+              </div>
+            `);
+          }
+          return;
+        }
+
+        if (latest.kind === 'time') {
+          const diffSec = (first.maxReps && latest.maxReps)
+            ? Number((latest.maxReps - first.maxReps).toFixed(1))
+            : 0;
+          const diffSets = latest.setsCount - first.setsCount;
+          const diffKg = (first.maxWeight !== null && latest.maxWeight !== null)
+            ? Number((latest.maxWeight - first.maxWeight).toFixed(1))
+            : 0;
+
+          let badgeClass = 'evo-same';
+          let badgeText = 'Seguís igual';
+          const lines = [];
+
+          if (diffSec > 0) {
+            badgeClass = 'evo-improved';
+            badgeText = 'Mejoraste';
+            lines.push(`Aguantás ${diffSec} seg + que cuando empezaste (de ${first.maxReps} seg a ${latest.maxReps} seg).`);
+          } else if (diffSec < 0) {
+            badgeText = 'Por debajo del inicio';
+            lines.push(`Empezaste con ${first.maxReps} seg y ahora hacés ${latest.maxReps} seg.`);
+          } else if (first.maxReps && latest.maxReps) {
+            lines.push(`Empezaste con ${first.maxReps} seg y seguís en ${latest.maxReps} seg.`);
+          }
+
+          if (diffSets > 0) {
+            badgeClass = 'evo-improved';
+            badgeText = 'Mejoraste';
+            lines.push(`Además agregaste ${diffSets} serie${diffSets > 1 ? 's' : ''} + desde que empezaste.`);
+          }
+          if (diffKg > 0) {
+            badgeClass = 'evo-improved';
+            badgeText = 'Mejoraste';
+            lines.push(`Además subiste ${diffKg} kg + de lastre también.`);
+          }
+
+          if (lines.length === 0) {
+            lines.push(`Empezaste con ${first.setsCount} series y ahora hacés ${latest.setsCount} series.`);
+          }
+
+          comparableCards.push(`
+            <div class="evolution-item">
+              <div class="evolution-item-top">
+                <strong>${latest.name} <span class="evo-group-tag">${latest.mainGroup}</span></strong>
+                <span class="evo-badge ${badgeClass}">${badgeText}</span>
+              </div>
+              <div class="evo-detail">${lines.map(l => `<div>${l}</div>`).join('')}</div>
+            </div>
+          `);
+          return;
+        }
+
+        // Fuerza (pesas)
+        const hasWeights = first.maxWeight !== null && latest.maxWeight !== null;
+        const diffKg = hasWeights ? Number((latest.maxWeight - first.maxWeight).toFixed(1)) : 0;
         const diffSets = latest.setsCount - first.setsCount;
+        const diffReps = (first.maxReps && latest.maxReps) ? (latest.maxReps - first.maxReps) : 0;
 
         let badgeClass = 'evo-same';
         let badgeText = 'Seguís igual';
-        let sentence = `Empezaste con ${first.maxWeight} kg y ahora levantás ${latest.maxWeight} kg (seguís igual que cuando empezaste).`;
+        const lines = [];
 
-        if (diffKg > 0) {
+        if (hasWeights && diffKg > 0 && diffSets > 0) {
           badgeClass = 'evo-improved';
           badgeText = 'Mejoraste';
-          sentence = `Empezaste con ${first.maxWeight} kg y ahora levantás ${latest.maxWeight} kg (+${diffKg} kg más que cuando empezaste).`;
-        } else if (diffKg < 0) {
-          badgeClass = 'evo-same';
+          lines.push(`Agregaste ${diffSets} serie${diffSets > 1 ? 's' : ''} + desde que empezaste (de ${first.setsCount} a ${latest.setsCount} series).`);
+          lines.push(`Además subiste ${diffKg} kg + también (de ${first.maxWeight} kg a ${latest.maxWeight} kg).`);
+        } else if (hasWeights && diffKg > 0) {
+          badgeClass = 'evo-improved';
+          badgeText = 'Mejoraste';
+          lines.push(`Empezaste con ${first.maxWeight} kg y ahora levantás ${latest.maxWeight} kg (${diffKg} kg + que cuando empezaste).`);
+          if (diffReps > 0) {
+            lines.push(`Además hacés ${diffReps} rep${diffReps > 1 ? 's' : ''} + por serie también.`);
+          }
+        } else if (hasWeights && diffKg < 0) {
           badgeText = 'Por debajo del inicio';
-          sentence = `Empezaste con ${first.maxWeight} kg y ahora levantás ${latest.maxWeight} kg (${diffKg} kg respecto al inicio).`;
+          lines.push(`Empezaste con ${first.maxWeight} kg y ahora levantás ${latest.maxWeight} kg (${Math.abs(diffKg)} kg menos que al principio).`);
         } else if (diffSets > 0) {
           badgeClass = 'evo-improved';
           badgeText = 'Mejoraste';
-          sentence = `Empezaste con ${first.maxWeight} kg (${first.setsCount} series) y ahora hacés ${latest.maxWeight} kg con ${latest.setsCount} series (+${diffSets} serie${diffSets > 1 ? 's' : ''}).`;
+          const weightNote = hasWeights ? ` con ${latest.maxWeight} kg` : '';
+          lines.push(`Empezaste con ${first.setsCount} series y ahora hacés ${latest.setsCount} series (${diffSets} serie${diffSets > 1 ? 's' : ''} + que cuando empezaste${weightNote}).`);
+          if (diffReps > 0) {
+            lines.push(`Además subiste ${diffReps} rep${diffReps > 1 ? 's' : ''} + también.`);
+          }
+        } else if (diffReps > 0) {
+          badgeClass = 'evo-improved';
+          badgeText = 'Mejoraste';
+          const weightNote = hasWeights ? ` en ${latest.maxWeight} kg` : '';
+          lines.push(`Mantenés el peso${weightNote} y hacés ${diffReps} rep${diffReps > 1 ? 's' : ''} + que cuando empezaste (de ${first.maxReps} a ${latest.maxReps}).`);
+        } else if (hasWeights) {
+          lines.push(`Empezaste con ${first.maxWeight} kg y seguís en ${latest.maxWeight} kg (${latest.setsCount} series).`);
+        } else {
+          lines.push(`Empezaste con ${first.setsCount} series y seguís en ${latest.setsCount} series.`);
         }
 
-        cardsHtml.push(`
+        comparableCards.push(`
           <div class="evolution-item">
             <div class="evolution-item-top">
-              <strong>${latest.name}</strong>
+              <strong>${latest.name} <span class="evo-group-tag">${latest.mainGroup}</span></strong>
               <span class="evo-badge ${badgeClass}">${badgeText}</span>
             </div>
-            <p class="evo-detail">${sentence}</p>
+            <div class="evo-detail">${lines.map(l => `<div>${l}</div>`).join('')}</div>
           </div>
         `);
-      } else {
-        const diffSets = latest.setsCount - first.setsCount;
-        const badgeClass = diffSets > 0 ? 'evo-improved' : 'evo-same';
-        const badgeText = diffSets > 0 ? 'Mejoraste' : 'Seguís igual';
-        const setsSentence = diffSets > 0
-          ? `Empezaste con ${first.setsCount} series y ahora hacés ${latest.setsCount} series (+${diffSets} serie${diffSets > 1 ? 's' : ''} más que cuando empezaste).`
-          : `Empezaste con ${first.setsCount} series y ahora hacés ${latest.setsCount} series.`;
+      });
 
-        cardsHtml.push(`
-          <div class="evolution-item">
-            <div class="evolution-item-top">
-              <strong>${latest.name}</strong>
-              <span class="evo-badge ${badgeClass}">${badgeText}</span>
-            </div>
-            <p class="evo-detail">${setsSentence}</p>
-          </div>
-        `);
+      if (comparableCards.length === 0 && pendingCards.length === 0) {
+        evolutionExercisesContainer.innerHTML = '<p style="color:var(--muted); font-size:13px; margin:0;">No hay ejercicios registrados en este grupo.</p>';
+        return;
       }
-    });
 
-    evolutionExercisesContainer.innerHTML = `<div class="evolution-list">${cardsHtml.join('')}</div>`;
+      let outHtml = '';
+      if (comparableCards.length > 0) {
+        outHtml += `<div class="evolution-list">${comparableCards.join('')}</div>`;
+      }
+      if (pendingCards.length > 0) {
+        outHtml += `
+          <details style="margin-top:10px; background:var(--bg); padding:10px 12px; border-radius:12px; border:1px solid var(--line);">
+            <summary style="cursor:pointer; color:var(--muted); font-size:12px; font-weight:700; outline:none;">
+              Ver ${pendingCards.length} ejercicio${pendingCards.length !== 1 ? 's' : ''} con datos insuficientes
+            </summary>
+            <div class="evolution-list" style="margin-top:10px;">${pendingCards.join('')}</div>
+          </details>
+        `;
+      }
+
+      evolutionExercisesContainer.innerHTML = outHtml;
+    }
+
+    if (evolutionGroupFilter) {
+      evolutionGroupFilter.onchange = renderFilteredExercises;
+    }
+    renderFilteredExercises();
   }
 
   // ==========================================
@@ -1281,6 +1419,8 @@
   if (saveProfileBtn) saveProfileBtn.addEventListener('click', handleSaveProfile);
 
   if (weightHead) weightHead.addEventListener('click', toggleWeightCard);
+
+  if (evolutionHead) evolutionHead.addEventListener('click', toggleEvolutionCard);
 
   if (registerWeightBtn) registerWeightBtn.addEventListener('click', openWeightModal);
   if (closeWeightModal)  closeWeightModal.addEventListener('click', closeWeightModalFn);
