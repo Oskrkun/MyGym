@@ -1200,8 +1200,15 @@
         .map(g => `<option value="${g}">${g}</option>`)
         .join('');
 
-      const hasValidPrevious = previousFilter && sortedGroups.includes(previousFilter);
-      evolutionGroupFilter.value = hasValidPrevious ? previousFilter : defaultGroup;
+      const hasValidPrevious = previousFilter && previousFilter !== 'Todos' && sortedGroups.includes(previousFilter);
+      const targetValue = hasValidPrevious ? previousFilter : defaultGroup;
+
+      evolutionGroupFilter.value = targetValue;
+
+      // Forzar el atributo selected en el <option> correspondiente por si el DOM tarda en sincronizar
+      Array.from(evolutionGroupFilter.options).forEach(opt => {
+        opt.selected = (opt.value === targetValue);
+      });
     }
 
     function renderFilteredExercises() {
