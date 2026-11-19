@@ -1190,13 +1190,18 @@
       if (entries[0] && entries[0].mainGroup) availableGroups.add(entries[0].mainGroup);
     });
 
-    const previousFilter = evolutionGroupFilter ? evolutionGroupFilter.value : 'Todos';
+    const previousFilter = evolutionGroupFilter ? evolutionGroupFilter.value : '';
     if (evolutionGroupFilter) {
-      const sortedGroups = ['Todos', ...Array.from(availableGroups).sort()];
+      const orderedGroups = Array.from(availableGroups).sort();
+      const sortedGroups = ['Todos', ...orderedGroups];
+      const defaultGroup = orderedGroups.length > 0 ? orderedGroups[0] : 'Todos';
+
       evolutionGroupFilter.innerHTML = sortedGroups
         .map(g => `<option value="${g}">${g}</option>`)
         .join('');
-      evolutionGroupFilter.value = sortedGroups.includes(previousFilter) ? previousFilter : 'Todos';
+
+      const hasValidPrevious = previousFilter && sortedGroups.includes(previousFilter);
+      evolutionGroupFilter.value = hasValidPrevious ? previousFilter : defaultGroup;
     }
 
     function renderFilteredExercises() {
