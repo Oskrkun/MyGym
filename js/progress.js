@@ -1,6 +1,6 @@
 // ==========================================
 // progress.js — Vista Progreso
-// Perfil + Peso + Heatmap + Gráfica + Modificar día pasado
+// Perfil + Peso + Heatmap + Gráfica + Evolución + Modificar día pasado
 // Depende de: core.js
 // ==========================================
 
@@ -13,47 +13,51 @@
   // 1. REFERENCIAS DOM
   // ==========================================
 
-  const progressView          = $('progressView');
+  const progressView              = $('progressView');
 
   // Perfil
-  const profileCard           = $('profileCard');
-  const profileHead           = $('profileHead');
-  const profileChevron        = $('profileChevron');
-  const profileDisplayName    = $('profileDisplayName');
-  const profileDisplayNick    = $('profileDisplayNick');
-  const profileNameInput      = $('profileName');
-  const profileNickInput      = $('profileNick');
-  const profileSexInput       = $('profileSex');
-  const profileHeightInput    = $('profileHeight');
-  const profileBirthYearInput = $('profileBirthYear');
-  const profileGoalInput      = $('profileGoal');
-  const saveProfileBtn        = $('saveProfileBtn');
+  const profileCard               = $('profileCard');
+  const profileHead               = $('profileHead');
+  const profileChevron            = $('profileChevron');
+  const profileDisplayName        = $('profileDisplayName');
+  const profileDisplayNick        = $('profileDisplayNick');
+  const profileNameInput          = $('profileName');
+  const profileNickInput          = $('profileNick');
+  const profileSexInput           = $('profileSex');
+  const profileHeightInput        = $('profileHeight');
+  const profileBirthYearInput     = $('profileBirthYear');
+  const profileGoalInput          = $('profileGoal');
+  const saveProfileBtn            = $('saveProfileBtn');
 
   // Peso
-  const weightCard            = $('weightCard');
-  const weightHead            = $('weightHead');
-  const weightChevron         = $('weightChevron');
-  const weightCurrent         = $('weightCurrent');
-  const weightLastDate        = $('weightLastDate');
-  const weightGoalMessage     = $('weightGoalMessage');
-  const registerWeightBtn     = $('registerWeightBtn');
-  const weightModal           = $('weightModal');
-  const closeWeightModal      = $('closeWeightModal');
-  const weightDateInput       = $('weightDate');
-  const weightKgInput         = $('weightKg');
-  const weightNoteInput       = $('weightNote');
-  const saveWeightBtn         = $('saveWeightBtn');
-  const weightChartContainer  = $('weightChartContainer');
+  const weightCard                = $('weightCard');
+  const weightHead                = $('weightHead');
+  const weightChevron             = $('weightChevron');
+  const weightCurrent             = $('weightCurrent');
+  const weightLastDate            = $('weightLastDate');
+  const weightGoalMessage         = $('weightGoalMessage');
+  const registerWeightBtn         = $('registerWeightBtn');
+  const weightModal               = $('weightModal');
+  const closeWeightModal          = $('closeWeightModal');
+  const weightDateInput           = $('weightDate');
+  const weightKgInput             = $('weightKg');
+  const weightNoteInput           = $('weightNote');
+  const saveWeightBtn             = $('saveWeightBtn');
+  const weightChartContainer      = $('weightChartContainer');
+
+  // Evolución
+  const evolutionFrequencyContainer = $('evolutionFrequencyContainer');
+  const evolutionExercisesContainer = $('evolutionExercisesContainer');
 
   // Historial / Heatmap
-  const historyModal          = $('historyModal');
-  const historyModalTitle     = $('historyModalTitle');
-  const historyModalContent   = $('historyModalContent');
-  const closeHistoryModal     = $('closeHistoryModal');
-  const monthLabel            = $('monthLabel');
-  const prevMonthBtn          = $('prevMonthBtn');
-  const nextMonthBtn          = $('nextMonthBtn');
-  const todayBtn              = $('todayBtn');
+  const historyModal              = $('historyModal');
+  const historyModalTitle         = $('historyModalTitle');
+  const historyModalContent       = $('historyModalContent');
+  const closeHistoryModal         = $('closeHistoryModal');
+  const monthLabel                = $('monthLabel');
+  const prevMonthBtn              = $('prevMonthBtn');
+  const nextMonthBtn              = $('nextMonthBtn');
+  const todayBtn                  = $('todayBtn');
 
   // ==========================================
   // 2. ESTADO LOCAL
@@ -91,6 +95,14 @@
     if (str === '') return false;
     const num = Number(str.replace(',', '.'));
     return !Number.isNaN(num) && num > 0;
+  }
+
+  function parsearNumero(val) {
+    if (val === undefined || val === null) return null;
+    const str = String(val).trim();
+    if (str === '') return null;
+    const num = Number(str.replace(',', '.'));
+    return Number.isNaN(num) ? null : num;
   }
 
   function esTextoNoVacio(v) {
@@ -642,6 +654,7 @@
       closeModal();
       historyModal.classList.add('hidden');
       renderHeatmap();
+      renderEvolutionSection();
     });
 
     updateRoutinePreview();
@@ -777,7 +790,6 @@
 
     let html = '';
 
-    // Bloque de peso
     if (weightEntry) {
       const kgText = `${weightEntry.kg} kg`;
       html += `
@@ -789,7 +801,6 @@
       `;
     }
 
-    // Bloque de sesión
     if (session) {
       const routineLabel = typeof nombreRutinaParaMostrar === 'function'
         ? nombreRutinaParaMostrar(session)
@@ -1006,7 +1017,264 @@
   }
 
   // ==========================================
-  // 13. LISTENERS
+  // 13. SECCIÓN EVOLUCIÓN (FRECUENCIA + EJERCICIOS)
+  // ==========================================
+
+  function extraerResumenEjercicioEnSesion(ex, dateKey) {
+    if (!ex || !ex.exerciseId) return null;
+
+    const exData = (typeof getExerciseById === 'function') ? getExerciseById(ex.exerciseId) : null;
+    const name = (exData && exData.name) || ex.name || 'Ejercicio';
+    const isCardio = !!(
+      ex.isCardio ||
+      (exData && Array.isArray(exData.groups) && exData.groups.includes('Cardio'))
+    );
+
+    if (isCardio) {
+      const completedArr = Array.isArray(ex.completed) ? ex.completed : [];
+      const anyCompleted = completedArr.length === 0 ? true : completedArr.some(Boolean);
+      const minsMatch = String(ex.cardioTime || '').match(/(\d+(?:[.,]\d+)?)/);
+      const minutes = minsMatch ? Number(minsMatch[1].replace(',', '.')) : null;
+      const speed = parsearNumero(ex.speed);
+
+      if (!anyCompleted && (!minutes || minutes <= 0)) return null;
+
+      return {
+        exerciseId: ex.exerciseId,
+        name,
+        kind: 'cardio',
+        date: dateKey,
+        minutes: minutes && minutes > 0 ? minutes : null,
+        speed: speed && speed > 0 ? speed : null,
+        setsCount: anyCompleted ? 1 : 0
+      };
+    }
+
+    const completedArr = Array.isArray(ex.completed) ? ex.completed : [];
+    const weightsArr = Array.isArray(ex.weights) ? ex.weights : [];
+    const repsArr = Array.isArray(ex.reps) ? ex.reps : [];
+    const len = Math.max(completedArr.length, weightsArr.length, repsArr.length);
+
+    let maxWeight = null;
+    let completedSets = 0;
+
+    for (let i = 0; i < len; i++) {
+      const isDone = completedArr.length > 0 ? Boolean(completedArr[i]) : true;
+      if (!isDone) continue;
+      completedSets++;
+
+      const wNum = parsearNumero(weightsArr[i]);
+      if (wNum !== null && wNum > 0) {
+        if (maxWeight === null || wNum > maxWeight) {
+          maxWeight = wNum;
+        }
+      }
+    }
+
+    if (completedSets === 0 && maxWeight === null) return null;
+
+    const isTimeExercise = (typeof esEjercicioPorTiempo === 'function')
+      ? esEjercicioPorTiempo(exData)
+      : false;
+
+    return {
+      exerciseId: ex.exerciseId,
+      name,
+      kind: isTimeExercise ? 'time' : 'strength',
+      date: dateKey,
+      maxWeight,
+      setsCount: completedSets
+    };
+  }
+
+  function renderEvolutionSection() {
+    if (!evolutionFrequencyContainer || !evolutionExercisesContainer) return;
+
+    const history = (typeof getGlobalHistory === 'function') ? getGlobalHistory() : {};
+    const validDates = Object.entries(history)
+      .filter(([k, s]) => s && (s.status === 'completed' || (Array.isArray(s.exercises) && s.exercises.some(e => (e.completed || []).some(Boolean)))))
+      .map(([k]) => k)
+      .sort();
+
+    if (validDates.length === 0) {
+      evolutionFrequencyContainer.innerHTML = '<p style="color:var(--muted); font-size:13px; margin:0;">Todavía no hay sesiones registradas para calcular frecuencia.</p>';
+      evolutionExercisesContainer.innerHTML = '<p style="color:var(--muted); font-size:13px; margin:0;">Faltan datos para métricas de ejercicios.</p>';
+      return;
+    }
+
+    const firstDateKey = validDates[0];
+    const startMs = new Date(firstDateKey + 'T00:00:00').getTime();
+    const nowMs = new Date(getTodayKey() + 'T00:00:00').getTime();
+    const elapsedDays = Math.max(1, Math.round((nowMs - startMs) / (1000 * 60 * 60 * 24)) + 1);
+    const weeks = Math.max(1, elapsedDays / 7);
+    const months = Math.max(1, elapsedDays / 30.4375);
+
+    const avgWeekly = (validDates.length / weeks).toFixed(1);
+    const avgMonthly = (validDates.length / months).toFixed(1);
+
+    evolutionFrequencyContainer.innerHTML = `
+      <div class="evolution-stats-grid">
+        <div class="evolution-stat-box">
+          <span class="evo-stat-label">Desde el inicio (${firstDateKey})</span>
+          <strong class="evo-stat-value">${validDates.length} días</strong>
+        </div>
+        <div class="evolution-stat-box">
+          <span class="evo-stat-label">Promedio semanal</span>
+          <strong class="evo-stat-value">${avgWeekly} / sem</strong>
+        </div>
+        <div class="evolution-stat-box">
+          <span class="evo-stat-label">Promedio mensual</span>
+          <strong class="evo-stat-value">${avgMonthly} / mes</strong>
+        </div>
+      </div>
+    `;
+
+    // Agrupar registros por ejercicio
+    const byExercise = new Map();
+    const sortedEntries = Object.entries(history).sort((a, b) => a[0].localeCompare(b[0]));
+
+    for (const [dateKey, session] of sortedEntries) {
+      if (!session || session.externalActivity) continue;
+
+      const mainExs = Array.isArray(session.exercises) ? session.exercises : [];
+      mainExs.forEach(ex => {
+        const entry = extraerResumenEjercicioEnSesion(ex, dateKey);
+        if (!entry) return;
+        if (!byExercise.has(entry.exerciseId)) byExercise.set(entry.exerciseId, []);
+        byExercise.get(entry.exerciseId).push(entry);
+      });
+
+      const extraExs = Array.isArray(session.extras) ? session.extras : [];
+      extraExs.forEach(ex => {
+        const entry = extraerResumenEjercicioEnSesion(ex, dateKey);
+        if (!entry) return;
+        if (!byExercise.has(entry.exerciseId)) byExercise.set(entry.exerciseId, []);
+        byExercise.get(entry.exerciseId).push(entry);
+      });
+    }
+
+    if (byExercise.size === 0) {
+      evolutionExercisesContainer.innerHTML = '<p style="color:var(--muted); font-size:13px; margin:0;">Faltan datos para métricas de ejercicios.</p>';
+      return;
+    }
+
+    const cardsHtml = [];
+
+    byExercise.forEach((entries) => {
+      if (entries.length < 2) {
+        cardsHtml.push(`
+          <div class="evolution-item">
+            <div class="evolution-item-top">
+              <strong>${entries[0].name}</strong>
+              <span class="evo-badge evo-pending">Faltan datos para métricas</span>
+            </div>
+            <p class="evo-detail">Registrado 1 vez (${entries[0].date}). Completalo en otra sesión para comparar.</p>
+          </div>
+        `);
+        return;
+      }
+
+      const first = entries[0];
+      const latest = entries[entries.length - 1];
+
+      if (latest.kind === 'cardio') {
+        if (first.minutes && latest.minutes) {
+          const diffMin = Number((latest.minutes - first.minutes).toFixed(1));
+          let badgeClass = 'evo-same';
+          let badgeText = 'Seguís igual';
+          let sentence = `Empezaste con ${first.minutes} min y ahora hacés ${latest.minutes} min (seguís igual que cuando empezaste).`;
+
+          if (diffMin > 0) {
+            badgeClass = 'evo-improved';
+            badgeText = 'Mejoraste';
+            sentence = `Empezaste con ${first.minutes} min y ahora hacés ${latest.minutes} min (+${diffMin} min más que cuando empezaste).`;
+          } else if (diffMin < 0) {
+            badgeClass = 'evo-same';
+            badgeText = 'Por debajo del inicio';
+            sentence = `Empezaste con ${first.minutes} min y ahora hacés ${latest.minutes} min (${diffMin} min respecto al inicio).`;
+          }
+
+          cardsHtml.push(`
+            <div class="evolution-item">
+              <div class="evolution-item-top">
+                <strong>${latest.name}</strong>
+                <span class="evo-badge ${badgeClass}">${badgeText}</span>
+              </div>
+              <p class="evo-detail">${sentence}</p>
+            </div>
+          `);
+        } else {
+          cardsHtml.push(`
+            <div class="evolution-item">
+              <div class="evolution-item-top">
+                <strong>${latest.name}</strong>
+                <span class="evo-badge evo-pending">Faltan datos para métricas</span>
+              </div>
+              <p class="evo-detail">Faltan tiempos válidos para comparar el inicio con hoy.</p>
+            </div>
+          `);
+        }
+        return;
+      }
+
+      // Fuerza o tiempo con peso
+      const hasWeights = first.maxWeight !== null && latest.maxWeight !== null;
+      if (hasWeights) {
+        const diffKg = Number((latest.maxWeight - first.maxWeight).toFixed(1));
+        const diffSets = latest.setsCount - first.setsCount;
+
+        let badgeClass = 'evo-same';
+        let badgeText = 'Seguís igual';
+        let sentence = `Empezaste con ${first.maxWeight} kg y ahora levantás ${latest.maxWeight} kg (seguís igual que cuando empezaste).`;
+
+        if (diffKg > 0) {
+          badgeClass = 'evo-improved';
+          badgeText = 'Mejoraste';
+          sentence = `Empezaste con ${first.maxWeight} kg y ahora levantás ${latest.maxWeight} kg (+${diffKg} kg más que cuando empezaste).`;
+        } else if (diffKg < 0) {
+          badgeClass = 'evo-same';
+          badgeText = 'Por debajo del inicio';
+          sentence = `Empezaste con ${first.maxWeight} kg y ahora levantás ${latest.maxWeight} kg (${diffKg} kg respecto al inicio).`;
+        } else if (diffSets > 0) {
+          badgeClass = 'evo-improved';
+          badgeText = 'Mejoraste';
+          sentence = `Empezaste con ${first.maxWeight} kg (${first.setsCount} series) y ahora hacés ${latest.maxWeight} kg con ${latest.setsCount} series (+${diffSets} serie${diffSets > 1 ? 's' : ''}).`;
+        }
+
+        cardsHtml.push(`
+          <div class="evolution-item">
+            <div class="evolution-item-top">
+              <strong>${latest.name}</strong>
+              <span class="evo-badge ${badgeClass}">${badgeText}</span>
+            </div>
+            <p class="evo-detail">${sentence}</p>
+          </div>
+        `);
+      } else {
+        const diffSets = latest.setsCount - first.setsCount;
+        const badgeClass = diffSets > 0 ? 'evo-improved' : 'evo-same';
+        const badgeText = diffSets > 0 ? 'Mejoraste' : 'Seguís igual';
+        const setsSentence = diffSets > 0
+          ? `Empezaste con ${first.setsCount} series y ahora hacés ${latest.setsCount} series (+${diffSets} serie${diffSets > 1 ? 's' : ''} más que cuando empezaste).`
+          : `Empezaste con ${first.setsCount} series y ahora hacés ${latest.setsCount} series.`;
+
+        cardsHtml.push(`
+          <div class="evolution-item">
+            <div class="evolution-item-top">
+              <strong>${latest.name}</strong>
+              <span class="evo-badge ${badgeClass}">${badgeText}</span>
+            </div>
+            <p class="evo-detail">${setsSentence}</p>
+          </div>
+        `);
+      }
+    });
+
+    evolutionExercisesContainer.innerHTML = `<div class="evolution-list">${cardsHtml.join('')}</div>`;
+  }
+
+  // ==========================================
+  // 14. LISTENERS
   // ==========================================
 
   if (profileHead)   profileHead.addEventListener('click', toggleProfileCard);
@@ -1066,7 +1334,7 @@
   });
 
   // ==========================================
-  // 14. API PÚBLICA
+  // 15. API PÚBLICA
   // ==========================================
 
   window.renderProgressView = function () {
@@ -1074,6 +1342,7 @@
     renderWeightCard();
     renderHeatmap();
     renderWeightChart();
+    renderEvolutionSection();
   };
 
   if (progressView && !progressView.classList.contains('hidden')) {

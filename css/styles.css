@@ -979,3 +979,78 @@ button { cursor: pointer; }
 .past-day-preview-item:last-child {
   border-bottom: none;
 }
+
+/* ====== SECCIÓN EVOLUCIÓN ====== */
+.evolution-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+@media (max-width: 480px) {
+  .evolution-stats-grid {
+    grid-template-columns: 1fr;
+  }
+}
+.evolution-stat-box {
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.evo-stat-label {
+  font-size: 11px;
+  color: var(--muted);
+}
+.evo-stat-value {
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--accent);
+}
+.evolution-list {
+  display: grid;
+  gap: 10px;
+}
+.evolution-item {
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 12px;
+}
+.evolution-item-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.evolution-item-top strong {
+  font-size: 14px;
+  color: var(--text);
+}
+.evo-badge {
+  font-size: 11px;
+  font-weight: 800;
+  padding: 3px 8px;
+  border-radius: 999px;
+}
+.evo-improved {
+  background: rgba(34, 197, 94, 0.16);
+  color: var(--success);
+}
+.evo-same {
+  background: rgba(234, 179, 8, 0.15);
+  color: var(--warning);
+}
+.evo-pending {
+  background: rgba(142, 148, 157, 0.16);
+  color: var(--muted);
+}
+.evo-detail {
+  margin: 6px 0 0;
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.4;
+}
