@@ -1,5 +1,5 @@
 // ==========================================
-// admin.js — Panel de administración + Backup JSON + Días de descanso
+// admin.js — Panel de administración + Backup JSON + Días de descanso + Paleta
 // Depende de: core.js
 // ==========================================
 
@@ -9,6 +9,102 @@
 
 let editingRoutineIndex = -1;
 let tempExercises = [];
+
+const PALETTES = [
+  {
+    id: 'verdes',
+    name: 'Verdes',
+    squares: ['#22c55e', '#10b981', '#064e3b'],
+    vars: {
+      '--bg': '#09110d',
+      '--card': '#111d17',
+      '--card-2': '#182920',
+      '--text': '#f0fdf4',
+      '--muted': '#8ba898',
+      '--line': '#243b2f',
+      '--accent': '#22c55e',
+      '--accent-dark': '#16a34a',
+      '--violet': '#34d399',
+      '--violet-dark': '#059669',
+      '--rest-day': '#132019'
+    }
+  },
+  {
+    id: 'azul',
+    name: 'Azul',
+    squares: ['#38bdf8', '#2563eb', '#1e3a8a'],
+    vars: {
+      '--bg': '#090e16',
+      '--card': '#111927',
+      '--card-2': '#182438',
+      '--text': '#f0f7ff',
+      '--muted': '#8da2be',
+      '--line': '#25354d',
+      '--accent': '#38bdf8',
+      '--accent-dark': '#0284c7',
+      '--violet': '#60a5fa',
+      '--violet-dark': '#2563eb',
+      '--rest-day': '#131d2c'
+    }
+  },
+  {
+    id: 'lime_negro',
+    name: 'Lima y Negro (Base)',
+    squares: ['#b8ff35', '#0c0d0f', '#a78bfa'],
+    vars: {
+      '--bg': '#0c0d0f',
+      '--card': '#17191d',
+      '--card-2': '#202329',
+      '--text': '#f4f5f6',
+      '--muted': '#8e949d',
+      '--line': '#30343b',
+      '--accent': '#b8ff35',
+      '--accent-dark': '#8fc91e',
+      '--violet': '#a78bfa',
+      '--violet-dark': '#7c5cf0',
+      '--rest-day': '#1a1d22'
+    }
+  },
+  {
+    id: 'rosa',
+    name: 'Rosa',
+    squares: ['#f472b6', '#ec4899', '#fbcfe8'],
+    vars: {
+      '--bg': '#120a0f',
+      '--card': '#1f121a',
+      '--card-2': '#2c1925',
+      '--text': '#fdf2f8',
+      '--muted': '#b38fa3',
+      '--line': '#422637',
+      '--accent': '#f472b6',
+      '--accent-dark': '#db2777',
+      '--violet': '#fb7185',
+      '--violet-dark': '#e11d48',
+      '--rest-day': '#23141d'
+    }
+  },
+  {
+    id: 'violeta',
+    name: 'Violeta',
+    squares: ['#a78bfa', '#7c3aed', '#ddd6fe'],
+    vars: {
+      '--bg': '#0d0a14',
+      '--card': '#171224',
+      '--card-2': '#221a33',
+      '--text': '#f5f3ff',
+      '--muted': '#9e92b8',
+      '--line': '#34294d',
+      '--accent': '#a78bfa',
+      '--accent-dark': '#7c3aed',
+      '--violet': '#c084fc',
+      '--violet-dark': '#9333ea',
+      '--rest-day': '#1b1529'
+    }
+  }
+];
+
+const PALETTE_STORAGE_KEY = 'migym_theme_palette';
+let selectedPaletteId = 'lime_negro';
 
 
 // ==========================================
@@ -29,6 +125,9 @@ const addRoutineBtn        = $('addRoutineBtn');
 
 const restInput = $('restInput');
 const saveRest  = $('saveRest');
+
+const paletteOptions = $('paletteOptions');
+const savePaletteBtn = $('savePaletteBtn');
 
 const saveRestDaysBtn = $('saveRestDaysBtn');
 
@@ -112,7 +211,6 @@ function openRoutineForm(idx = -1) {
 }
 
 function populateExerciseSelector(tipo) {
-  // Rellenar el dropdown de tipos (solo si está vacío)
   if (routineExerciseType && routineExerciseType.options.length === 0) {
     routineExerciseType.innerHTML = '';
     getTiposDeEjercicio().forEach(t => {
@@ -246,12 +344,12 @@ submitRoutine.addEventListener('click', () => {
 cancelRoutine.addEventListener('click', () => { routineForm.classList.add('hidden'); });
 addRoutineBtn.addEventListener('click', () => openRoutineForm());
 
-// Listener: cambio de tipo en el formulario de rutina
 if (routineExerciseType) {
   routineExerciseType.addEventListener('change', () => {
     populateExerciseSelector(routineExerciseType.value);
   });
 }
+
 
 // ==========================================
 // 4. TIEMPO DE DESCANSO
@@ -271,7 +369,92 @@ saveRest.addEventListener('click', () => {
 
 
 // ==========================================
-// 5. DÍAS DE DESCANSO
+// 5. PALETA DE COLORES
+// ==========================================
+
+function findPaletteById(id) {
+  return PALETTES.find(p => p.id === id) || PALETTES.find(p => p.id === 'lime_negro');
+}
+
+function applyPalette(paletteId) {
+  const palette = findPaletteById(paletteId);
+  const root = document.documentElement;
+  Object.entries(palette.vars).forEach(([prop, val]) => {
+    root.style.setProperty(prop, val);
+  });
+  selectedPaletteId = palette.id;
+
+  if (paletteOptions) {
+    paletteOptions.querySelectorAll('.palette-row').forEach(row => {
+      const isSelected = row.dataset.palette === palette.id;
+      row.classList.toggle('active', isSelected);
+      const checkEl = row.querySelector('.palette-check');
+      if (checkEl) checkEl.textContent = isSelected ? '[✓]' : '[ ]';
+    });
+  }
+}
+
+function getSavedPaletteId() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(PALETTE_STORAGE_KEY));
+    if (saved && saved.id && PALETTES.some(p => p.id === saved.id)) return saved.id;
+    if (typeof saved === 'string' && PALETTES.some(p => p.id === saved)) return saved;
+  } catch {
+    const raw = localStorage.getItem(PALETTE_STORAGE_KEY);
+    if (raw && PALETTES.some(p => p.id === raw)) return raw;
+  }
+  return 'lime_negro';
+}
+
+function renderPaletteOptions() {
+  if (!paletteOptions) return;
+  paletteOptions.innerHTML = '';
+
+  PALETTES.forEach(p => {
+    const isSelected = p.id === selectedPaletteId;
+    const row = document.createElement('button');
+    row.type = 'button';
+    row.className = 'palette-row' + (isSelected ? ' active' : '');
+    row.dataset.palette = p.id;
+    row.innerHTML = `
+      <span class="palette-check">${isSelected ? '[✓]' : '[ ]'}</span>
+      <span class="palette-squares">
+        ${p.squares.map(c => `<span class="palette-square" style="background:${c};"></span>`).join('')}
+      </span>
+      <span>${p.name}</span>
+    `;
+    row.addEventListener('click', () => {
+      applyPalette(p.id);
+    });
+    paletteOptions.appendChild(row);
+  });
+}
+
+if (savePaletteBtn) {
+  savePaletteBtn.addEventListener('click', () => {
+    const palette = findPaletteById(selectedPaletteId);
+    localStorage.setItem(PALETTE_STORAGE_KEY, JSON.stringify({
+      id: palette.id,
+      name: palette.name
+    }));
+    applyPalette(palette.id);
+    if (typeof window.renderProgressView === 'function') {
+      const pv = document.getElementById('progressView');
+      if (pv && !pv.classList.contains('hidden')) {
+        window.renderProgressView();
+      }
+    }
+    alert(`Paleta "${palette.name}" guardada.`);
+  });
+}
+
+selectedPaletteId = getSavedPaletteId();
+applyPalette(selectedPaletteId);
+renderPaletteOptions();
+
+
+// ==========================================
+// 6. DÍAS DE DESCANSO
 // ==========================================
 
 function renderRestDays() {
@@ -291,7 +474,6 @@ saveRestDaysBtn.addEventListener('click', () => {
   saveRestDays(selected);
   alert('Días de descanso guardados. Los cambios solo afectan a los días nuevos.');
   if (typeof window.renderProgressView === 'function') {
-    // Si la vista progreso está visible, redibujamos el heatmap
     const pv = document.getElementById('progressView');
     if (pv && !pv.classList.contains('hidden')) {
       window.renderProgressView();
@@ -299,12 +481,11 @@ saveRestDaysBtn.addEventListener('click', () => {
   }
 });
 
-// Render inicial
 renderRestDays();
 
 
 // ==========================================
-// 6. EXPORT / IMPORT JSON
+// 7. EXPORT / IMPORT JSON
 // ==========================================
 
 btnExportar.addEventListener('click', () => {
@@ -316,7 +497,6 @@ btnExportar.addEventListener('click', () => {
   const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(backup, null, 2));
   const downloadAnchor = document.createElement('a');
   downloadAnchor.setAttribute("href", dataStr);
-  // 👇 fecha local en vez de UTC
   const d = new Date();
   const fecha = [
     d.getFullYear(),
@@ -356,7 +536,12 @@ inputImportar.addEventListener('change', (event) => {
 
 
 // ==========================================
-// 7. API PÚBLICA
+// 8. API PÚBLICA
 // ==========================================
 
 window.renderAdminRoutines = renderAdminRoutines;
+window.applySavedPalette = function () {
+  const id = getSavedPaletteId();
+  applyPalette(id);
+  renderPaletteOptions();
+};
