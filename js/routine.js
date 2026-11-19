@@ -53,12 +53,11 @@ const cancelReplaceBtn        = $('cancelReplaceBtn');
 
 
 // ==========================================
-// 3. UTILIDADES DE SELECTORES
+// 3. UTILIDADES DE SELECTORES Y VALIDACIÓN
 // ==========================================
 
 function populateTypeSelector(selectEl, selected) {
   selectEl.innerHTML = '';
-  // 👇 opción placeholder
   const placeholder = document.createElement('option');
   placeholder.value = '';
   placeholder.textContent = 'Elegir tipo...';
@@ -73,13 +72,11 @@ function populateTypeSelector(selectEl, selected) {
     selectEl.appendChild(opt);
   });
 
-  // Si no hay selección, dejamos el placeholder seleccionado
   if (!selected) selectEl.value = '';
 }
 
 function populateExerciseSelectorByType(selectEl, tipo, excludeId) {
   selectEl.innerHTML = '';
-  // 👇 opción placeholder
   const placeholder = document.createElement('option');
   placeholder.value = '';
   placeholder.textContent = 'Elegir ejercicio...';
@@ -102,104 +99,116 @@ function populateExerciseSelectorByType(selectEl, tipo, excludeId) {
     selectEl.appendChild(opt);
   });
 
-  // Dejamos el placeholder seleccionado por defecto
   selectEl.value = '';
+}
+
+function esPesoValido(valor) {
+  if (valor === undefined || valor === null) return false;
+  const limpio = String(valor).trim();
+  if (limpio === '') return false;
+  const num = Number(limpio.replace(',', '.'));
+  if (!Number.isNaN(num) && num <= 0) return false;
+  return true;
+}
+
+function esValorNoVacio(valor) {
+  if (valor === undefined || valor === null) return false;
+  return String(valor).trim() !== '';
 }
 
 
 // ==========================================
-// 4. HELPERS DE FALLBACK
+// 4. HELPERS DE REFERENCIA POR EJERCICIO
 // ==========================================
 
-/**
- * Para un ejercicio dentro de una sesión, devuelve el peso a usar en una serie dada:
- * 1. El peso de la MISMA serie en la sesión anterior (si existe).
- * 2. El último peso válido (no vacío) de esa sesión anterior.
- * 3. '' si no hay nada.
- */
-function resolverPesoSerie(exState, currentExerciseId, exerciseName, setIndex, lastSession, lastExerciseData, routineId, routineName) {
-  const currentWeight = exState.weights[setIndex] || '';
-  if (currentWeight && String(currentWeight).trim() !== '') return currentWeight;
+function getRefEjercicio(exerciseId) {
+  if (typeof getUltimaReferenciaEjercicio === 'function') {
+    return getUltimaReferenciaEjercicio(exerciseId);
+  }
+  return null;
+}
 
-  // 1. Misma serie de la última sesión
-  if (lastExerciseData && Array.isArray(lastExerciseData.weights)) {
-    const wPrev = lastExerciseData.weights[setIndex];
-    if (wPrev !== undefined && wPrev !== null && String(wPrev).trim() !== '') {
-      return String(wPrev);
+function resolverPesoSerie(exState, currentExerciseId, exerciseName, setIndex, lastSession, lastExerciseData, routineId, routineName) {
+  const currentWeight = exState.weights[setIndex];
+  if (esPesoValido(currentWeight)) return String(currentWeight).trim();
+
+  const ref = getRefEjercicio(currentExerciseId);
+  if (ref) {
+    if (Array.isArray(ref.sets) && ref.sets[setIndex] && esPesoValido(ref.sets[setIndex].weight)) {
+      return String(ref.sets[setIndex].weight).trim();
+    }
+    if (esPesoValido(ref.lastWeight)) {
+      return String(ref.lastWeight).trim();
     }
   }
 
-  // 2. Último peso válido de la última sesión
-  if (lastSession) {
-    const fallback = getUltimoPesoValidoEnSesion(lastSession, currentExerciseId, exerciseName);
-    if (fallback) return fallback;
+  if (lastExerciseData && Array.isArray(lastExerciseData.weights)) {
+    const wPrev = lastExerciseData.weights[setIndex];
+    if (esPesoValido(wPrev)) return String(wPrev).trim();
   }
 
-  // 3. Último peso válido en cualquier sesión anterior de esta rutina
+  if (lastSession) {
+    const fallback = getUltimoPesoValidoEnSesion(lastSession, currentExerciseId, exerciseName);
+    if (esPesoValido(fallback)) return String(fallback).trim();
+  }
+
   if (routineId !== undefined && routineName) {
     const fallbackViejo = getUltimoPesoValidoEnRutina(routineId, routineName, currentExerciseId, exerciseName);
-    if (fallbackViejo) return fallbackViejo;
+    if (esPesoValido(fallbackViejo)) return String(fallbackViejo).trim();
   }
 
   return '';
 }
 
-/**
- * Para un ejercicio por tiempo: devuelve el valor del input de tiempo.
- * Se guarda en el campo "reps" (histórico).
- */
 function resolverTiempoSerie(exState, currentExerciseId, exerciseName, setIndex, lastSession, lastExerciseData, routineId, routineName) {
-  const current = exState.reps[setIndex] || '';
-  if (current && String(current).trim() !== '') return current;
+  const current = exState.reps[setIndex];
+  if (esValorNoVacio(current)) return String(current).trim();
 
-  // 1. Misma serie de la última sesión
+  const ref = getRefEjercicio(currentExerciseId);
+  if (ref) {
+    if (Array.isArray(ref.sets) && ref.sets[setIndex] && esValorNoVacio(ref.sets[setIndex].reps)) {
+      return String(ref.sets[setIndex].reps).trim();
+    }
+    if (esValorNoVacio(ref.lastReps)) {
+      return String(ref.lastReps).trim();
+    }
+  }
+
   if (lastExerciseData && Array.isArray(lastExerciseData.reps)) {
     const tPrev = lastExerciseData.reps[setIndex];
-    if (tPrev !== undefined && tPrev !== null && String(tPrev).trim() !== '') {
-      return String(tPrev);
-    }
+    if (esValorNoVacio(tPrev)) return String(tPrev).trim();
   }
 
-  // 2. Último tiempo válido de la última sesión
   if (lastSession) {
     const fallback = getUltimasRepsValidasEnSesion(lastSession, currentExerciseId, exerciseName);
-    if (fallback) return fallback;
+    if (esValorNoVacio(fallback)) return String(fallback).trim();
   }
 
-  // 3. Último tiempo válido en cualquier sesión anterior de esta rutina
-  if (routineId !== undefined && routineName) {
-    const history = getGlobalHistory();
-    const keys = Object.keys(history).sort().reverse();
-    for (const key of keys) {
-      const session = history[key];
-      if (!session) continue;
-      if (session.routineId !== routineId && session.routineName !== routineName) continue;
-      const ex = findExerciseInSession(session.exercises || [], currentExerciseId, exerciseName);
-      if (!ex || !Array.isArray(ex.reps)) continue;
-      for (let i = ex.reps.length - 1; i >= 0; i--) {
-        const r = ex.reps[i];
-        if (r !== undefined && r !== null && String(r).trim() !== '') return String(r);
-      }
-    }
-  }
-
-  return '60'; // default: 60 segundos
+  return '60';
 }
 
 function resolverRepsSerie(exState, ex, setIndex, lastSession, lastExerciseData, currentExerciseId, exerciseName) {
-  const currentReps = exState.reps[setIndex] || '';
-  if (currentReps && String(currentReps).trim() !== '') return currentReps;
+  const currentReps = exState.reps[setIndex];
+  if (esValorNoVacio(currentReps)) return String(currentReps).trim();
+
+  const ref = getRefEjercicio(currentExerciseId);
+  if (ref) {
+    if (Array.isArray(ref.sets) && ref.sets[setIndex] && esValorNoVacio(ref.sets[setIndex].reps)) {
+      return String(ref.sets[setIndex].reps).trim();
+    }
+    if (esValorNoVacio(ref.lastReps)) {
+      return String(ref.lastReps).trim();
+    }
+  }
 
   if (lastExerciseData && Array.isArray(lastExerciseData.reps)) {
     const rPrev = lastExerciseData.reps[setIndex];
-    if (rPrev !== undefined && rPrev !== null && String(rPrev).trim() !== '') {
-      return String(rPrev);
-    }
+    if (esValorNoVacio(rPrev)) return String(rPrev).trim();
   }
 
   if (lastSession) {
     const fallback = getUltimasRepsValidasEnSesion(lastSession, currentExerciseId, exerciseName);
-    if (fallback) return fallback;
+    if (esValorNoVacio(fallback)) return String(fallback).trim();
   }
 
   return String(ex.reps || DEFAULT_REPS);
@@ -214,16 +223,26 @@ function asignarEjercicioAExtra(extraIdx, exerciseId) {
   const exData = getExerciseById(exerciseId);
   if (!exData) return;
 
-  const lastWeight = getPesoDeUltimaSesion(exerciseId);
-  const lastReps = getRepsDeUltimaSesion(exerciseId);
+  const ref = getRefEjercicio(exerciseId);
 
   state.extras[extraIdx].exerciseId = exerciseId;
   state.extras[extraIdx].name = exData.name;
-  state.extras[extraIdx].sets = [{
-    weight: lastWeight !== null ? String(lastWeight) : '',
-    reps: lastReps !== null ? String(lastReps) : String(DEFAULT_REPS),
-    completed: false
-  }];
+
+  if (ref && Array.isArray(ref.sets) && ref.sets.length > 0) {
+    state.extras[extraIdx].sets = ref.sets.map(s => ({
+      weight: esPesoValido(s.weight) ? String(s.weight).trim() : '',
+      reps: esValorNoVacio(s.reps) ? String(s.reps).trim() : String(DEFAULT_REPS),
+      completed: false
+    }));
+  } else {
+    const lastWeight = getPesoDeUltimaSesion(exerciseId);
+    const lastReps = getRepsDeUltimaSesion(exerciseId);
+    state.extras[extraIdx].sets = [{
+      weight: esPesoValido(lastWeight) ? String(lastWeight).trim() : '',
+      reps: esValorNoVacio(lastReps) ? String(lastReps).trim() : String(DEFAULT_REPS),
+      completed: false
+    }];
+  }
 
   saveDayState(currentRoutineId, state);
   renderUser();
@@ -288,14 +307,27 @@ function renderUser() {
       );
     }
 
+    const ref = getRefEjercicio(currentExerciseId);
+
     const card = document.createElement('article');
     card.className = `exercise-card${exState.collapsed ? ' collapsed' : ''}${allDone ? ' completed-exercise' : ''}`;
     card.dataset.exerciseIndex = idx;
 
     const showImageBtn = images.length > 1;
     const numSets = exState.completed.length;
+
+    const displayCardioTime = esValorNoVacio(exState.cardioTime)
+      ? String(exState.cardioTime).trim()
+      : ((ref && esValorNoVacio(ref.cardioTime)) ? String(ref.cardioTime).trim() : (ex.time || '15 min'));
+    const displayCardioSpeed = (exState.speed !== undefined && exState.speed !== null && String(exState.speed).trim() !== '')
+      ? exState.speed
+      : ((ref && ref.speed !== undefined) ? ref.speed : (ex.speed || 0));
+    const displayCardioIncline = (exState.incline !== undefined && exState.incline !== null && String(exState.incline).trim() !== '')
+      ? exState.incline
+      : ((ref && ref.incline !== undefined) ? ref.incline : (ex.incline || 0));
+
     const subtitleText = isCardio
-      ? `Duración: ${exState.cardioTime || ex.time || '15 min'}`
+      ? `Duración: ${displayCardioTime}`
       : `${numSets} serie${numSets !== 1 ? 's' : ''} · ${ex.reps} repeticiones base`;
 
     let cardioHtml = '';
@@ -304,15 +336,15 @@ function renderUser() {
         <div style="display:flex; gap:12px; margin-top:10px; padding:10px; background:var(--bg); border-radius:10px; flex-wrap:wrap;">
           <div style="flex:1; min-width:110px;">
             <label for="cardioTime_${idx}" style="font-size:11px; color:var(--muted);">Tiempo realizado</label>
-            <input type="text" id="cardioTime_${idx}" name="cardioTime_${idx}" class="weight-input cardio-time" data-exercise="${idx}" value="${exState.cardioTime || ex.time || '15 min'}" placeholder="0 min" style="width:100%; margin-top:4px;" />
+            <input type="text" id="cardioTime_${idx}" name="cardioTime_${idx}" class="weight-input cardio-time" data-exercise="${idx}" value="${displayCardioTime}" placeholder="0 min" style="width:100%; margin-top:4px;" />
           </div>
           <div style="flex:1; min-width:90px;">
             <label for="cardioSpeed_${idx}" style="font-size:11px; color:var(--muted);">Velocidad</label>
-            <input type="number" id="cardioSpeed_${idx}" name="cardioSpeed_${idx}" class="weight-input cardio-speed" data-exercise="${idx}" value="${exState.speed || 0}" style="width:100%; margin-top:4px;" />
+            <input type="number" id="cardioSpeed_${idx}" name="cardioSpeed_${idx}" class="weight-input cardio-speed" data-exercise="${idx}" value="${displayCardioSpeed}" style="width:100%; margin-top:4px;" />
           </div>
           <div style="flex:1; min-width:90px;">
             <label for="cardioIncline_${idx}" style="font-size:11px; color:var(--muted);">Inclinación</label>
-            <input type="number" id="cardioIncline_${idx}" name="cardioIncline_${idx}" class="weight-input cardio-incline" data-exercise="${idx}" value="${exState.incline || 0}" style="width:100%; margin-top:4px;" />
+            <input type="number" id="cardioIncline_${idx}" name="cardioIncline_${idx}" class="weight-input cardio-incline" data-exercise="${idx}" value="${displayCardioIncline}" style="width:100%; margin-top:4px;" />
           </div>
         </div>
       `;
@@ -374,7 +406,6 @@ function renderUser() {
             `;
           }
 
-          // Ejercicio normal (peso + reps)
           const displayedWeight = resolverPesoSerie(
             exState, currentExerciseId, exerciseData.name, setIndex, lastSession, lastExerciseData,
             routine.id, routine.name
@@ -383,11 +414,11 @@ function renderUser() {
             exState, ex, setIndex, lastSession, lastExerciseData, currentExerciseId, exerciseData.name
           );
 
-          const lastWeight = lastExerciseData && lastExerciseData.weights
-            ? lastExerciseData.weights[setIndex]
-            : null;
+          const hintWeight = (ref && Array.isArray(ref.sets) && ref.sets[setIndex] && esPesoValido(ref.sets[setIndex].weight))
+            ? String(ref.sets[setIndex].weight).trim()
+            : (ref && esPesoValido(ref.lastWeight) ? String(ref.lastWeight).trim() : null);
           const currentWeight = exState.weights[setIndex] || '';
-          const showHint = !isCardio && lastWeight && String(lastWeight).trim() !== '' && String(lastWeight) !== currentWeight;
+          const showHint = !isCardio && hintWeight && String(hintWeight) !== String(currentWeight);
 
           return `
           <div class="set-row ${checked ? 'checked' : ''}" data-exercise="${idx}" data-set="${setIndex}">
@@ -401,8 +432,8 @@ function renderUser() {
                   <span class="set-times">×</span>
                   <input class="weight-input set-reps-input" id="reps_${idx}_${setIndex}" data-exercise="${idx}" data-set="${setIndex}" placeholder="reps" value="${displayedReps}" />
                 </div>
-                ${showHint ? `<span class="last-weight-hint">Última vez: ${lastWeight} kg</span>` : ''}
-              ` : `<small>Tiempo objetivo: ${ex.time || '15 min'}</small>`}
+                ${showHint ? `<span class="last-weight-hint">Última vez: ${hintWeight} kg</span>` : ''}
+              ` : `<small>Tiempo objetivo: ${displayCardioTime}</small>`}
             </div>
             <button type="button" class="remove-set-btn" data-exercise="${idx}" data-set="${setIndex}" aria-label="Eliminar serie">✕</button>
             <span class="set-state">${checked ? 'COMPLETADA' : 'PENDIENTE'}</span>
@@ -423,14 +454,12 @@ function renderUser() {
   progressPercent.textContent = percent + '%';
   finishCard.classList.toggle('hidden', percent !== 100);
 
-  // Mostrar/ocultar extras: solo si está al 100%
   if (percent === 100 && totalSets > 0) {
     extrasActions.classList.remove('hidden');
   } else {
     extrasActions.classList.add('hidden');
   }
 
-  // El botón de terminar siempre está visible y el texto cambia según el progreso
   if (finishRoutineBtn) {
     if (percent === 100 && totalSets > 0) {
       finishRoutineBtn.textContent = '✓ Finalizar rutina';
@@ -476,27 +505,46 @@ function renderUser() {
     });
   });
 
-  // Inputs de peso, reps y tiempo
+  // Inputs de peso, reps, tiempo y cardio
   exerciseList.querySelectorAll('.weight-input').forEach(input => {
     input.addEventListener('input', (e) => {
       const exIdx = Number(e.target.dataset.exercise);
+      const val = e.target.value;
+
       if (e.target.classList.contains('cardio-time')) {
-        state.exercises[exIdx].cardioTime = e.target.value;
+        if (esValorNoVacio(val)) {
+          state.exercises[exIdx].cardioTime = String(val).trim();
+          saveDayState(currentRoutineId, state);
+        }
       } else if (e.target.classList.contains('cardio-speed')) {
-        state.exercises[exIdx].speed = e.target.value;
+        if (esValorNoVacio(val)) {
+          state.exercises[exIdx].speed = val;
+          saveDayState(currentRoutineId, state);
+        }
       } else if (e.target.classList.contains('cardio-incline')) {
-        state.exercises[exIdx].incline = e.target.value;
+        if (esValorNoVacio(val)) {
+          state.exercises[exIdx].incline = val;
+          saveDayState(currentRoutineId, state);
+        }
       } else if (e.target.classList.contains('set-time-input')) {
         const setIdx = Number(e.target.dataset.set);
-        state.exercises[exIdx].reps[setIdx] = e.target.value;
+        if (esValorNoVacio(val)) {
+          state.exercises[exIdx].reps[setIdx] = String(val).trim();
+          saveDayState(currentRoutineId, state);
+        }
       } else if (e.target.classList.contains('set-reps-input')) {
         const setIdx = Number(e.target.dataset.set);
-        state.exercises[exIdx].reps[setIdx] = e.target.value;
+        if (esValorNoVacio(val)) {
+          state.exercises[exIdx].reps[setIdx] = String(val).trim();
+          saveDayState(currentRoutineId, state);
+        }
       } else if (e.target.classList.contains('set-weight-input')) {
         const setIdx = Number(e.target.dataset.set);
-        state.exercises[exIdx].weights[setIdx] = e.target.value;
+        if (esPesoValido(val)) {
+          state.exercises[exIdx].weights[setIdx] = String(val).trim();
+          saveDayState(currentRoutineId, state);
+        }
       }
-      saveDayState(currentRoutineId, state);
     });
     input.addEventListener('click', (e) => e.stopPropagation());
   });
@@ -531,12 +579,22 @@ function renderUser() {
       const exState = state.exercises[exIdx];
       const lastIdx = exState.completed.length - 1;
 
-      const lastWeight = lastIdx >= 0 ? exState.weights[lastIdx] : '';
-      const lastReps = lastIdx >= 0 ? exState.reps[lastIdx] : String(routine.exercises[exIdx].reps || DEFAULT_REPS);
+      const currentExId = exState.currentExerciseId !== undefined
+        ? exState.currentExerciseId
+        : routine.exercises[exIdx].exerciseId;
+      const ref = getRefEjercicio(currentExId);
+
+      const rawWeight = lastIdx >= 0 && esPesoValido(exState.weights[lastIdx])
+        ? String(exState.weights[lastIdx]).trim()
+        : (ref && esPesoValido(ref.lastWeight) ? String(ref.lastWeight).trim() : '');
+
+      const rawReps = lastIdx >= 0 && esValorNoVacio(exState.reps[lastIdx])
+        ? String(exState.reps[lastIdx]).trim()
+        : (ref && esValorNoVacio(ref.lastReps) ? String(ref.lastReps).trim() : String(routine.exercises[exIdx].reps || DEFAULT_REPS));
 
       exState.completed.push(false);
-      exState.weights.push(lastWeight || '');
-      exState.reps.push(lastReps || String(DEFAULT_REPS));
+      exState.weights.push(rawWeight);
+      exState.reps.push(rawReps);
 
       saveDayState(currentRoutineId, state);
       renderUser();
@@ -693,10 +751,8 @@ function renderExtras() {
     if (!exerciseData) {
       const typeSel = card.querySelector('.extra-type-select');
       const exSel = card.querySelector('.extra-ex-select');
-      // Ambos arrancan vacíos, el usuario debe elegir explícitamente
       populateTypeSelector(typeSel, '');
       populateExerciseSelectorByType(exSel, 'Todos');
-      // El selector de ejercicio queda deshabilitado hasta elegir un tipo
       exSel.disabled = true;
     }
   });
@@ -719,7 +775,6 @@ function renderExtras() {
       const extraIdx = Number(sel.dataset.extra);
       const exSel = extrasList.querySelector(`.extra-ex-select[data-extra="${extraIdx}"]`);
       if (!sel.value) {
-        // No eligió tipo todavía
         exSel.disabled = true;
         exSel.innerHTML = '<option value="">Elegir ejercicio...</option>';
         return;
@@ -744,10 +799,20 @@ function renderExtras() {
     btn.addEventListener('click', () => {
       const extraIdx = Number(btn.dataset.extra);
       const extra = state.extras[extraIdx];
-      const last = extra.sets[extra.sets.length - 1] || { weight: '', reps: String(DEFAULT_REPS) };
+      const ref = getRefEjercicio(extra.exerciseId);
+      const last = extra.sets[extra.sets.length - 1] || {};
+
+      const nextWeight = esPesoValido(last.weight)
+        ? String(last.weight).trim()
+        : (ref && esPesoValido(ref.lastWeight) ? String(ref.lastWeight).trim() : '');
+
+      const nextReps = esValorNoVacio(last.reps)
+        ? String(last.reps).trim()
+        : (ref && esValorNoVacio(ref.lastReps) ? String(ref.lastReps).trim() : String(DEFAULT_REPS));
+
       extra.sets.push({
-        weight: last.weight || '',
-        reps: last.reps || String(DEFAULT_REPS),
+        weight: nextWeight,
+        reps: nextReps,
         completed: false
       });
       saveDayState(currentRoutineId, state);
@@ -783,19 +848,29 @@ function renderExtras() {
     });
   });
 
-  // Editar peso/reps/tiempo del extra
+  // Editar peso/reps/tiempo del extra (ignora vacío, nulo o <= 0 para peso)
   extrasList.querySelectorAll('.extra-weight, .extra-reps, .extra-time').forEach(input => {
     input.addEventListener('input', (e) => {
       const extraIdx = Number(e.target.dataset.extra);
       const setIdx = Number(e.target.dataset.set);
+      const val = e.target.value;
+
       if (e.target.classList.contains('extra-weight')) {
-        state.extras[extraIdx].sets[setIdx].weight = e.target.value;
+        if (esPesoValido(val)) {
+          state.extras[extraIdx].sets[setIdx].weight = String(val).trim();
+          saveDayState(currentRoutineId, state);
+        }
       } else if (e.target.classList.contains('extra-time')) {
-        state.extras[extraIdx].sets[setIdx].reps = e.target.value;
+        if (esValorNoVacio(val)) {
+          state.extras[extraIdx].sets[setIdx].reps = String(val).trim();
+          saveDayState(currentRoutineId, state);
+        }
       } else {
-        state.extras[extraIdx].sets[setIdx].reps = e.target.value;
+        if (esValorNoVacio(val)) {
+          state.extras[extraIdx].sets[setIdx].reps = String(val).trim();
+          saveDayState(currentRoutineId, state);
+        }
       }
-      saveDayState(currentRoutineId, state);
     });
     input.addEventListener('click', (e) => e.stopPropagation());
   });
@@ -862,9 +937,38 @@ confirmReplaceBtn.addEventListener('click', () => {
   const routines = getRoutines();
   const routine = routines.find(r => r.id === currentRoutineId);
   const originalId = routine.exercises[exIdx].exerciseId;
+  const baseEx = routine.exercises[exIdx] || {};
+  const newExData = getExerciseById(newId);
+
+  const ref = getRefEjercicio(newId);
 
   state.exercises[exIdx].currentExerciseId = newId;
   state.exercises[exIdx].replacedFrom = originalId;
+
+  if (ref && ref.isCardio) {
+    state.exercises[exIdx].completed = [false];
+    state.exercises[exIdx].weights = [''];
+    state.exercises[exIdx].reps = [''];
+    state.exercises[exIdx].cardioTime = esValorNoVacio(ref.cardioTime) ? String(ref.cardioTime).trim() : (baseEx.time || '15 min');
+    state.exercises[exIdx].speed = ref.speed !== undefined ? ref.speed : 0;
+    state.exercises[exIdx].incline = ref.incline !== undefined ? ref.incline : 0;
+    state.exercises[exIdx].collapsed = false;
+  } else if (ref && Array.isArray(ref.sets) && ref.sets.length > 0) {
+    const count = ref.sets.length;
+    state.exercises[exIdx].completed = Array(count).fill(false);
+    state.exercises[exIdx].weights = ref.sets.map(s => esPesoValido(s.weight) ? String(s.weight).trim() : '');
+    state.exercises[exIdx].reps = ref.sets.map(s => esValorNoVacio(s.reps) ? String(s.reps).trim() : String(baseEx.reps || DEFAULT_REPS));
+    state.exercises[exIdx].collapsed = false;
+  } else if (newExData && (newExData.groups || []).includes('Cardio')) {
+    state.exercises[exIdx].completed = [false];
+    state.exercises[exIdx].weights = [''];
+    state.exercises[exIdx].reps = [''];
+    state.exercises[exIdx].cardioTime = baseEx.time || '15 min';
+    state.exercises[exIdx].speed = baseEx.speed || 0;
+    state.exercises[exIdx].incline = baseEx.incline || 0;
+    state.exercises[exIdx].collapsed = false;
+  }
+
   saveDayState(currentRoutineId, state);
 
   replaceExerciseModal.classList.add('hidden');
@@ -900,9 +1004,6 @@ function completeRoutineAndAdvance(isSuccess) {
     ? (currentStateData.extras || []).filter(e => e.exerciseId && e.sets.length > 0)
     : [];
 
-  // Última sesión de esta rutina para fallback de autocompletado
-  const lastSession = getLastSessionForRoutine(currentRoutine.id, currentRoutine.name);
-
   history[todayKey] = {
     routineId: currentRoutine.id,
     routineName: currentRoutine.name,
@@ -915,22 +1016,16 @@ function completeRoutineAndAdvance(isSuccess) {
       const exData = getExerciseById(currentExerciseId);
       const isCardio = (exData && (exData.groups || []).includes('Cardio')) || !!ex.time;
 
-      const lastEx = lastSession && exData
-        ? findExerciseInSession(lastSession.exercises, currentExerciseId, exData.name)
-        : null;
-
-      // Guardar SOLO lo que está en el estado (lo que el usuario cargó o el autocompletado)
-      // Pero solo si la serie está marcada como completada.
       const finalWeights = exState.weights.map((w, sIdx) => {
         const isCompleted = exState.completed[sIdx];
         if (!isCompleted) return '';
-        return w || '';
+        return esPesoValido(w) ? String(w).trim() : '';
       });
 
       const finalReps = exState.reps.map((r, sIdx) => {
         const isCompleted = exState.completed[sIdx];
         if (!isCompleted) return '';
-        return r || '';
+        return esValorNoVacio(r) ? String(r).trim() : '';
       });
 
       return {
@@ -941,15 +1036,19 @@ function completeRoutineAndAdvance(isSuccess) {
         cardioTime: exState.cardioTime || ex.time || '0 min',
         weights: finalWeights,
         reps: finalReps,
-        speed: exState.speed || 0,
-        incline: exState.incline || 0,
+        speed: exState.speed !== undefined ? exState.speed : 0,
+        incline: exState.incline !== undefined ? exState.incline : 0,
         completed: [...exState.completed]
       };
     }),
     extras: savedExtras.map(e => ({
       exerciseId: e.exerciseId,
       name: e.name,
-      sets: e.sets.map(s => ({ weight: s.weight, reps: s.reps, completed: s.completed }))
+      sets: e.sets.map(s => ({
+        weight: esPesoValido(s.weight) ? String(s.weight).trim() : '',
+        reps: esValorNoVacio(s.reps) ? String(s.reps).trim() : '',
+        completed: s.completed
+      }))
     }))
   };
   saveGlobalHistory(history);
@@ -1163,7 +1262,7 @@ window.refreshRoutineView = function () {
   state = getDayState(currentRoutineId);
   renderUser();
 };
-
+|
 window.updateRestSeconds = function (sec) {
   restSeconds = sec;
 };
