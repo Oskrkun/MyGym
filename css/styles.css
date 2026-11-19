@@ -941,3 +941,41 @@ button { cursor: pointer; }
   width: 55px;
   text-align: center;
 }
+
+/* Lapicito rojo volteado en esquina superior derecha */
+.manual-pencil-badge {
+  position: absolute;
+  top: 4px;
+  right: 5px;
+  color: #ef4444;
+  font-size: 11px;
+  line-height: 1;
+  display: inline-block;
+  transform: scaleX(-1);
+  pointer-events: none;
+  font-weight: 900;
+}
+.manual-pencil-badge.inline {
+  position: static;
+  margin-left: 6px;
+  font-size: 15px;
+  pointer-events: auto;
+}
+
+.past-day-preview {
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 8px 10px;
+  font-size: 12px;
+  color: var(--muted);
+  max-height: 130px;
+  overflow-y: auto;
+}
+.past-day-preview-item {
+  padding: 3px 0;
+  border-bottom: 1px solid rgba(48, 52, 59, 0.5);
+}
+.past-day-preview-item:last-child {
+  border-bottom: none;
+}

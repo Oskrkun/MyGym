@@ -1,6 +1,6 @@
 // ==========================================
 // progress.js — Vista Progreso
-// Perfil + Peso + Heatmap + Gráfica + Extras
+// Perfil + Peso + Heatmap + Gráfica + Modificar día pasado
 // Depende de: core.js
 // ==========================================
 
@@ -63,14 +63,38 @@
   let viewMonth = new Date().getMonth();
 
   // ==========================================
-  // 3. UTILIDADES
+  // 3. UTILIDADES DE FECHA Y VALIDACIÓN
   // ==========================================
+
+  function getTodayKey() {
+    const now = new Date();
+    const yyyy = now.getFullYear();
+    const mm = String(now.getMonth() + 1).padStart(2, '0');
+    const dd = String(now.getDate()).padStart(2, '0');
+    return `${yyyy}-${mm}-${dd}`;
+  }
+
+  function isPastDayKey(dateKey) {
+    return typeof dateKey === 'string' && dateKey < getTodayKey();
+  }
 
   function getAge(birthYear) {
     if (!birthYear) return null;
     const y = Number(birthYear);
     if (!y || y < 1900 || y > new Date().getFullYear()) return null;
     return new Date().getFullYear() - y;
+  }
+
+  function esPesoPositivo(w) {
+    if (w === undefined || w === null) return false;
+    const str = String(w).trim();
+    if (str === '') return false;
+    const num = Number(str.replace(',', '.'));
+    return !Number.isNaN(num) && num > 0;
+  }
+
+  function esTextoNoVacio(v) {
+    return v !== undefined && v !== null && String(v).trim() !== '';
   }
 
   // ==========================================
@@ -332,7 +356,294 @@
   }
 
   // ==========================================
-  // 9. HEATMAP
+  // 9. MODIFICAR DÍA PASADO SIN REGISTRO (MODAL DINÁMICO)
+  // ==========================================
+
+  function sugerirRutinaParaFecha(dateKey, routines) {
+    if (!Array.isArray(routines) || routines.length === 0) return null;
+    const history = (typeof getGlobalHistory === 'function') ? getGlobalHistory() : {};
+    const orderedEntries = Object.entries(history)
+      .filter(([k, s]) => s && s.routineId && routines.some(r => r.id === s.routineId))
+      .sort((a, b) => a[0].localeCompare(b[0]));
+
+    if (orderedEntries.length > 0) {
+      const prevEntry = [...orderedEntries].reverse().find(([k]) => k < dateKey);
+      if (prevEntry) {
+        const prevIdx = routines.findIndex(r => r.id === prevEntry[1].routineId);
+        if (prevIdx !== -1) {
+          return routines[(prevIdx + 1) % routines.length].id;
+        }
+      }
+    }
+
+    const dayNum = Number(dateKey.split('-')[2] || 1);
+    return routines[(dayNum - 1) % routines.length].id;
+  }
+
+  function construirEjerciciosConValoresValidos(routine) {
+    const defaultReps = (typeof DEFAULT_REPS !== 'undefined') ? DEFAULT_REPS : 10;
+
+    return (routine.exercises || []).map(ex => {
+      const exData = (typeof getExerciseById === 'function') ? getExerciseById(ex.exerciseId) : null;
+      const isCardio = !!(
+        (exData && Array.isArray(exData.groups) && exData.groups.includes('Cardio')) ||
+        ex.time
+      );
+      const ref = (typeof getUltimaReferenciaEjercicio === 'function')
+        ? getUltimaReferenciaEjercicio(ex.exerciseId)
+        : null;
+
+      if (isCardio) {
+        const cardioTime = esTextoNoVacio(ref && ref.cardioTime)
+          ? String(ref.cardioTime).trim()
+          : (esTextoNoVacio(ex.time) ? String(ex.time).trim() : '15 min');
+        const speed = (ref && ref.speed !== undefined && ref.speed !== null && Number(ref.speed) > 0)
+          ? Number(ref.speed)
+          : ((ex.speed !== undefined && Number(ex.speed) > 0) ? Number(ex.speed) : 8);
+        const incline = (ref && ref.incline !== undefined && ref.incline !== null)
+          ? Number(ref.incline)
+          : ((ex.incline !== undefined) ? Number(ex.incline) : 0);
+
+        return {
+          exerciseId: ex.exerciseId,
+          replacedFrom: null,
+          name: exData ? exData.name : 'Ejercicio',
+          isCardio: true,
+          cardioTime,
+          weights: [''],
+          reps: [''],
+          speed,
+          incline,
+          completed: [true]
+        };
+      }
+
+      const isTimeExercise = (typeof esEjercicioPorTiempo === 'function')
+        ? esEjercicioPorTiempo(exData)
+        : false;
+
+      const baseSetsCount = Math.max(Number(ex.sets) || 3, 1);
+      const refSets = (ref && Array.isArray(ref.sets) && ref.sets.length > 0) ? ref.sets : null;
+      const setsCount = refSets ? refSets.length : baseSetsCount;
+
+      const fallbackWeight = esPesoPositivo(ref && ref.lastWeight)
+        ? String(ref.lastWeight).trim()
+        : (esPesoPositivo(ex.weight) ? String(ex.weight).trim() : '');
+
+      const fallbackReps = esTextoNoVacio(ref && ref.lastReps)
+        ? String(ref.lastReps).trim()
+        : (esTextoNoVacio(ex.reps) ? String(ex.reps).trim() : (isTimeExercise ? '60' : String(defaultReps)));
+
+      const weights = [];
+      const reps = [];
+
+      for (let i = 0; i < setsCount; i++) {
+        const sRef = refSets && refSets[i] ? refSets[i] : null;
+        const wVal = esPesoPositivo(sRef && sRef.weight)
+          ? String(sRef.weight).trim()
+          : fallbackWeight;
+        const rVal = esTextoNoVacio(sRef && sRef.reps)
+          ? String(sRef.reps).trim()
+          : fallbackReps;
+
+        weights.push(wVal);
+        reps.push(rVal);
+      }
+
+      return {
+        exerciseId: ex.exerciseId,
+        replacedFrom: null,
+        name: exData ? exData.name : 'Ejercicio',
+        isCardio: false,
+        cardioTime: '0 min',
+        weights,
+        reps,
+        speed: 0,
+        incline: 0,
+        completed: Array(setsCount).fill(true)
+      };
+    });
+  }
+
+  function openModifyPastDayModal(dateKey) {
+    if (!isPastDayKey(dateKey)) return;
+
+    const existingModal = $('modifyPastDayModal');
+    if (existingModal) existingModal.remove();
+
+    const routines = (typeof getRoutines === 'function') ? getRoutines() : [];
+    const suggestedRoutineId = sugerirRutinaParaFecha(dateKey, routines);
+
+    const modal = document.createElement('div');
+    modal.id = 'modifyPastDayModal';
+    modal.className = 'modal';
+
+    const routineOptionsHtml = routines.length > 0
+      ? routines.map(r => `<option value="${r.id}" ${r.id === suggestedRoutineId ? 'selected' : ''}>${r.name}</option>`).join('')
+      : `<option value="">Sin rutinas disponibles</option>`;
+
+    modal.innerHTML = `
+      <div class="modal-box">
+        <div class="modal-header">
+          <h2>Modificar día (${dateKey})</h2>
+          <button type="button" id="closeModifyPastDayBtn" class="icon-button" aria-label="Cerrar modal">×</button>
+        </div>
+
+        <div style="margin-top:14px; display:grid; gap:12px;">
+          <label style="font-weight:700; font-size:0.85rem;">¿Qué querés cargar en este día?</label>
+          <select id="pastDayModeSelect" class="weight-input" style="width:100%; padding:10px; font-size:14px;">
+            <option value="routine">Completar rutina de ese día</option>
+            <option value="activity">Actividad fuera del gym (fútbol / correr / otro)</option>
+          </select>
+
+          <div id="pastDayRoutineBox" style="display:grid; gap:8px;">
+            <label for="pastDayRoutineSelect" style="font-weight:700; font-size:0.85rem;">Rutina</label>
+            <select id="pastDayRoutineSelect" class="weight-input" style="width:100%; padding:10px; font-size:14px;">
+              ${routineOptionsHtml}
+            </select>
+            <div id="pastDayRoutinePreview" class="past-day-preview"></div>
+          </div>
+
+          <div id="pastDayActivityBox" class="hidden" style="display:grid; gap:8px;">
+            <label for="pastDayActivitySelect" style="font-weight:700; font-size:0.85rem;">Actividad</label>
+            <select id="pastDayActivitySelect" class="weight-input" style="width:100%; padding:10px; font-size:14px;">
+              <option value="⚽ Partido de fútbol">⚽ Partido de fútbol</option>
+              <option value="🏃 Salir a correr">🏃 Salir a correr</option>
+              <option value="🚴 Bicicleta / Paseo">🚴 Bicicleta / Paseo</option>
+              <option value="other">✨ Otra actividad</option>
+            </select>
+            <input type="text" id="pastDayActivityCustom" class="weight-input hidden" placeholder="Ej: Fútbol 5 con amigos" style="width:100%; padding:10px; font-size:14px;" />
+          </div>
+
+          <div style="display:flex; gap:10px; margin-top:6px;">
+            <button type="button" id="confirmModifyPastDayBtn" class="save-btn" style="flex:1; padding:12px; border-radius:10px; border:none; font-weight:700;">Completar rutina de ese día</button>
+            <button type="button" id="cancelModifyPastDayBtn" class="cancel-btn" style="flex:1; padding:12px; border-radius:10px; border:none; font-weight:700;">Cancelar</button>
+          </div>
+        </div>
+      </div>
+    `;
+
+    document.body.appendChild(modal);
+
+    const modeSelect       = $('pastDayModeSelect');
+    const routineBox       = $('pastDayRoutineBox');
+    const routineSelect    = $('pastDayRoutineSelect');
+    const routinePreview   = $('pastDayRoutinePreview');
+    const activityBox      = $('pastDayActivityBox');
+    const activitySelect   = $('pastDayActivitySelect');
+    const activityCustom   = $('pastDayActivityCustom');
+    const confirmBtn       = $('confirmModifyPastDayBtn');
+    const cancelBtn        = $('cancelModifyPastDayBtn');
+    const closeBtn         = $('closeModifyPastDayBtn');
+
+    function updateRoutinePreview() {
+      const rId = Number(routineSelect.value);
+      const r = routines.find(item => item.id === rId);
+      if (!r || !Array.isArray(r.exercises) || r.exercises.length === 0) {
+        routinePreview.innerHTML = '<small style="color:var(--muted);">Sin ejercicios en esta rutina.</small>';
+        return;
+      }
+      const built = construirEjerciciosConValoresValidos(r);
+      routinePreview.innerHTML = built.map(ex => {
+        if (ex.isCardio) {
+          return `<div class="past-day-preview-item"><strong>${ex.name}</strong> · ${ex.cardioTime} (Vel ${ex.speed} / Inc ${ex.incline})</div>`;
+        }
+        const firstW = ex.weights.find(esPesoPositivo);
+        const firstR = ex.reps[0] || '';
+        const wLabel = firstW ? `${firstW} kg` : 'peso base';
+        return `<div class="past-day-preview-item"><strong>${ex.name}</strong> · ${ex.completed.length} series × ${firstR} (${wLabel})</div>`;
+      }).join('');
+    }
+
+    modeSelect.addEventListener('change', () => {
+      const isRoutine = modeSelect.value === 'routine';
+      routineBox.classList.toggle('hidden', !isRoutine);
+      activityBox.classList.toggle('hidden', isRoutine);
+      confirmBtn.textContent = isRoutine ? 'Completar rutina de ese día' : 'Guardar actividad';
+    });
+
+    routineSelect.addEventListener('change', updateRoutinePreview);
+
+    activitySelect.addEventListener('change', () => {
+      const isOther = activitySelect.value === 'other';
+      activityCustom.classList.toggle('hidden', !isOther);
+      if (isOther) activityCustom.focus();
+    });
+
+    function closeModal() {
+      modal.remove();
+    }
+
+    closeBtn.addEventListener('click', closeModal);
+    cancelBtn.addEventListener('click', closeModal);
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) closeModal();
+    });
+
+    confirmBtn.addEventListener('click', () => {
+      if (!isPastDayKey(dateKey)) {
+        alert('Solo se pueden modificar días anteriores a hoy.');
+        closeModal();
+        return;
+      }
+
+      const history = (typeof getGlobalHistory === 'function') ? getGlobalHistory() : {};
+      if (history[dateKey]) {
+        alert('Este día ya tiene un registro guardado.');
+        closeModal();
+        return;
+      }
+
+      if (modeSelect.value === 'routine') {
+        const selectedRoutineId = Number(routineSelect.value);
+        const selectedRoutine = routines.find(r => r.id === selectedRoutineId);
+        if (!selectedRoutine) {
+          alert('Seleccioná una rutina válida.');
+          return;
+        }
+
+        history[dateKey] = {
+          routineId: selectedRoutine.id,
+          routineName: selectedRoutine.name,
+          status: 'completed',
+          manualEdit: true,
+          exercises: construirEjerciciosConValoresValidos(selectedRoutine),
+          extras: []
+        };
+      } else {
+        let activityLabel = activitySelect.value;
+        if (activityLabel === 'other') {
+          const customText = activityCustom.value.trim();
+          activityLabel = customText ? `✨ ${customText}` : '✨ Actividad física';
+        }
+
+        history[dateKey] = {
+          routineId: null,
+          routineName: activityLabel,
+          status: 'completed',
+          manualEdit: true,
+          externalActivity: activityLabel,
+          exercises: [],
+          extras: []
+        };
+      }
+
+      if (typeof saveGlobalHistory === 'function') {
+        saveGlobalHistory(history);
+      } else {
+        localStorage.setItem('migym_global_history', JSON.stringify(history));
+      }
+
+      closeModal();
+      historyModal.classList.add('hidden');
+      renderHeatmap();
+    });
+
+    updateRoutinePreview();
+  }
+
+  // ==========================================
+  // 10. HEATMAP
   // ==========================================
 
   function renderHeatmap() {
@@ -383,6 +694,7 @@
       }
 
       const tieneExtras = session && Array.isArray(session.extras) && session.extras.length > 0;
+      const esCargaManual = !!(session && session.manualEdit);
 
       if (session) {
         if (session.status === 'completed') {
@@ -404,7 +716,12 @@
       if (tieneExtras) iconText = '⚡';
       else if (esDescanso) iconText = '💤';
 
+      const manualBadgeHtml = esCargaManual
+        ? `<span class="manual-pencil-badge" title="Cargado manualmente">✎</span>`
+        : '';
+
       div.innerHTML = `
+        ${manualBadgeHtml}
         <span class="hm-num">${date.getDate()}</span>
         ${iconText ? `<span class="hm-icon">${iconText}</span>` : ''}
       `;
@@ -418,11 +735,14 @@
   }
 
   // ==========================================
-  // 10. MODAL DE DETALLE DE DÍA
+  // 11. MODAL DE DETALLE DE DÍA
   // ==========================================
 
   function showHistoryDetail(fullDateKey, dayNum, session) {
-    historyModalTitle.textContent = `Fecha: ${fullDateKey}`;
+    const esCargaManual = !!(session && session.manualEdit);
+    historyModalTitle.innerHTML = esCargaManual
+      ? `Fecha: ${fullDateKey} <span class="manual-pencil-badge inline" title="Cargado manualmente">✎</span>`
+      : `Fecha: ${fullDateKey}`;
 
     const weights = getWeights();
     const weightEntry = weights.find(w => w.date === fullDateKey);
@@ -430,8 +750,23 @@
     const tieneExtras = session && Array.isArray(session.extras) && session.extras.length > 0;
 
     if (!session && !weightEntry) {
-      historyModalContent.innerHTML = `<p style="color:var(--muted); text-align:center; padding: 20px;">No hay registros guardados para esta fecha.</p>`;
+      const canModify = isPastDayKey(fullDateKey);
+      historyModalContent.innerHTML = `
+        <p style="color:var(--muted); text-align:center; padding: 16px 12px;">No hay registros guardados para esta fecha.</p>
+        ${canModify ? `
+          <div style="text-align:center; margin-top:6px;">
+            <button type="button" id="modifyEmptyPastDayBtn" class="day-button" style="background:var(--card-2); border-color:var(--accent); color:var(--accent);">
+              Modificar
+            </button>
+          </div>
+        ` : ''}
+      `;
       historyModal.classList.remove('hidden');
+
+      const modBtn = $('modifyEmptyPastDayBtn');
+      if (modBtn) {
+        modBtn.addEventListener('click', () => openModifyPastDayModal(fullDateKey));
+      }
       return;
     }
 
@@ -457,7 +792,6 @@
       html += `<p><strong>Rutina:</strong> ${routineLabel} (${session.status === 'completed' ? '✅ Completada' : '⏳ Incompleta'})</p>`;
       html += `<hr style="border-color:var(--line); margin: 10px 0;">`;
 
-      // Separar ejercicios hechos de pendientes
       const exercises = session.exercises || [];
       const doneExercises = [];
       const pendingExercises = [];
@@ -474,15 +808,16 @@
       const totalExercises = exercises.length;
       const doneCount = doneExercises.length;
 
-      // Resumen
-      html += `<p style="color:var(--muted); font-size:12px; margin: 6px 0 12px;">${doneCount} de ${totalExercises} ejercicios completados</p>`;
+      if (session.externalActivity) {
+        html += `<p style="color:var(--text); font-size:13px; margin: 8px 0;">Actividad registrada: <strong>${session.externalActivity}</strong></p>`;
+      } else {
+        html += `<p style="color:var(--muted); font-size:12px; margin: 6px 0 12px;">${doneCount} de ${totalExercises} ejercicios completados</p>`;
 
-      // Si no completaste nada
-      if (doneCount === 0) {
-        html += `<p style="color:var(--muted); text-align:center; padding: 12px;">No completaste ningún ejercicio esta sesión.</p>`;
+        if (doneCount === 0 && totalExercises > 0) {
+          html += `<p style="color:var(--muted); text-align:center; padding: 12px;">No completaste ningún ejercicio esta sesión.</p>`;
+        }
       }
 
-      // Ejercicios hechos
       doneExercises.forEach(({ ex, i, completedCount }) => {
         const totalSets = (ex.completed || []).length;
         const partialLabel = completedCount < totalSets ? ` (${completedCount}/${totalSets})` : '';
@@ -529,7 +864,6 @@
         html += `</div>`;
       });
 
-      // Ejercicios pendientes (colapsables)
       if (pendingExercises.length > 0) {
         html += `<details style="margin-top:8px; background:var(--bg); padding:10px 12px; border-radius:10px; border:1px solid var(--line);">`;
         html += `<summary style="cursor:pointer; color:var(--muted); font-size:12px; font-weight:700; outline:none;">Ver ${pendingExercises.length} ejercicio${pendingExercises.length !== 1 ? 's' : ''} pendiente${pendingExercises.length !== 1 ? 's' : ''}</summary>`;
@@ -540,7 +874,6 @@
         html += `</div></details>`;
       }
 
-      // Sección de extras
       if (tieneExtras) {
         html += `<div style="margin-top:16px; padding-top:10px; border-top:1px solid var(--violet);"><strong style="color:var(--violet); font-size:14px;">⚡ Extras</strong></div>`;
 
@@ -575,7 +908,7 @@
   }
 
   // ==========================================
-  // 11. GRÁFICA DE PESO (SVG puro)
+  // 12. GRÁFICA DE PESO (SVG puro)
   // ==========================================
 
   function renderWeightChart() {
@@ -668,7 +1001,7 @@
   }
 
   // ==========================================
-  // 12. LISTENERS
+  // 13. LISTENERS
   // ==========================================
 
   if (profileHead)   profileHead.addEventListener('click', toggleProfileCard);
@@ -728,7 +1061,7 @@
   });
 
   // ==========================================
-  // 13. API PÚBLICA
+  // 14. API PÚBLICA
   // ==========================================
 
   window.renderProgressView = function () {
