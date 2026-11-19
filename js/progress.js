@@ -217,8 +217,8 @@
         return '→';
       };
       const actionLabel = (val) => {
-        if (val < -0.05) return 'Bajaste - Perdiste';
-        if (val > 0.05) return 'Subiste - Ganaste';
+        if (val < -0.05) return 'Bajaste';
+        if (val > 0.05) return 'Subiste';
         return 'Sin cambios';
       };
       const colorFor = (diff) => {
