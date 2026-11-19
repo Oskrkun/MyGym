@@ -120,26 +120,26 @@
         <button id="nextMonthBtn" class="day-button" type="button">Siguiente ▶</button>
       </div>
 
-		<p style="color: var(--muted); font-size: 0.85rem;">Haz clic en cualquier día del mes para ver el detalle de la rutina guardada:</p>
-		<div class="heatmap-head" id="heatmapHead">
-		  <span>Dom</span>
-		  <span>Lun</span>
-		  <span>Mar</span>
-		  <span>Mié</span>
-		  <span>Jue</span>
-		  <span>Vie</span>
-		  <span>Sáb</span>
-		</div>
-		<div class="heatmap-grid" id="heatmapContainer"></div>
-		
-		<div class="heatmap-legend">
-			<div class="legend-item"><span class="legend-swatch legend-rest"></span>Descanso</div>
-			<div class="legend-item"><span class="legend-swatch legend-incomplete"></span>Incompleta</div>
-			<div class="legend-item"><span class="legend-swatch legend-completed"></span>Completa</div>
-			<div class="legend-item"><span class="legend-swatch legend-extras"></span>Con extras</div>
-		</div>
+      <p style="color: var(--muted); font-size: 0.85rem;">Haz clic en cualquier día del mes para ver el detalle de la rutina guardada:</p>
+      <div class="heatmap-head" id="heatmapHead">
+        <span>Dom</span>
+        <span>Lun</span>
+        <span>Mar</span>
+        <span>Mié</span>
+        <span>Jue</span>
+        <span>Vie</span>
+        <span>Sáb</span>
+      </div>
+      <div class="heatmap-grid" id="heatmapContainer"></div>
 
-		<button id="todayBtn" class="day-button" type="button" style="width:100%; margin-top:12px;">📍 Ir a hoy</button>
+      <div class="heatmap-legend">
+        <div class="legend-item"><span class="legend-swatch legend-rest"></span>Descanso</div>
+        <div class="legend-item"><span class="legend-swatch legend-incomplete"></span>Incompleta</div>
+        <div class="legend-item"><span class="legend-swatch legend-completed"></span>Completa</div>
+        <div class="legend-item"><span class="legend-swatch legend-extras"></span>Con extras</div>
+      </div>
+
+      <button id="todayBtn" class="day-button" type="button" style="width:100%; margin-top:12px;">📍 Ir a hoy</button>
     </section>
 
     <section class="progress-panel-card">
@@ -190,10 +190,10 @@
     <section id="exerciseList" class="exercise-list"></section>
 
     <section id="extrasList" class="extras-list"></section>
-	
-	<div id="devToolsRow" style="margin-top:12px; text-align:right;">
-	  <button id="fillAllBtn" class="day-button" type="button" style="background: #2a1e3a; color: #a78bfa; border-color: #a78bfa; font-size: 11px;">⚡ Llenar todo (test)</button>
-	</div>
+
+    <div id="devToolsRow" style="margin-top:12px; text-align:right;">
+      <button id="fillAllBtn" class="day-button" type="button" style="background: #2a1e3a; color: #a78bfa; border-color: #a78bfa; font-size: 11px;">⚡ Llenar todo (test)</button>
+    </div>
 
     <div id="extrasActions" class="extras-actions hidden">
       <button id="addExtraBtn" class="day-button" type="button" style="background: var(--violet); color:#0c0d0f; width:100%;">⚡ Agregar extra</button>
@@ -212,89 +212,157 @@
   </div>
 
   <!-- VISTA ADMIN -->
-  <div id="adminView" class="hidden">
-    <section class="admin-section">
-      <h2>💾 Copia de Seguridad</h2>
-      <p style="color:var(--muted); font-size:0.85rem; margin-top:-5px; margin-bottom:12px;">Exporta todo tu progreso y rutinas a un archivo JSON para cargarlo en otro celular o navegador.</p>
-      <div style="display:flex; gap:10px; flex-wrap:wrap;">
-        <button id="btnExportar" class="day-button" type="button" style="background:var(--card-2);">📥 Respaldo (JSON)</button>
-        <button id="btnImportar" class="day-button" type="button" style="background:var(--accent); color:#0c0d0f;">📤 Cargar Datos</button>
-        <input type="file" id="inputImportar" name="inputImportar" accept=".json" style="display: none;" aria-label="Cargar archivo de copia de seguridad" />
-      </div>
-    </section>
+  <div id="adminView" class="hidden" style="display:grid; gap:12px;">
 
-    <section class="admin-section">
-      <h2>⏱️ Tiempo de descanso</h2>
-      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
-        <label for="restInput" style="display:none;">Segundos de descanso</label>
-        <input type="number" id="restInput" name="restSeconds" value="60" style="width:80px;background:#0c0d0f;border:1px solid var(--line);color:#fff;padding:8px;border-radius:8px;" aria-label="Segundos de descanso" />
-        <span>segundos</span>
-        <button id="saveRest" class="day-button" type="button">Guardar</button>
-      </div>
-    </section>
-
-    <section class="admin-section">
-      <h2>🎨 Paleta de colores</h2>
-      <p style="color:var(--muted); font-size:0.85rem; margin-top:-5px; margin-bottom:12px;">Elegí una paleta para personalizar la app. Se incluye automáticamente en el respaldo JSON.</p>
-      <div id="paletteOptions" class="palette-list"></div>
-      <button id="savePaletteBtn" class="day-button" type="button" style="margin-top:12px;">Guardar paleta</button>
-    </section>
-
-    <section class="admin-section">
-      <h2>💤 Días de descanso</h2>
-      <p style="color:var(--muted); font-size:0.85rem; margin-top:-5px; margin-bottom:12px;">Marcá los días que NO entrenás. Los cambios no afectan los días pasados.</p>
-      <div id="restDaysGrid" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap:10px;">
-        <label style="display:flex; align-items:center; gap:8px; padding:8px; background:var(--bg); border-radius:8px; cursor:pointer;">
-          <input type="checkbox" id="restDay_1" value="1" /> Lunes
-        </label>
-        <label style="display:flex; align-items:center; gap:8px; padding:8px; background:var(--bg); border-radius:8px; cursor:pointer;">
-          <input type="checkbox" id="restDay_2" value="2" /> Martes
-        </label>
-        <label style="display:flex; align-items:center; gap:8px; padding:8px; background:var(--bg); border-radius:8px; cursor:pointer;">
-          <input type="checkbox" id="restDay_3" value="3" /> Miércoles
-        </label>
-        <label style="display:flex; align-items:center; gap:8px; padding:8px; background:var(--bg); border-radius:8px; cursor:pointer;">
-          <input type="checkbox" id="restDay_4" value="4" /> Jueves
-        </label>
-        <label style="display:flex; align-items:center; gap:8px; padding:8px; background:var(--bg); border-radius:8px; cursor:pointer;">
-          <input type="checkbox" id="restDay_5" value="5" /> Viernes
-        </label>
-        <label style="display:flex; align-items:center; gap:8px; padding:8px; background:var(--bg); border-radius:8px; cursor:pointer;">
-          <input type="checkbox" id="restDay_6" value="6" /> Sábado
-        </label>
-        <label style="display:flex; align-items:center; gap:8px; padding:8px; background:var(--bg); border-radius:8px; cursor:pointer;">
-          <input type="checkbox" id="restDay_0" value="0" /> Domingo
-        </label>
-      </div>
-      <button id="saveRestDaysBtn" class="day-button" type="button" style="margin-top:12px;">Guardar días de descanso</button>
-    </section>
-
-    <section class="admin-section">
-      <h2>📅 Rutinas</h2>
-      <button id="addRoutineBtn" class="day-button" type="button" style="margin-bottom:15px;">+ Crear rutina</button>
-      <div id="routineListAdmin"></div>
-
-      <div id="routineForm" class="admin-form hidden">
-        <h3 id="formTitle">Nueva rutina</h3>
-
-        <label for="routineName">Nombre</label>
-        <input type="text" id="routineName" name="routineName" placeholder="Ej: Rutina 1" />
-
-                <label for="routineExerciseType">Tipo</label>
-        <select id="routineExerciseType" name="routineExerciseType" style="width:100%;"></select>
-
-        <label for="exerciseSelector">Ejercicio</label>
-        <div style="display:flex;gap:10px;flex-wrap:wrap;">
-          <select id="exerciseSelector" name="exerciseSelector" style="flex:1;min-width:200px;"></select>
-          <button id="addExerciseBtn" class="day-button" type="button" style="padding:8px 16px;">+ Agregar</button>
+    <!-- 1. Rutinas -->
+    <article id="adminRoutinesCard" class="exercise-card collapsed">
+      <div class="exercise-head" id="adminRoutinesHead">
+        <div class="card-icon">📅</div>
+        <div class="exercise-number"></div>
+        <div class="exercise-title">
+          <div class="group">ADMIN</div>
+          <h2>Rutinas</h2>
+          <p>Crear, editar o eliminar rutinas</p>
         </div>
-        <div id="routineExercisesList"></div>
-        <div class="admin-actions">
-          <button id="submitRoutine" class="save-btn" type="button">Guardar rutina</button>
-          <button id="cancelRoutine" class="cancel-btn" type="button">Cancelar</button>
+        <div id="adminRoutinesChevron" class="exercise-chevron">▾</div>
+      </div>
+
+      <div class="series-container" id="adminRoutinesBody" style="padding-top:10px; padding-bottom:14px;">
+        <button id="addRoutineBtn" class="day-button" type="button" style="margin-bottom:15px;">+ Crear rutina</button>
+        <div id="routineListAdmin"></div>
+
+        <div id="routineForm" class="admin-form hidden">
+          <h3 id="formTitle">Nueva rutina</h3>
+
+          <label for="routineName">Nombre</label>
+          <input type="text" id="routineName" name="routineName" placeholder="Ej: Rutina 1" />
+
+          <label for="routineExerciseType">Tipo</label>
+          <select id="routineExerciseType" name="routineExerciseType" style="width:100%;"></select>
+
+          <label for="exerciseSelector">Ejercicio</label>
+          <div style="display:flex;gap:10px;flex-wrap:wrap;">
+            <select id="exerciseSelector" name="exerciseSelector" style="flex:1;min-width:200px;"></select>
+            <button id="addExerciseBtn" class="day-button" type="button" style="padding:8px 16px;">+ Agregar</button>
+          </div>
+          <div id="routineExercisesList"></div>
+          <div class="admin-actions">
+            <button id="submitRoutine" class="save-btn" type="button">Guardar rutina</button>
+            <button id="cancelRoutine" class="cancel-btn" type="button">Cancelar</button>
+          </div>
         </div>
       </div>
-    </section>
+    </article>
+
+    <!-- 2. Tiempo de descanso -->
+    <article id="adminRestTimeCard" class="exercise-card collapsed">
+      <div class="exercise-head" id="adminRestTimeHead">
+        <div class="card-icon">⏱️</div>
+        <div class="exercise-number"></div>
+        <div class="exercise-title">
+          <div class="group">ADMIN</div>
+          <h2>Tiempo de descanso</h2>
+          <p>Segundos del temporizador entre series</p>
+        </div>
+        <div id="adminRestTimeChevron" class="exercise-chevron">▾</div>
+      </div>
+
+      <div class="series-container" id="adminRestTimeBody" style="padding-top:10px; padding-bottom:14px;">
+        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+          <label for="restInput" style="display:none;">Segundos de descanso</label>
+          <input type="number" id="restInput" name="restSeconds" value="60" style="width:80px;background:#0c0d0f;border:1px solid var(--line);color:#fff;padding:8px;border-radius:8px;" aria-label="Segundos de descanso" />
+          <span>segundos</span>
+          <button id="saveRest" class="day-button" type="button">Guardar</button>
+        </div>
+      </div>
+    </article>
+
+    <!-- 3. Paleta de colores -->
+    <article id="adminPaletteCard" class="exercise-card collapsed">
+      <div class="exercise-head" id="adminPaletteHead">
+        <div class="card-icon">🎨</div>
+        <div class="exercise-number"></div>
+        <div class="exercise-title">
+          <div class="group">ADMIN</div>
+          <h2>Paleta de colores</h2>
+          <p>Personalizá los colores de la app</p>
+        </div>
+        <div id="adminPaletteChevron" class="exercise-chevron">▾</div>
+      </div>
+
+      <div class="series-container" id="adminPaletteBody" style="padding-top:10px; padding-bottom:14px;">
+        <p style="color:var(--muted); font-size:0.85rem; margin-top:0; margin-bottom:10px;">Elegí una paleta para personalizar la app. Se guarda en este dispositivo y entra en el respaldo JSON.</p>
+        <div id="paletteOptions" class="palette-list"></div>
+        <div id="randomPaletteStatus" style="color:var(--muted); font-size:12px; margin-top:8px;"></div>
+        <button id="savePaletteBtn" class="day-button" type="button" style="margin-top:12px;">Guardar paleta</button>
+      </div>
+    </article>
+
+    <!-- 4. Días de descanso -->
+    <article id="adminRestDaysCard" class="exercise-card collapsed">
+      <div class="exercise-head" id="adminRestDaysHead">
+        <div class="card-icon">💤</div>
+        <div class="exercise-number"></div>
+        <div class="exercise-title">
+          <div class="group">ADMIN</div>
+          <h2>Días de descanso</h2>
+          <p>Días de la semana sin entrenamiento</p>
+        </div>
+        <div id="adminRestDaysChevron" class="exercise-chevron">▾</div>
+      </div>
+
+      <div class="series-container" id="adminRestDaysBody" style="padding-top:10px; padding-bottom:14px;">
+        <p style="color:var(--muted); font-size:0.85rem; margin-top:0; margin-bottom:12px;">Marcá los días que NO entrenás. Los cambios no afectan los días pasados.</p>
+        <div id="restDaysGrid" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap:10px;">
+          <label style="display:flex; align-items:center; gap:8px; padding:8px; background:var(--bg); border-radius:8px; cursor:pointer;">
+            <input type="checkbox" id="restDay_1" value="1" /> Lunes
+          </label>
+          <label style="display:flex; align-items:center; gap:8px; padding:8px; background:var(--bg); border-radius:8px; cursor:pointer;">
+            <input type="checkbox" id="restDay_2" value="2" /> Martes
+          </label>
+          <label style="display:flex; align-items:center; gap:8px; padding:8px; background:var(--bg); border-radius:8px; cursor:pointer;">
+            <input type="checkbox" id="restDay_3" value="3" /> Miércoles
+          </label>
+          <label style="display:flex; align-items:center; gap:8px; padding:8px; background:var(--bg); border-radius:8px; cursor:pointer;">
+            <input type="checkbox" id="restDay_4" value="4" /> Jueves
+          </label>
+          <label style="display:flex; align-items:center; gap:8px; padding:8px; background:var(--bg); border-radius:8px; cursor:pointer;">
+            <input type="checkbox" id="restDay_5" value="5" /> Viernes
+          </label>
+          <label style="display:flex; align-items:center; gap:8px; padding:8px; background:var(--bg); border-radius:8px; cursor:pointer;">
+            <input type="checkbox" id="restDay_6" value="6" /> Sábado
+          </label>
+          <label style="display:flex; align-items:center; gap:8px; padding:8px; background:var(--bg); border-radius:8px; cursor:pointer;">
+            <input type="checkbox" id="restDay_0" value="0" /> Domingo
+          </label>
+        </div>
+        <button id="saveRestDaysBtn" class="day-button" type="button" style="margin-top:12px;">Guardar días de descanso</button>
+      </div>
+    </article>
+
+    <!-- 5. Respaldo de datos (Exportar / Importar JSON) -->
+    <article id="adminBackupCard" class="exercise-card collapsed">
+      <div class="exercise-head" id="adminBackupHead">
+        <div class="card-icon">💾</div>
+        <div class="exercise-number"></div>
+        <div class="exercise-title">
+          <div class="group">ADMIN</div>
+          <h2>Respaldo de datos (Exportar / Importar JSON)</h2>
+          <p>Copia de seguridad y restauración</p>
+        </div>
+        <div id="adminBackupChevron" class="exercise-chevron">▾</div>
+      </div>
+
+      <div class="series-container" id="adminBackupBody" style="padding-top:10px; padding-bottom:14px;">
+        <p style="color:var(--muted); font-size:0.85rem; margin-top:0; margin-bottom:12px;">Exporta todo tu progreso, rutinas y configuración a un archivo JSON para cargarlo en otro celular o navegador.</p>
+        <div style="display:flex; gap:10px; flex-wrap:wrap;">
+          <button id="btnExportar" class="day-button" type="button" style="background:var(--card-2);">📥 Respaldo (JSON)</button>
+          <button id="btnImportar" class="day-button" type="button" style="background:var(--accent); color:#0c0d0f;">📤 Cargar Datos</button>
+          <input type="file" id="inputImportar" name="inputImportar" accept=".json" style="display: none;" aria-label="Cargar archivo de copia de seguridad" />
+        </div>
+      </div>
+    </article>
+
   </div>
 </main>
 
