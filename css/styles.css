@@ -1134,3 +1134,24 @@ select {
   background: var(--card-2);
   box-shadow: inset 0 0 0 1px var(--accent);
 }
+
+select {
+  font: inherit;
+}
+
+#adminView .exercise-card {
+  margin-top: 0;
+}
+
+.admin-subpanel {
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 12px 14px;
+}
+
+.palette-row.active {
+  border-color: var(--accent);
+  background: var(--card-2);
+  box-shadow: inset 0 0 0 1px var(--accent);
+}

@@ -44,7 +44,8 @@ const inputImportar = $('inputImportar');
 
 
 // ==========================================
-// 3. ACORDEÓN DE SECCIONES DE ADMIN
+// 3. ACORDEÓN EXCLUSIVO DE SECCIONES DE ADMIN
+//    (Solo una sección expandida a la vez)
 // ==========================================
 
 function setupAdminAccordions() {
@@ -66,8 +67,21 @@ function setupAdminAccordions() {
     if (chevEl) chevEl.textContent = '▾';
 
     headEl.addEventListener('click', () => {
-      const isCollapsed = cardEl.classList.toggle('collapsed');
-      if (chevEl) chevEl.textContent = isCollapsed ? '▾' : '▴';
+      const willOpen = cardEl.classList.contains('collapsed');
+
+      // Contraer todas primero
+      sections.forEach(other => {
+        const otherCard = $(other.card);
+        const otherChev = $(other.chevron);
+        if (otherCard) otherCard.classList.add('collapsed');
+        if (otherChev) otherChev.textContent = '▾';
+      });
+
+      // Si estaba cerrada, abrirla
+      if (willOpen) {
+        cardEl.classList.remove('collapsed');
+        if (chevEl) chevEl.textContent = '▴';
+      }
     });
   });
 }

@@ -228,8 +228,11 @@
       </div>
 
       <div class="series-container" id="adminRoutinesBody" style="padding-top:10px; padding-bottom:14px;">
-        <button id="addRoutineBtn" class="day-button" type="button" style="margin-bottom:15px;">+ Crear rutina</button>
-        <div id="routineListAdmin"></div>
+        <button id="addRoutineBtn" class="day-button" type="button" style="margin-bottom:12px;">+ Crear rutina</button>
+
+        <div class="admin-subpanel">
+          <div id="routineListAdmin"></div>
+        </div>
 
         <div id="routineForm" class="admin-form hidden">
           <h3 id="formTitle">Nueva rutina</h3>
@@ -268,11 +271,13 @@
       </div>
 
       <div class="series-container" id="adminRestTimeBody" style="padding-top:10px; padding-bottom:14px;">
-        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
-          <label for="restInput" style="display:none;">Segundos de descanso</label>
-          <input type="number" id="restInput" name="restSeconds" value="60" style="width:80px;background:#0c0d0f;border:1px solid var(--line);color:#fff;padding:8px;border-radius:8px;" aria-label="Segundos de descanso" />
-          <span>segundos</span>
-          <button id="saveRest" class="day-button" type="button">Guardar</button>
+        <div class="admin-subpanel">
+          <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+            <label for="restInput" style="display:none;">Segundos de descanso</label>
+            <input type="number" id="restInput" name="restSeconds" value="60" style="width:80px;background:var(--card);border:1px solid var(--line);color:var(--text);padding:8px;border-radius:8px;" aria-label="Segundos de descanso" />
+            <span>segundos</span>
+            <button id="saveRest" class="day-button" type="button">Guardar</button>
+          </div>
         </div>
       </div>
     </article>
@@ -312,31 +317,33 @@
       </div>
 
       <div class="series-container" id="adminRestDaysBody" style="padding-top:10px; padding-bottom:14px;">
-        <p style="color:var(--muted); font-size:0.85rem; margin-top:0; margin-bottom:12px;">Marcá los días que NO entrenás. Los cambios no afectan los días pasados.</p>
-        <div id="restDaysGrid" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap:10px;">
-          <label style="display:flex; align-items:center; gap:8px; padding:8px; background:var(--bg); border-radius:8px; cursor:pointer;">
-            <input type="checkbox" id="restDay_1" value="1" /> Lunes
-          </label>
-          <label style="display:flex; align-items:center; gap:8px; padding:8px; background:var(--bg); border-radius:8px; cursor:pointer;">
-            <input type="checkbox" id="restDay_2" value="2" /> Martes
-          </label>
-          <label style="display:flex; align-items:center; gap:8px; padding:8px; background:var(--bg); border-radius:8px; cursor:pointer;">
-            <input type="checkbox" id="restDay_3" value="3" /> Miércoles
-          </label>
-          <label style="display:flex; align-items:center; gap:8px; padding:8px; background:var(--bg); border-radius:8px; cursor:pointer;">
-            <input type="checkbox" id="restDay_4" value="4" /> Jueves
-          </label>
-          <label style="display:flex; align-items:center; gap:8px; padding:8px; background:var(--bg); border-radius:8px; cursor:pointer;">
-            <input type="checkbox" id="restDay_5" value="5" /> Viernes
-          </label>
-          <label style="display:flex; align-items:center; gap:8px; padding:8px; background:var(--bg); border-radius:8px; cursor:pointer;">
-            <input type="checkbox" id="restDay_6" value="6" /> Sábado
-          </label>
-          <label style="display:flex; align-items:center; gap:8px; padding:8px; background:var(--bg); border-radius:8px; cursor:pointer;">
-            <input type="checkbox" id="restDay_0" value="0" /> Domingo
-          </label>
+        <div class="admin-subpanel">
+          <p style="color:var(--muted); font-size:0.85rem; margin-top:0; margin-bottom:12px;">Marcá los días que NO entrenás. Los cambios no afectan los días pasados.</p>
+          <div id="restDaysGrid" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap:10px;">
+            <label style="display:flex; align-items:center; gap:8px; padding:8px; background:var(--card); border:1px solid var(--line); border-radius:8px; cursor:pointer;">
+              <input type="checkbox" id="restDay_1" value="1" /> Lunes
+            </label>
+            <label style="display:flex; align-items:center; gap:8px; padding:8px; background:var(--card); border:1px solid var(--line); border-radius:8px; cursor:pointer;">
+              <input type="checkbox" id="restDay_2" value="2" /> Martes
+            </label>
+            <label style="display:flex; align-items:center; gap:8px; padding:8px; background:var(--card); border:1px solid var(--line); border-radius:8px; cursor:pointer;">
+              <input type="checkbox" id="restDay_3" value="3" /> Miércoles
+            </label>
+            <label style="display:flex; align-items:center; gap:8px; padding:8px; background:var(--card); border:1px solid var(--line); border-radius:8px; cursor:pointer;">
+              <input type="checkbox" id="restDay_4" value="4" /> Jueves
+            </label>
+            <label style="display:flex; align-items:center; gap:8px; padding:8px; background:var(--card); border:1px solid var(--line); border-radius:8px; cursor:pointer;">
+              <input type="checkbox" id="restDay_5" value="5" /> Viernes
+            </label>
+            <label style="display:flex; align-items:center; gap:8px; padding:8px; background:var(--card); border:1px solid var(--line); border-radius:8px; cursor:pointer;">
+              <input type="checkbox" id="restDay_6" value="6" /> Sábado
+            </label>
+            <label style="display:flex; align-items:center; gap:8px; padding:8px; background:var(--card); border:1px solid var(--line); border-radius:8px; cursor:pointer;">
+              <input type="checkbox" id="restDay_0" value="0" /> Domingo
+            </label>
+          </div>
+          <button id="saveRestDaysBtn" class="day-button" type="button" style="margin-top:12px;">Guardar días de descanso</button>
         </div>
-        <button id="saveRestDaysBtn" class="day-button" type="button" style="margin-top:12px;">Guardar días de descanso</button>
       </div>
     </article>
 
@@ -354,11 +361,13 @@
       </div>
 
       <div class="series-container" id="adminBackupBody" style="padding-top:10px; padding-bottom:14px;">
-        <p style="color:var(--muted); font-size:0.85rem; margin-top:0; margin-bottom:12px;">Exporta todo tu progreso, rutinas y configuración a un archivo JSON para cargarlo en otro celular o navegador.</p>
-        <div style="display:flex; gap:10px; flex-wrap:wrap;">
-          <button id="btnExportar" class="day-button" type="button" style="background:var(--card-2);">📥 Respaldo (JSON)</button>
-          <button id="btnImportar" class="day-button" type="button" style="background:var(--accent); color:#0c0d0f;">📤 Cargar Datos</button>
-          <input type="file" id="inputImportar" name="inputImportar" accept=".json" style="display: none;" aria-label="Cargar archivo de copia de seguridad" />
+        <div class="admin-subpanel">
+          <p style="color:var(--muted); font-size:0.85rem; margin-top:0; margin-bottom:12px;">Exporta todo tu progreso, rutinas y configuración a un archivo JSON para cargarlo en otro celular o navegador.</p>
+          <div style="display:flex; gap:10px; flex-wrap:wrap;">
+            <button id="btnExportar" class="day-button" type="button" style="background:var(--card-2);">📥 Respaldo (JSON)</button>
+            <button id="btnImportar" class="day-button" type="button" style="background:var(--accent); color:#0c0d0f;">📤 Cargar Datos</button>
+            <input type="file" id="inputImportar" name="inputImportar" accept=".json" style="display: none;" aria-label="Cargar archivo de copia de seguridad" />
+          </div>
         </div>
       </div>
     </article>
