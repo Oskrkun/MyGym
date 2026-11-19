@@ -1262,7 +1262,6 @@ window.refreshRoutineView = function () {
   state = getDayState(currentRoutineId);
   renderUser();
 };
-|
 window.updateRestSeconds = function (sec) {
   restSeconds = sec;
 };
